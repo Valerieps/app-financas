@@ -1,0 +1,30 @@
+// Cloudflare Worker: the app's files, the API, the live WebSocket and the cron (ADR-004).
+// Secrets are not here: set WEBHOOK_SECRET with `npx wrangler secret put WEBHOOK_SECRET`,
+// and locally in .dev.vars (see .dev.vars.example).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "app-financas",
+  "main": "server/entry/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "APP_STORAGE", "class_name": "AppObject" }]
+  },
+  // Never edit a shipped migration; add the next tag.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AppObject"] }],
+  // One cron for every time-based job; each job decides whether it is due (AppService.tick).
+  "triggers": { "crons": ["*/5 * * * *"] },
+  // Branch previews (`wrangler preview`, ADR-004) refuse to deploy without this block.
+  "previews": {
+    "durable_objects": {
+      "bindings": [{ "name": "APP_STORAGE", "class_name": "AppObject" }]
+    }
+  },
+  "observability": { "enabled": true },
+  "send_metrics": false
+}

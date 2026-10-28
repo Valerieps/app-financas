@@ -1,0 +1,13 @@
+# Copy to .dev.vars (ignored by git) for local development with `npm run dev:api`
+
+# Token secreto para autenticar requisições de webhook do MacroDroid/Tasker
+WEBHOOK_SECRET=dev-webhook-secret-12345
+
+# Chave de API do Google Gemini (1.5 Flash para higienizar e categorizar estabelecimentos)
+GEMINI_API_KEY=
+
+# Token do Bot do Telegram para alertas e comandos
+TELEGRAM_BOT_TOKEN=
+
+# Chat ID padrão do Telegram (opcional; pode ser salvo no banco via configurações)
+TELEGRAM_CHAT_ID=
