@@ -14,7 +14,7 @@
   },
   // Normalized tables; migrations in migrations/, applied with `wrangler d1 migrations apply DB`.
   "d1_databases": [
-    { "binding": "DB", "database_name": "sinal-verde", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+    { "binding": "DB", "database_name": "sinal-verde", "database_id": "6d5cf155-8050-47f2-84fb-e18af3731990", "migrations_dir": "migrations" }
   ],
   // Raw archive: every Pluggy response and webhook body, before normalization.
   "r2_buckets": [{ "binding": "RAW", "bucket_name": "sinal-verde-raw" }],
@@ -23,10 +23,13 @@
   // Branch previews (ADR-004) get their own database and bucket, never production's.
   "previews": {
     "d1_databases": [
-      { "binding": "DB", "database_name": "sinal-verde-preview", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+      { "binding": "DB", "database_name": "sinal-verde-preview", "database_id": "a2842ea6-4e3a-4573-b690-35a2378c9285", "migrations_dir": "migrations" }
     ],
     "r2_buckets": [{ "binding": "RAW", "bucket_name": "sinal-verde-raw-preview" }]
   },
+  // Not secret: the audience tag of the "Sinal Verde" Access application (ADR-007). OWNER_EMAIL
+  // and the Pluggy credentials are secrets, set with `wrangler secret put`.
+  "vars": { "ACCESS_AUD": "48cd9f067d37a15c59105a67945b626246d0559a499f1d9ed78acbdd5df7e9d5" },
   "observability": { "enabled": true },
   "send_metrics": false
 }
