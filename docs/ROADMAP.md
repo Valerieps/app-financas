@@ -11,10 +11,6 @@ O que ainda não está pronto.
 
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
-| Cliente do Pluggy | 1 | `spec/cofre-de-dados.md` | API key sob demanda, páginas de 500, nova tentativa após 429 (ADR-008) |
-| Carga inicial e cadastro de conexões | 1 | `spec/cofre-de-dados.md` | |
-| Webhooks do Pluggy | 1 | `spec/cofre-de-dados.md` | Responder 2xx na hora, processar depois; idempotência por `eventId` |
-| Varredura diária e retratos do dia | 1 | `spec/cofre-de-dados.md` | |
 | Espelho noturno no desktop | 1 | `spec/cofre-de-dados.md` | Script de `wrangler d1 export` + sync do R2 |
 | Tela Cofre | 1 | `spec/cofre-de-dados.md` | Substitui a tela de exemplo do template |
 | Notificações do MacroDroid e gastos provisórios | 2 | `spec/gastos-provisorios.md` | |

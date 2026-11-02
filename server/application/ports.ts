@@ -27,6 +27,17 @@ export interface RawStore {
   get(key: string): Promise<string | null>;
 }
 
+/** Pluggy's API (ADR-008): authenticated GETs, with retries after 429 already handled. */
+export interface PluggyApi {
+  get(path: string, query?: Readonly<Record<string, string>>): Promise<PluggyResponse>;
+}
+
+export interface PluggyResponse {
+  readonly status: number;
+  /** The body exactly as Pluggy sent it, for the raw archive. */
+  readonly body: string;
+}
+
 export interface Clock {
   now(): Date;
 }

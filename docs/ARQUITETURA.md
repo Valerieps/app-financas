@@ -48,10 +48,17 @@ espelho noturno (desktop) ◄── wrangler d1 export + sync do R2
 - **Webhook responde em menos de 1 segundo:** grava o bruto e o evento, devolve 2xx e processa em
   `waitUntil`. Evento sem `processed_at` é reprocessado pelo cron.
 - **Idempotência:** `webhook_events.event_id` é único; um evento repetido não tem efeito.
-- **Re-buscar, não deduzir:** um evento de transação dispara uma releitura da conta pela API.
+- **Re-buscar, não deduzir:** um evento de transação dispara uma releitura da conta pela API (os
+  últimos 40 dias, mais as criadas desde `transactionsCreatedAtFrom`); `item/updated` relê a conexão
+  inteira. O cron tenta de novo um evento que falhou, até 5 vezes.
+- **Uma leitura vazia ou de uma conexão em erro não apaga nada:** só uma lista completa, de uma
+  conexão com status `UPDATED`, marca como apagado o que sumiu.
 - **Nada é apagado:** exclusão é `deleted_at`; mudança gera uma linha em `transaction_versions`.
 - **Id próprio:** `transactions.id` é do app. A ligação com o Pluggy é pelo `providerId`; na falta,
-  por data + valor + descrição. O `pluggy_id` muda quando o cartão recria a transação.
+  por data + valor + descrição + posição entre as idênticas do dia (`match_key`). O `pluggy_id` muda
+  quando o cartão recria a transação. Contas de uma conexão renovada são ligadas às da antiga por
+  tipo + subtipo + final do número; faturas, investimentos e empréstimos da conexão nova começam
+  registros novos.
 - **Decisões separadas:** `user_overrides`, `classification_rules` e `category_bucket_map` nunca são
   tocadas pela sincronização.
 - Valores em centavos (inteiro), sempre com a moeda; datas em UTC, convertidas para

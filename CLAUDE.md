@@ -106,13 +106,13 @@ Each step rereads the whole conversation, so long sessions and back-and-forth co
 - `src/application` - ports (interfaces the infrastructure implements) and `api-contract.ts`, the API's types.
 - `src/infrastructure` - the HTTP backend; the only place in `src/` that may use the network.
 - `src/ui` - React components. All colors, fonts and spacing live in `src/ui/theme/tokens.css`.
-- `server/application` - the server's use cases (`AppService`), asynchronous, on the `Sql`/`RawStore`/`Clock`/`IdGenerator` ports.
+- `server/application` - the server's use cases (`AppService`), asynchronous, on the `Sql`/`RawStore`/`PluggyApi`/`Clock`/`IdGenerator` ports; `collect/` is the Pluggy collection (raw first, mirrors, transactions, sync, webhooks), `lock.ts` the passkey lock.
 - `migrations/` - the D1 schema, numbered SQL files applied by `wrangler d1 migrations apply`.
-- `server/infrastructure`, `server/entry` - Worker, D1, R2, Access, cookies, crypto. `server/testing` - `node:sqlite` (with `migrations/` applied) and memory ports for tests.
+- `server/infrastructure`, `server/entry` - Worker, D1, R2, Access, cookies, crypto. `server/testing` - `node:sqlite` (with `migrations/` applied), memory ports, a fake Pluggy and anonymized Pluggy fixtures for tests.
 - `wrangler.jsonc` - the Worker: assets, D1 (`DB`), R2 (`RAW`), their preview copies, cron. Secrets via `wrangler secret put`; locally in `.dev.vars` (see `.dev.vars.example`).
 - `public/` - static files: manifest, icons, `_headers`.
 - `network-policy.ts` - the servers the app (`ALLOWED_ORIGINS`, `IMAGE_ORIGINS`) and the Worker (`SERVER_ORIGINS`) may talk to.
-- `scripts/` - `check-docs.mjs` (run by CI) and `setup-repo.mjs` (once per new repository).
+- `scripts/` - `check-docs.mjs` (run by CI), `setup-repo.mjs` (once per new repository) and `pluggy-webhook.mjs` (registers the Pluggy webhook with its secret header).
 
 ## Commands
 - `npm ci` - install exactly what the lockfile pins

@@ -1,12 +1,15 @@
 import type { ApiError, Topic } from '../../src/application/api-contract';
-import type { Clock, IdGenerator, RawStore, Sql } from './ports';
+import type { Clock, IdGenerator, PluggyApi, RawStore, Sql } from './ports';
 
-/** What every use case gets: the database, the raw archive, the time and new ids. */
+/** What every use case gets: the database, the raw archive, Pluggy, the time and new ids. */
 export interface Context {
   readonly sql: Sql;
   readonly raw: RawStore;
+  readonly pluggy: PluggyApi;
   readonly clock: Clock;
   readonly ids: IdGenerator;
+  /** Work that may finish after the response (the Worker's `waitUntil`). */
+  readonly background: (task: Promise<unknown>) => void;
 }
 
 /** A command's result: on success, the topics whose screens must refetch. */
