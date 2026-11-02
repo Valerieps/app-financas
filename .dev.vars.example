@@ -3,6 +3,10 @@
 # Stands in for Cloudflare Access locally (ADR-007); read only on localhost, never set in production
 DEV_ACCESS_EMAIL=
 
+# Cloudflare Access (production): the application's AUD tag and the only e-mail allowed in
+ACCESS_AUD=
+OWNER_EMAIL=
+
 # Pluggy, personal use via Meu Pluggy (ADR-008)
 PLUGGY_CLIENT_ID=
 PLUGGY_CLIENT_SECRET=

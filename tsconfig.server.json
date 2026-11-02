@@ -13,6 +13,6 @@
     "skipLibCheck": true,
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["server", "src/domain", "src/application/api-contract.ts"],
+  "include": ["server", "src/domain", "src/application/api-contract.ts", "network-policy.ts"],
   "exclude": ["server/**/*.test.ts", "server/testing", "src/**/*.test.ts"]
 }

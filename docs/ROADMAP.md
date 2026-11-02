@@ -11,7 +11,6 @@ O que ainda não está pronto.
 
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
-| Login Google (Cloudflare Access) e digital | 1 | `spec/acesso.md` | ADR-007; substitui o PIN do template |
 | Cliente do Pluggy | 1 | `spec/cofre-de-dados.md` | API key sob demanda, páginas de 500, nova tentativa após 429 (ADR-008) |
 | Carga inicial e cadastro de conexões | 1 | `spec/cofre-de-dados.md` | |
 | Webhooks do Pluggy | 1 | `spec/cofre-de-dados.md` | Responder 2xx na hora, processar depois; idempotência por `eventId` |
@@ -32,13 +31,11 @@ O que ainda não está pronto.
 
 ## O código ainda não segue o spec
 
-- Acesso (`spec/acesso.md`) — o código ainda não confere o JWT do Access; até conferir, a API em
-  produção recusa tudo e só responde localmente, com `DEV_ACCESS_EMAIL`.
 - Tela Cofre — por enquanto só mostra quantas conexões existem.
 
 ## Adiado
 
-- A origem dos certificados do Cloudflare Access em `SERVER_ORIGINS` — até a dona criar o time do Zero Trust (ADR-008).
+(Nada adiado)
 
 ## Revisar as lacunas que o agente decidiu
 

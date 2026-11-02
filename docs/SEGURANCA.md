@@ -38,7 +38,8 @@ Dado bancário completo: é tudo sensível.
 - O Cloudflare Access, com login Google, fica na frente do app e da API; só o meu e-mail entra. O
   Worker confere o JWT do Access em toda requisição (ADR-007).
 - Num aparelho com passkey cadastrada, o app pede a digital ao abrir; o desbloqueio vira um cookie
-  `__Host-sessao` (`HttpOnly`, `Secure`, `SameSite=Lax`), e o banco guarda só o hash do token.
+  `__Host-sessao` (`HttpOnly`, `Secure`, `SameSite=Lax`), e o banco guarda só o hash do token. O
+  aparelho com passkey é marcado pelo cookie `__Host-aparelho`, também guardado só como hash.
 - O app não acessa o banco diretamente: toda leitura e escrita passa pela API, que confere o acesso
   no servidor. Outros apps leem pela API de dados, nunca direto do D1.
 - Chamadas internas ao app exigem verificação de mesma origem (`Origin`).
