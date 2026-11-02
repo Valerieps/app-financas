@@ -86,8 +86,7 @@ describe('security rules', () => {
 
   it('secrets never sit in the deployed configuration', () => {
     const config = read(join(__dirname, '..', 'wrangler.jsonc'));
-    expect(config).not.toMatch(/WEBHOOK_SECRET"\s*:/);
-    expect(config).not.toMatch(/APP_PIN"\s*:/);
+    expect(config).not.toMatch(/(SECRET|TOKEN|API_KEY|DEV_ACCESS_EMAIL)"\s*:/);
   });
 
   it('allowed origins are bare https origins', () => {

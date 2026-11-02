@@ -1,9 +1,6 @@
 # Copy to .dev.vars (ignored by git) for local development with `npm run dev:api`
 
-# Token for the template's /api/webhook (until the phase-1 webhooks replace it, docs/ROADMAP.md)
-WEBHOOK_SECRET=dev-webhook-secret-12345
-
-# Stands in for Cloudflare Access locally (ADR-007); never set in production
+# Stands in for Cloudflare Access locally (ADR-007); read only on localhost, never set in production
 DEV_ACCESS_EMAIL=
 
 # Pluggy, personal use via Meu Pluggy (ADR-008)

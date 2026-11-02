@@ -156,65 +156,11 @@ button:disabled {
   margin: var(--space-8) auto;
 }
 
-.item-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.item-list li {
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.item-list li:last-child {
-  border-bottom: none;
-}
-
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-  margin-left: var(--space-2);
-}
-
-.status-dot.online {
-  background: #22c55e;
-}
-
-.status-dot.connecting {
-  background: #eab308;
-}
-
-.status-dot.offline {
-  background: #ef4444;
-}
-
 .badge {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  font-size: 0.85rem;
-}
-
-.offline-banner {
-  background: #fef2f2;
-  color: #991b1b;
-  padding: var(--space-2);
-  border-radius: var(--radius);
-  margin-bottom: var(--space-3);
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-.webhook-box pre {
-  background: #1e1e24;
-  color: #f8fafc;
-  padding: var(--space-3);
-  border-radius: var(--radius);
-  overflow-x: auto;
   font-size: 0.85rem;
 }

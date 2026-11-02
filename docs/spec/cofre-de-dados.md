@@ -20,6 +20,9 @@ Guardar para sempre tudo o que o Pluggy deixar coletar das minhas contas, sem pe
   disponíveis. *(1)*
 - A autorização do Meu Pluggy vence em 1 ano. Ao renovar, o Pluggy pode dar um itemId novo para a
   mesma instituição: eu cadastro o novo, e o app liga as transações às que já tem, sem duplicar. *(1)*
+- Quando eu cadastro o itemId novo de uma instituição que já tem conexão, a antiga fica marcada como
+  "substituída" e sai da varredura diária; as contas da nova são ligadas às da antiga pela
+  instituição, pelo tipo e pelo final do número. *(1)*
 
 ## O que é coletado
 
@@ -44,9 +47,15 @@ Fora do escopo: pagamentos, Pix Automático, boletos e Smart Transfers.
 - Quando o Pluggy avisa que algo mudou numa conexão ou nas transações, o app relê da API o estado
   atual da conta, em vez de deduzir pelo aviso. *(1)*
 - Um aviso repetido do Pluggy não tem efeito duplicado. *(1)*
-- Uma vez por dia, mesmo sem aviso, o app relê contas, faturas, investimentos e empréstimos de
-  todas as conexões e guarda o retrato do dia. *(1)*
+- Uma vez por dia, às 7h de Brasília, mesmo sem aviso, o app relê contas, faturas, investimentos e
+  empréstimos de todas as conexões e guarda o retrato do dia, datado pelo dia de Brasília. *(1)*
   Por quê: o Pluggy atualiza a cada 24 horas, sem hora fixa, e um aviso pode se perder.
+- Na mesma varredura, o app relê as transações dos últimos 40 dias de cada conta; a que sumiu do
+  Pluggy fica marcada como apagada. *(1)*
+  Por quê: se um aviso de transação se perder, nada mais a recuperaria.
+- O relatório do SCR é relido uma vez por mês; se o Pluggy não o liberar, ele fica como "não
+  disponível". *(1)*
+  Por quê: o SCR é mensal e depende de o Pluggy habilitar o recurso na conta.
 
 ## Como os dados são guardados
 
@@ -63,7 +72,8 @@ Fora do escopo: pagamentos, Pix Automático, boletos e Smart Transfers.
   sobrevivem a qualquer nova sincronização. *(2)*
 - Valores em centavos, com a moeda sempre junto. Datas guardadas em UTC e mostradas no horário de
   Brasília. *(1)*
-- Toda noite, uma cópia completa vai para o meu computador, com uma cópia criptografada fora dele. *(1)*
+- Toda noite, às 23h30, uma cópia completa vai para o meu computador (`Documentos\SinalVerde-espelho`),
+  com uma cópia criptografada no meu Google Drive. *(1)*
 
 ## Tela Cofre
 

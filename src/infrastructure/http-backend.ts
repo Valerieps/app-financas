@@ -1,8 +1,8 @@
 // The API over HTTP, same origin. Inputs always go in a JSON body, never in the URL.
-import type { ApiError, ApiResult, AuthStatusView } from '../application/api-contract';
+import type { ApiError, ApiResult, CommandResponse, Topic } from '../application/api-contract';
 import type { Backend } from '../application/ports';
 
-async function post<T>(path: string, body: unknown): Promise<ApiResult<T>> {
+async function post<T>(path: string, body: unknown): Promise<ApiResult<T> & { changed?: readonly Topic[] }> {
   let response: Response;
   try {
     response = await fetch(path, {
@@ -14,20 +14,23 @@ async function post<T>(path: string, body: unknown): Promise<ApiResult<T>> {
   } catch {
     return { ok: false, error: 'unavailable' };
   }
-  const payload = (await response.json().catch(() => ({}))) as { value?: T; error?: ApiError };
-  if (response.ok) return { ok: true, value: payload.value as T };
+  const payload = (await response.json().catch(() => ({}))) as Partial<CommandResponse<T>> & { error?: ApiError };
+  if (response.ok) return { ok: true, value: payload.value as T, changed: payload.changed };
   return { ok: false, error: payload.error ?? 'unavailable' };
 }
 
 export function httpBackend(): Backend {
+  const listeners = new Set<(topics: readonly Topic[]) => void>();
   return {
-    authStatus: () => post<AuthStatusView>('/api/auth/status', {}),
-    setupPin: (pin: string) => post<null>('/api/auth/setup', { pin }),
-    unlock: (pin: string) => post<null>('/api/auth/unlock', { pin }),
-    lock: async () => {
-      await post('/api/auth/lock', {});
-    },
     query: (name, input) => post(`/api/query/${name}`, input),
-    command: (name, input) => post(`/api/command/${name}`, input),
+    command: async (name, input) => {
+      const { changed, ...result } = await post<never>(`/api/command/${String(name)}`, input);
+      if (result.ok && changed?.length) listeners.forEach((listener) => listener(changed));
+      return result;
+    },
+    onChange(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
   };
 }
