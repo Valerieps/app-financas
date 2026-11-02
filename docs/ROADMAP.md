@@ -11,16 +11,40 @@ O que ainda não está pronto.
 
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
-| <feature> | 1 | `spec/<arquivo>.md` | |
+| Trocar o Durable Object por D1 + R2 | 1 | `spec/cofre-de-dados.md` | ADR-006; primeira migration com as tabelas da coleta |
+| Login Google (Cloudflare Access) e digital | 1 | `spec/acesso.md` | ADR-007; substitui o PIN do template |
+| Cliente do Pluggy | 1 | `spec/cofre-de-dados.md` | API key sob demanda, páginas de 500, nova tentativa após 429 (ADR-008) |
+| Carga inicial e cadastro de conexões | 1 | `spec/cofre-de-dados.md` | |
+| Webhooks do Pluggy | 1 | `spec/cofre-de-dados.md` | Responder 2xx na hora, processar depois; idempotência por `eventId` |
+| Varredura diária e retratos do dia | 1 | `spec/cofre-de-dados.md` | |
+| Espelho noturno no desktop | 1 | `spec/cofre-de-dados.md` | Script de `wrangler d1 export` + sync do R2 |
+| Tela Cofre | 1 | `spec/cofre-de-dados.md` | Substitui a tela de exemplo do template |
+| Notificações do MacroDroid e gastos provisórios | 2 | `spec/gastos-provisorios.md` | |
+| Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
+| Categoria, caixinha, regras e Gemini | 2 | `spec/classificacao.md` | |
+| Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
+| Bot do Telegram | 3 | `spec/telegram.md` | |
+| Tela do semáforo | 3 | `spec/tela-do-celular.md` | |
+| Faturas e parcelas futuras | 4 | `spec/cartao-de-credito.md` | |
+| Reembolsos | 4 | `spec/classificacao.md` | |
+| Avisos de renovação e de erro nas conexões | 4 | `spec/cofre-de-dados.md` | |
+| Exportação e API de dados | 4 | `spec/exportacao-e-api.md` | |
+| Wise e várias moedas | 5 | `spec/cofre-de-dados.md` | |
 
 ## O código ainda não segue o spec
 
-- <regra do spec> — <o que o código faz hoje>.
+- Acesso (`spec/acesso.md`) — o código ainda usa o PIN e o cookie de 180 dias do template (ADR-005).
+- Armazenamento (ADR-006) — o código ainda guarda tudo no Durable Object `AppObject`, com a conexão ao vivo.
+- Tela inicial — ainda é a tela de exemplo do template, com a tabela `items`.
+- Webhooks — o código ainda tem um só `/api/webhook` com `WEBHOOK_SECRET`; o spec pede
+  `/webhooks/pluggy`, `/webhooks/notification` e `/webhooks/telegram`, cada um com o seu segredo.
 
 ## Adiado
 
-- <o que foi adiado> — <por quê e até quando>.
+- A origem dos certificados do Cloudflare Access em `SERVER_ORIGINS` — até a dona criar o time do Zero Trust (ADR-008).
 
 ## Revisar as lacunas que o agente decidiu
 
-- [ ] <regra que o agente escreveu em `spec/` sem perguntar, com o arquivo>.
+- [ ] O app pede a digital quando é aberto e a última vez foi há mais de 1 hora (`spec/acesso.md`).
+- [ ] Num aparelho sem digital cadastrada, o login Google basta (`spec/acesso.md`).
+- [ ] O `/gastei` vale a partir da fase 3, junto com o bot (`spec/gastos-provisorios.md`).

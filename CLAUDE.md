@@ -1,7 +1,11 @@
-# <Nome do app> - Claude Code Context & Instructions
+# Sinal Verde - Claude Code Context & Instructions
 
-<!-- BOOTSTRAP.md fills this paragraph: what the app is, for whom, and its core loop. -->
-<One paragraph: what the app does, who uses it, the loop a member repeats every day.>
+Sinal Verde is the owner's personal finance app. She has ADHD; the app regulates her spending in
+real time with no manual entry, and keeps, forever, every piece of financial data Pluggy lets it
+collect (Nubank now, Wise later). Her daily loop: she pays for something, the phone's bank
+notification (via MacroDroid) and Pluggy record it, and within seconds Telegram tells her how much
+is still free to spend today (the "Livre do dia") with a traffic-light color; when she wants, she
+opens the phone app, glances at the color and moves an expense to another "caixinha" with one tap.
 
 ## Docs
 
@@ -23,7 +27,8 @@ The owner edits docs between messages: re-read a doc before editing it and prese
 Hard rules from `docs/SEGURANCA.md`, valid for every change:
 - The app talks only to its own origin (the Worker) and the origins in `network-policy.ts`; secrets (API keys, webhook secret) live only in the Worker, never in the bundle.
 - The app never reaches the database: every read and write goes through the API, which checks the session on the server.
-- The app is protected by a numeric PIN (ADR-005); external webhooks require `Authorization: Bearer <WEBHOOK_SECRET>`.
+- The app and the API sit behind Cloudflare Access (Google sign-in), and the Worker checks the Access JWT; on the phone, a passkey (fingerprint) locks the app (ADR-007). Each webhook (`/webhooks/pluggy`, `/webhooks/notification`, `/webhooks/telegram`) has its own secret.
+- Bank data is sensitive: CPF, account numbers and identity data never go to logs or Telegram; raw payloads go to R2 before any processing.
 - Never insert user text as HTML; links open with `target="_blank" rel="noopener noreferrer"`.
 - Minimize dependencies; pin exact versions; bundle them, never load from a CDN.
 - `network-policy.ts` is the only place that says which servers the app and the Worker may talk to.
@@ -86,7 +91,7 @@ Each step rereads the whole conversation, so long sessions and back-and-forth co
 
 ## Architecture Overview
 - Clean Architecture + Domain Driven Design (DDD).
-- Web app (Vite + React) and backend in one Cloudflare Worker; all personal data in one SQLite Durable Object (`AppObject`); live updates over a WebSocket; simplified PIN authentication. See `docs/ARQUITETURA.md`, ADR-004 and ADR-005.
+- Web app (Vite + React) and backend in one Cloudflare Worker; normalized data in D1, raw payloads in R2; Cloudflare Access with Google sign-in plus a passkey lock. See `docs/ARQUITETURA.md`, ADR-004, ADR-006 and ADR-007. Until the first phase-1 PR lands, the code still has the template's Durable Object and PIN (`docs/ROADMAP.md`).
 - The domain (`src/domain`) is shared: the server imports the same rules the app uses.
 
 ## Adding a feature
@@ -120,8 +125,8 @@ Each step rereads the whole conversation, so long sessions and back-and-forth co
 
 ## Deployment
 Cloudflare Workers Builds, from the GitHub repository. Build command `npm run build`, deploy
-command `npx wrangler deploy` for `main`; other branches get a preview version (ADR-004). Sign-in
-only works where Google has the redirect URI registered: production and localhost (ADR-005). GitHub Actions (`.github/workflows/ci.yml`) runs the same build and the docs check on every
+command `npx wrangler deploy` for `main`; other branches get a preview version (ADR-004). Cloudflare
+Access protects production; locally, `DEV_ACCESS_EMAIL` in `.dev.vars` stands in for it (ADR-007). GitHub Actions (`.github/workflows/ci.yml`) runs the same build and the docs check on every
 pull request. Branch protection on `main` requires the `build` check and a branch up to date with
 `main` (ADR-003): wait with `gh pr checks <n> --watch`, and if the merge is refused because the
 branch is behind, bring it up to date and wait again. No direct pushes to `main`. No `dev` branch:

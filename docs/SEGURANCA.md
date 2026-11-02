@@ -15,20 +15,38 @@ conferidas pelo `src/security.test.ts`, que roda em todo build.
 - As chamadas de rede ficam em `src/infrastructure/`; o resto do código não as faz.
 - Sem analytics nem telemetria de terceiros sem uma decisão registrada num ADR. O Wrangler roda com
   `send_metrics: false`.
-- Segredos nunca vão para o código do cliente: tudo que está no bundle é público. O segredo do login
-  Google, e qualquer chave de API, ficam só no Worker (`wrangler secret put`; localmente no `.dev.vars`).
-- <O `BOOTSTRAP.md` escreve aqui quais dados pessoais o app guarda e se algum é sensível.>
+- Segredos nunca vão para o código do cliente: tudo que está no bundle é público. Client ID e secret
+  do Pluggy, token do bot do Telegram, chave do Gemini e segredos dos webhooks ficam só no Worker
+  (`wrangler secret put`; localmente no `.dev.vars`). A API key do Pluggy é gerada sob demanda e fica
+  só em memória.
 
-## 2. Acesso e dados
+## 2. Que dados o app guarda
 
-- O acesso é protegido por um PIN numérico (4 a 8 dígitos) configurado na primeira execução.
-- A sessão autenticada é guardada em um cookie `__Host-sessao` (`HttpOnly`, `Secure`, `SameSite=Lax`, 180 dias); o banco guarda apenas o hash SHA-256 do token de sessão.
-- Bloquear o app (`/api/auth/lock`) apaga o token de sessão do banco e limpa o cookie imediatamente.
-- O app não acessa o banco diretamente: toda leitura e escrita passa pela API sob verificação da sessão.
+Dado bancário completo: é tudo sensível.
+
+- Contas, saldos, transações (com pagador e recebedor, documento e banco), faturas, investimentos,
+  empréstimos, consentimentos, dados cadastrais (identidade) e o relatório do SCR do Banco Central.
+- O texto bruto das notificações de compra do celular.
+- As minhas decisões: categoria, caixinha, notas, reembolsos, regras.
+- Tudo fica no D1 e no R2 da conta Cloudflare, mais o espelho noturno no desktop, com uma cópia
+  criptografada fora da máquina. Tudo pode ser exportado em JSON, CSV e SQLite.
+- CPF, números de conta e dados cadastrais nunca vão para logs nem para o Telegram.
+- Para o Gemini vão só a descrição, o valor e a categoria do Pluggy, sem documentos de terceiros.
+
+## 3. Acesso
+
+- O Cloudflare Access, com login Google, fica na frente do app e da API; só o meu e-mail entra. O
+  Worker confere o JWT do Access em toda requisição (ADR-007).
+- Num aparelho com passkey cadastrada, o app pede a digital ao abrir; o desbloqueio vira um cookie
+  `__Host-sessao` (`HttpOnly`, `Secure`, `SameSite=Lax`), e o banco guarda só o hash do token.
+- O app não acessa o banco diretamente: toda leitura e escrita passa pela API, que confere o acesso
+  no servidor. Outros apps leem pela API de dados, nunca direto do D1.
 - Chamadas internas ao app exigem verificação de mesma origem (`Origin`).
-- Webhooks externos (`/api/webhook`) exigem o cabeçalho `Authorization: Bearer <WEBHOOK_SECRET>`, comparado em tempo constante (`constantTimeEqual`).
+- Cada webhook tem o seu segredo, comparado em tempo constante: `/webhooks/pluggy`
+  (`PLUGGY_WEBHOOK_SECRET`), `/webhooks/notification` (`NOTIFICATION_WEBHOOK_SECRET`) e
+  `/webhooks/telegram` (token secreto do Telegram). O resto é rejeitado.
 
-## 3. Para todo app
+## 4. Para todo app
 
 - Texto do usuário nunca é inserido como HTML (`textContent`, nunca `innerHTML` ou `dangerouslySetInnerHTML`).
 - Links abrem com `target="_blank" rel="noopener noreferrer"`.

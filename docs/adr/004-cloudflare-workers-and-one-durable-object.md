@@ -1,6 +1,6 @@
 # ADR-004: Cloudflare Workers backend with one Durable Object for the personal app
 
-**Status:** Accepted
+**Status:** Accepted, updated by ADR-006
 **Date:** 2026-10-26
 **Decision:** One Cloudflare Worker (`server/entry/worker.ts`, configured in `wrangler.jsonc`) serves
 the built app from `dist/` (static assets, single-page fallback), the API under `/api`, the live
@@ -28,3 +28,6 @@ without locks, and the object holds the live connections. One Worker means one o
 is `connect-src 'self'`.
 **Alternatives:** D1 (no interactive transactions and no live WebSockets); Pages plus a separate Worker
 for the cron (two deploys, two origins).
+
+**Update (2026-11-02):** Data moves to D1 and R2 and the live WebSocket goes away (ADR-006). One Worker
+still serves the app, the API, the webhooks and the cron.

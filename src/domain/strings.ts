@@ -1,14 +1,14 @@
 // Every user-facing text, in Brazilian Portuguese, in the app's voice.
 // The UI imports from here; it never writes its own text.
 export const strings = {
-  appName: 'App Pessoal',
+  appName: 'Sinal Verde',
   genericError: 'Algo deu errado. Tenta de novo?',
   retry: 'Tentar de novo',
   forbidden: 'Acesso não autorizado.',
   offline: 'Sem conexão. Mostrando o último estado carregado.',
 
   auth: {
-    tagline: 'Seu painel pessoal seguro e reativo.',
+    tagline: 'Quanto posso gastar hoje, sem culpa.',
     setupTitle: 'Defina seu PIN de acesso',
     setupSubtitle: 'Escolha um PIN de 4 a 8 dígitos para proteger seu app.',
     unlockTitle: 'Digite seu PIN',
