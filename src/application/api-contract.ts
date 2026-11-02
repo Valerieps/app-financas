@@ -56,6 +56,8 @@ export interface Queries {
 /** Writes: `POST /api/command/<name>`. Each sends its writes in one atomic batch. */
 export interface Commands {
   'passkey.delete': { input: { id: string }; output: null };
+  /** Registers a connection by the itemId copied from the Pluggy Dashboard; the first load runs after. */
+  'connection.add': { input: { itemId: string }; output: { itemId: string } };
 }
 
 export type QueryName = keyof Queries;

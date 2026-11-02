@@ -10,6 +10,7 @@ OWNER_EMAIL=
 # Pluggy, personal use via Meu Pluggy (ADR-008)
 PLUGGY_CLIENT_ID=
 PLUGGY_CLIENT_SECRET=
+# Sent by Pluggy in X-Webhook-Secret; registered with `node scripts/pluggy-webhook.mjs <app origin>`
 PLUGGY_WEBHOOK_SECRET=
 
 # MacroDroid notifications: Authorization: Bearer <NOTIFICATION_WEBHOOK_SECRET>

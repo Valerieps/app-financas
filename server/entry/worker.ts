@@ -1,6 +1,7 @@
-// The Worker: serves the app's files, the API under /api and the cron (ADR-004, ADR-006).
+// The Worker: serves the app's files, the API under /api, the webhooks and the cron (ADR-004, ADR-006).
 import type { ApiError } from '../../src/application/api-contract';
 import { AppService } from '../application/app-service';
+import { processEvent, receivePluggyWebhook } from '../application/collect/webhooks';
 import type { Context } from '../application/context';
 import * as lockService from '../application/lock';
 import type { Caller } from '../application/lock';
@@ -14,8 +15,9 @@ import {
   SESSION_COOKIE_SECONDS,
   setCookie,
 } from '../infrastructure/cookies';
-import { sha256 } from '../infrastructure/crypto';
+import { constantTimeEqual, sha256 } from '../infrastructure/crypto';
 import { d1Sql } from '../infrastructure/d1-sql';
+import { pluggyClient } from '../infrastructure/pluggy-client';
 import { r2RawStore } from '../infrastructure/r2-raw-store';
 import type { Env } from './env';
 
@@ -43,13 +45,35 @@ function json(body: unknown, status = 200, headers: HeadersInit = {}): Response 
 
 const error = (code: ApiError) => json({ error: code }, STATUS[code]);
 
-function context(env: Env): Context {
+function context(env: Env, background: (task: Promise<unknown>) => void): Context {
   return {
     sql: d1Sql(env.DB),
     raw: r2RawStore(env.RAW),
+    pluggy: pluggyClient(env),
     clock: { now: () => new Date() },
     ids: { next: () => crypto.randomUUID() },
+    background,
   };
+}
+
+/** The header the Pluggy webhook was registered with (scripts/pluggy-webhook.mjs). */
+const PLUGGY_SECRET_HEADER = 'X-Webhook-Secret';
+const MAX_WEBHOOK_BYTES = 1024 * 1024;
+
+/**
+ * /webhooks/pluggy: authenticated by its own secret (Access bypasses this path). Stores the raw
+ * body and the event, answers 200 at once and processes in `waitUntil`; the cron retries failures.
+ */
+async function pluggyWebhook(request: Request, env: Env, ctx: Context): Promise<Response> {
+  if (request.method !== 'POST') return error('not_found');
+  const secret = request.headers.get(PLUGGY_SECRET_HEADER) ?? '';
+  if (!env.PLUGGY_WEBHOOK_SECRET || !constantTimeEqual(secret, env.PLUGGY_WEBHOOK_SECRET)) return error('unauthenticated');
+  const body = await request.text();
+  if (new TextEncoder().encode(body).length > MAX_WEBHOOK_BYTES) return error('invalid');
+  const received = await receivePluggyWebhook(ctx, body);
+  if (received.status === 'invalid') return error('invalid');
+  if (received.status === 'new') ctx.background(processEvent(ctx, received.eventId));
+  return json({ ok: true });
 }
 
 /** In-app requests must come from the app's own pages. */
@@ -112,12 +136,11 @@ async function auth(action: string, request: Request, ctx: Context, who: Caller,
   }
 }
 
-async function api(request: Request, env: Env, url: URL): Promise<Response> {
+async function api(request: Request, env: Env, url: URL, ctx: Context): Promise<Response> {
   if (request.method !== 'POST') return error('not_found');
   if (!sameOrigin(request, url)) return error('forbidden');
   if (!(await accessEmail(request, env))) return error('unauthenticated');
 
-  const ctx = context(env);
   const who = await caller(request);
   if (url.pathname.startsWith('/api/auth/')) return auth(url.pathname.slice('/api/auth/'.length), request, ctx, who, url);
 
@@ -138,13 +161,16 @@ async function api(request: Request, env: Env, url: URL): Promise<Response> {
 }
 
 export default {
-  async fetch(request, env): Promise<Response> {
+  async fetch(request, env, executionContext): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname.startsWith('/api/')) return api(request, env, url);
+    const ctx = () => context(env, (task) => executionContext.waitUntil(task));
+    if (url.pathname === '/webhooks/pluggy') return pluggyWebhook(request, env, ctx());
+    if (url.pathname.startsWith('/webhooks/')) return error('not_found');
+    if (url.pathname.startsWith('/api/')) return api(request, env, url, ctx());
     return env.ASSETS.fetch(request);
   },
 
-  async scheduled(_controller, env): Promise<void> {
-    await new AppService(context(env)).tick();
+  async scheduled(_controller, env, executionContext): Promise<void> {
+    await new AppService(context(env, (task) => executionContext.waitUntil(task))).tick();
   },
 } satisfies ExportedHandler<Env>;

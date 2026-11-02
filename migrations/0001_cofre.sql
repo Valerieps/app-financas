@@ -15,7 +15,7 @@ CREATE TABLE raw_payloads (
   item_id TEXT,
   status INTEGER,                  -- HTTP status of an API response
   received_at TEXT NOT NULL,
-  r2_key TEXT NOT NULL UNIQUE,
+  r2_key TEXT NOT NULL,            -- same content at the same instant shares one object
   sha256 TEXT NOT NULL,
   bytes INTEGER NOT NULL
 );
@@ -154,10 +154,12 @@ CREATE TABLE transactions (
   deleted_at TEXT,
   raw_json TEXT NOT NULL,
   first_seen_at TEXT NOT NULL,
-  last_seen_at TEXT NOT NULL,
-  UNIQUE (account_id, match_key)
+  last_seen_at TEXT NOT NULL
 );
 CREATE INDEX transactions_account_date ON transactions (account_id, date);
+-- Not unique: two different transactions may share a fallback key for a while (a description
+-- that changed, a list read in part); the sync decides which row a fetched transaction is.
+CREATE INDEX transactions_account_match ON transactions (account_id, match_key);
 
 CREATE TABLE transaction_versions (
   id TEXT PRIMARY KEY,

@@ -2,6 +2,9 @@
 // then calls it.
 import type { ApiResult, CommandName, Commands, PasskeyView, Queries, QueryName } from '../../src/application/api-contract';
 import { failure, QueryError, type CommandResult, type Context } from './context';
+import { addConnection } from './collect/connections';
+import { runSweeps } from './collect/sync';
+import { processPendingEvents } from './collect/webhooks';
 import { cleanUpLock, type Caller } from './lock';
 import { statement } from './ports';
 
@@ -28,6 +31,8 @@ export class AppService {
   /** The cron: every job decides whether it is due. */
   async tick(): Promise<void> {
     await cleanUpLock(this.ctx);
+    await processPendingEvents(this.ctx);
+    await runSweeps(this.ctx);
   }
 }
 
@@ -56,4 +61,5 @@ const COMMANDS: { [N in CommandName]: Handler<CommandResult<Commands[N]['output'
     await ctx.sql.batch([statement('DELETE FROM sessions WHERE passkey_id = ?', id), statement('DELETE FROM passkeys WHERE id = ?', id)]);
     return { ok: true, value: null, changed: ['passkeys'] };
   },
+  'connection.add': async (ctx, input) => addConnection(ctx, input.itemId),
 };

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { base64Url, sha256 } from '../infrastructure/crypto';
 import { derToRaw } from '../infrastructure/webauthn';
-import { fixedClock, memoryRawStore, memorySql, sequentialIds } from '../testing/node-sql';
+import { testContext } from '../testing/node-sql';
 import { AppService } from './app-service';
 import type { Context } from './context';
 import { gate, lock, lockStatus, register, registrationOptions, unlock, unlockOptions, type Caller } from './lock';
@@ -73,8 +73,7 @@ function rawToDer(raw: Uint8Array): Uint8Array {
 }
 
 function setup() {
-  const clock = fixedClock('2026-11-02T12:00:00Z');
-  const ctx: Context = { sql: memorySql(), raw: memoryRawStore(), clock, ids: sequentialIds() };
+  const { ctx, clock } = testContext();
   return { ctx, clock };
 }
 

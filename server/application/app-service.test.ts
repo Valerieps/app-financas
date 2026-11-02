@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { fixedClock, memoryRawStore, memorySql, sequentialIds } from '../testing/node-sql';
+import { testContext } from '../testing/node-sql';
 import { statement } from './ports';
 import { AppService } from './app-service';
 import { NO_CALLER } from './lock';
 
 function createService() {
-  const sql = memorySql();
-  const service = new AppService({ sql, raw: memoryRawStore(), clock: fixedClock('2026-11-02T12:00:00Z'), ids: sequentialIds() });
-  return { service, sql };
+  const { ctx, sql } = testContext();
+  return { service: new AppService(ctx), sql };
 }
 
 const NOW = '2026-11-02T12:00:00Z';
