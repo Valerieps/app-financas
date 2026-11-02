@@ -1,6 +1,6 @@
 # ADR-005: PIN authentication, session cookie and webhook token
 
-**Status:** Accepted
+**Status:** Superseded by ADR-007
 **Date:** 2026-10-26
 **Decision:** A simplified, frictionless single-user authentication mechanism based on a numeric PIN (4 to 8 digits) and a session cookie:
 - **First Run (Setup):** On the first visit, if no PIN is configured in `settings`, the app displays the setup screen. The user creates a numeric PIN. The Worker computes its SHA-256 digest, stores it in `settings`, generates a secure random token, and sets the `__Host-sessao` cookie (HttpOnly, Secure, SameSite=Lax, 180 days).

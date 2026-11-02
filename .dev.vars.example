@@ -1,13 +1,22 @@
 # Copy to .dev.vars (ignored by git) for local development with `npm run dev:api`
 
-# Token secreto para autenticar requisições de webhook do MacroDroid/Tasker
+# Token for the template's /api/webhook (until the phase-1 webhooks replace it, docs/ROADMAP.md)
 WEBHOOK_SECRET=dev-webhook-secret-12345
 
-# Chave de API do Google Gemini (1.5 Flash para higienizar e categorizar estabelecimentos)
-GEMINI_API_KEY=
+# Stands in for Cloudflare Access locally (ADR-007); never set in production
+DEV_ACCESS_EMAIL=
 
-# Token do Bot do Telegram para alertas e comandos
+# Pluggy, personal use via Meu Pluggy (ADR-008)
+PLUGGY_CLIENT_ID=
+PLUGGY_CLIENT_SECRET=
+PLUGGY_WEBHOOK_SECRET=
+
+# MacroDroid notifications: Authorization: Bearer <NOTIFICATION_WEBHOOK_SECRET>
+NOTIFICATION_WEBHOOK_SECRET=
+
+# Telegram bot for alerts and commands
 TELEGRAM_BOT_TOKEN=
 
-# Chat ID padrão do Telegram (opcional; pode ser salvo no banco via configurações)
-TELEGRAM_CHAT_ID=
+# Google Gemini (phase 2); the model name is configuration, not code
+GEMINI_API_KEY=
+GEMINI_MODEL=

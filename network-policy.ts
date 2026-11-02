@@ -10,8 +10,9 @@ export const ALLOWED_ORIGINS: readonly string[] = [];
 /** Where images may load from (CSP `img-src`). */
 export const IMAGE_ORIGINS: readonly string[] = [];
 
-/** The only external servers the Worker (server/) calls: Gemini API and Telegram Bot API. */
+/** The only external servers the Worker (server/) calls: Pluggy, Telegram and Gemini (ADR-008). */
 export const SERVER_ORIGINS: readonly string[] = [
-  'https://generativelanguage.googleapis.com',
+  'https://api.pluggy.ai',
   'https://api.telegram.org',
+  'https://generativelanguage.googleapis.com',
 ];
