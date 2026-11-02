@@ -7,9 +7,6 @@ O desenho técnico que o código não mostra sozinho.
 - **Não entra aqui:** um passeio pelos arquivos (o código mostra), o porquê de cada decisão (`adr/`),
   o que falta construir (`ROADMAP.md`) e as regras de produto (`spec/`).
 
-O código ainda está no desenho do template (Durable Object, PIN, conexão ao vivo); a troca para o
-desenho abaixo é o primeiro item da fase 1 em [ROADMAP.md](ROADMAP.md).
-
 ## Visão geral
 
 - **App:** web app (Vite + React + TypeScript), instalável (PWA). Fala só com a própria origem.
@@ -70,10 +67,10 @@ Coleta (fase 1):
 | `raw_payloads` | resposta da API ou webhook | origem, endpoint, `received_at`, chave no R2, hash |
 | `webhook_events` | evento recebido | `event_id` (único), tipo, `item_id`, `processed_at` |
 | `sync_runs` | execução de sincronização | `item_id`, início, fim, contagens, erro |
-| `items` | conexão | `item_id`, instituição, status, `consent_expires_at`, último sync |
+| `items` | conexão | `item_id`, instituição, status, `consent_expires_at`, último sync, `replaced_by` (a conexão que a substituiu ao renovar) |
 | `consents` | consentimento | produtos, permissões, criado, expira, revogado |
-| `item_resources` | produto por conexão | produto, disponível |
-| `accounts` | conta | tipo, subtipo, número mascarado, moeda, limite |
+| `item_resources` | produto por conexão | produto, disponível, motivo |
+| `accounts` | conta | `id` próprio, `pluggy_id`, tipo, subtipo, final do número, moeda, limite |
 | `account_balance_snapshots` | conta por dia | saldo, limite disponível, data |
 | `transactions` | transação definitiva | `id` próprio, `pluggy_id`, `provider_id`, `provider_code`, data, valor, moeda, valor em reais, status, tipo, `operation_type`, descrição, conta, fatura, `deleted_at` |
 | `transaction_versions` | mudança numa transação | transação, versão anterior em JSON, `changed_at` |
@@ -84,11 +81,15 @@ Coleta (fase 1):
 | `investment_snapshots` | investimento por dia | saldo, valor bruto e líquido |
 | `investment_transactions` | aplicação ou resgate | investimento, data, valor, tipo |
 | `loans` | contrato | taxa, parcelas, saldo devedor |
-| `identity` | versão dos dados cadastrais | `collected_at` |
+| `identity` | versão dos dados cadastrais | hash, `collected_at`; linha nova só quando muda |
 | `scr_reports` | consulta ao SCR | `item_id`, `collected_at` |
+| `record_versions` | mudança em conta, fatura, investimento, empréstimo ou consentimento | tabela, registro, versão anterior em JSON, `changed_at` |
+| `pluggy_categories` | categoria do Pluggy | descrição, pai |
+| `job_runs` | tarefa do cron | última execução |
 
-Acesso (fase 1): `passkeys` (id da credencial, chave pública SPKI, criada, último uso) e `sessions`
-(hash do token, `created_at`, `expires_at`).
+Acesso (fase 1): `passkeys` (id da credencial, chave pública SPKI, contador de assinaturas, hash do
+token do aparelho, criada, último uso), `webauthn_challenges` (desafio de uso único, validade) e
+`sessions` (hash do token, passkey, `created_at`, `expires_at`).
 
 Classificação, orçamento e decisões (fases 2 a 4):
 
@@ -109,5 +110,9 @@ No código e no banco, caixinha é `bucket` (`value_buckets`).
 
 ## Migrações
 
-Arquivos SQL numerados em `migrations/`, aplicados com `wrangler d1 migrations apply` (ADR-006). Um
+Arquivos SQL numerados em `migrations/`, aplicados com `wrangler d1 migrations apply` (ADR-006) antes
+de cada deploy e de `npm run dev:api`; os testes aplicam os mesmos arquivos no `node:sqlite`. Um
 arquivo já aplicado em produção nunca é editado: a mudança vai no próximo número.
+
+O D1 não tem transação interativa: um caso de uso lê, decide e manda todas as escritas que precisam
+cair juntas num único `batch` da porta `Sql`.

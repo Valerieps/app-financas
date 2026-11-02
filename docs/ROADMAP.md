@@ -11,7 +11,6 @@ O que ainda não está pronto.
 
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
-| Trocar o Durable Object por D1 + R2 | 1 | `spec/cofre-de-dados.md` | ADR-006; primeira migration com as tabelas da coleta |
 | Login Google (Cloudflare Access) e digital | 1 | `spec/acesso.md` | ADR-007; substitui o PIN do template |
 | Cliente do Pluggy | 1 | `spec/cofre-de-dados.md` | API key sob demanda, páginas de 500, nova tentativa após 429 (ADR-008) |
 | Carga inicial e cadastro de conexões | 1 | `spec/cofre-de-dados.md` | |
@@ -33,11 +32,9 @@ O que ainda não está pronto.
 
 ## O código ainda não segue o spec
 
-- Acesso (`spec/acesso.md`) — o código ainda usa o PIN e o cookie de 180 dias do template (ADR-005).
-- Armazenamento (ADR-006) — o código ainda guarda tudo no Durable Object `AppObject`, com a conexão ao vivo.
-- Tela inicial — ainda é a tela de exemplo do template, com a tabela `items`.
-- Webhooks — o código ainda tem um só `/api/webhook` com `WEBHOOK_SECRET`; o spec pede
-  `/webhooks/pluggy`, `/webhooks/notification` e `/webhooks/telegram`, cada um com o seu segredo.
+- Acesso (`spec/acesso.md`) — o código ainda não confere o JWT do Access; até conferir, a API em
+  produção recusa tudo e só responde localmente, com `DEV_ACCESS_EMAIL`.
+- Tela Cofre — por enquanto só mostra quantas conexões existem.
 
 ## Adiado
 

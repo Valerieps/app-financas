@@ -9,6 +9,8 @@
 - **Use cases** stay in `server/application/`, on ports. The `Sql` port becomes asynchronous (D1 is async); tests still run on `node:sqlite` behind the same port. Writes that must be atomic go through `DB.batch`.
 - **No live WebSocket:** screens refetch when the app opens or regains focus. Real-time feedback goes through Telegram ([spec/telegram.md](../spec/telegram.md)).
 - **Nightly mirror:** a script on the owner's desktop runs `wrangler d1 export` and syncs R2 through its S3 API.
+- **Branch previews** get their own D1 (`sinal-verde-preview`) and R2 bucket (`sinal-verde-raw-preview`), set in the `previews` block of `wrangler.jsonc`, so a branch never writes to production data.
+- **Deploy:** the deploy command applies pending migrations first (`npx wrangler d1 migrations apply DB --remote && npx wrangler deploy`).
 - One Worker still serves the app, the API, the webhooks and the cron (ADR-004).
 
 **Why:** The owner chose to keep the spec's storage. D1 can be exported with standard tooling and read by other Workers through the data Worker; R2 keeps every byte the API returned, so anything can be reprocessed when the normalization changes. Volume is hundreds of transactions a month, inside the free plans.

@@ -1,6 +1,6 @@
-// Cloudflare Worker: the app's files, the API, the live WebSocket and the cron (ADR-004).
-// Secrets are not here: set WEBHOOK_SECRET with `npx wrangler secret put WEBHOOK_SECRET`,
-// and locally in .dev.vars (see .dev.vars.example).
+// Cloudflare Worker: the app's files, the API, the webhooks and the cron (ADR-004, ADR-006).
+// Secrets are not here: set them with `npx wrangler secret put <NAME>`, and locally in .dev.vars
+// (see .dev.vars.example).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "sinal-verde",
@@ -10,20 +10,22 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/webhooks/*"]
   },
-  "durable_objects": {
-    "bindings": [{ "name": "APP_STORAGE", "class_name": "AppObject" }]
-  },
-  // Never edit a shipped migration; add the next tag.
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AppObject"] }],
+  // Normalized tables; migrations in migrations/, applied with `wrangler d1 migrations apply DB`.
+  "d1_databases": [
+    { "binding": "DB", "database_name": "sinal-verde", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+  ],
+  // Raw archive: every Pluggy response and webhook body, before normalization.
+  "r2_buckets": [{ "binding": "RAW", "bucket_name": "sinal-verde-raw" }],
   // One cron for every time-based job; each job decides whether it is due (AppService.tick).
   "triggers": { "crons": ["*/5 * * * *"] },
-  // Branch previews (`wrangler preview`, ADR-004) refuse to deploy without this block.
+  // Branch previews (ADR-004) get their own database and bucket, never production's.
   "previews": {
-    "durable_objects": {
-      "bindings": [{ "name": "APP_STORAGE", "class_name": "AppObject" }]
-    }
+    "d1_databases": [
+      { "binding": "DB", "database_name": "sinal-verde-preview", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+    ],
+    "r2_buckets": [{ "binding": "RAW", "bucket_name": "sinal-verde-raw-preview" }]
   },
   "observability": { "enabled": true },
   "send_metrics": false

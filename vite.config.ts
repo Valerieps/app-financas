@@ -39,8 +39,8 @@ const port = process.env.PORT ? Number(process.env.PORT) : undefined;
 
 export default defineConfig({
   // In development the API runs apart (`npm run dev:api`, wrangler on 8787); Vite forwards /api
-  // to it, the live WebSocket included, and keeps the Host so cookies and origins match.
-  server: { port, proxy: { '/api': { target: 'http://localhost:8787', ws: true } } },
+  // to it and keeps the Host so cookies and origins match.
+  server: { port, proxy: { '/api': 'http://localhost:8787' } },
   // Absolute base: the Worker serves the app at the root and deep links like /membros need it.
   base: '/',
   plugins: [react(), contentSecurityPolicy()],

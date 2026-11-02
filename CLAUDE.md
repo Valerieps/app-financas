@@ -91,24 +91,25 @@ Each step rereads the whole conversation, so long sessions and back-and-forth co
 
 ## Architecture Overview
 - Clean Architecture + Domain Driven Design (DDD).
-- Web app (Vite + React) and backend in one Cloudflare Worker; normalized data in D1, raw payloads in R2; Cloudflare Access with Google sign-in plus a passkey lock. See `docs/ARQUITETURA.md`, ADR-004, ADR-006 and ADR-007. Until the first phase-1 PR lands, the code still has the template's Durable Object and PIN (`docs/ROADMAP.md`).
+- Web app (Vite + React) and backend in one Cloudflare Worker; normalized data in D1, raw payloads in R2; Cloudflare Access with Google sign-in plus a passkey lock. See `docs/ARQUITETURA.md`, ADR-004, ADR-006 and ADR-007.
 - The domain (`src/domain`) is shared: the server imports the same rules the app uses.
 
 ## Adding a feature
 1. Types in `src/application/api-contract.ts`: a query (read) or a command (write), and the `Topic` it changes.
 2. Rules in `src/domain/`, with tests.
-3. The use case in `server/application/` (check session; return `failure(...)` or `{ ok, value, changed }`), registered in `QUERIES` or `COMMANDS` of `app-service.ts`, with tests on `node:sqlite`.
-4. A new table or column: the next entry of `MIGRATIONS` in `schema.ts`, never an edit of a shipped one.
+3. The use case in `server/application/` (return `failure(...)` or `{ ok, value, changed }`; read first, then send every write in one `ctx.sql.batch`), registered in `QUERIES` or `COMMANDS` of `app-service.ts`, with tests on `node:sqlite`.
+4. A new table or column: the next numbered file in `migrations/` (`0002_*.sql`, ...), never an edit of a shipped one.
 5. The screen in `src/ui/screens/`, reading with `useQuery(name, input, topics)` and writing with `backend.command`; texts in `src/domain/strings.ts`.
 
 ## Project Layout
 - `src/domain` - entities and rules. Pure TypeScript, no framework imports. Shared with the server. `strings.ts` holds every UI text.
 - `src/application` - ports (interfaces the infrastructure implements) and `api-contract.ts`, the API's types.
-- `src/infrastructure` - the HTTP backend and the live socket; the only place in `src/` that may use the network.
+- `src/infrastructure` - the HTTP backend; the only place in `src/` that may use the network.
 - `src/ui` - React components. All colors, fonts and spacing live in `src/ui/theme/tokens.css`.
-- `server/application` - the server's use cases (`AppService`), synchronous, on the `Sql`/`Clock`/`IdGenerator` ports; `schema.ts` holds the migrations.
-- `server/infrastructure`, `server/entry` - Durable Object, Worker, cookies, crypto. `server/testing` - `node:sqlite` for tests.
-- `wrangler.jsonc` - the Worker: assets, Durable Object, cron. Secrets via `wrangler secret put`; locally in `.dev.vars` (see `.dev.vars.example`).
+- `server/application` - the server's use cases (`AppService`), asynchronous, on the `Sql`/`RawStore`/`Clock`/`IdGenerator` ports.
+- `migrations/` - the D1 schema, numbered SQL files applied by `wrangler d1 migrations apply`.
+- `server/infrastructure`, `server/entry` - Worker, D1, R2, Access, cookies, crypto. `server/testing` - `node:sqlite` (with `migrations/` applied) and memory ports for tests.
+- `wrangler.jsonc` - the Worker: assets, D1 (`DB`), R2 (`RAW`), their preview copies, cron. Secrets via `wrangler secret put`; locally in `.dev.vars` (see `.dev.vars.example`).
 - `public/` - static files: manifest, icons, `_headers`.
 - `network-policy.ts` - the servers the app (`ALLOWED_ORIGINS`, `IMAGE_ORIGINS`) and the Worker (`SERVER_ORIGINS`) may talk to.
 - `scripts/` - `check-docs.mjs` (run by CI) and `setup-repo.mjs` (once per new repository).
@@ -116,16 +117,16 @@ Each step rereads the whole conversation, so long sessions and back-and-forth co
 ## Commands
 - `npm ci` - install exactly what the lockfile pins
 - `npm run dev` - Vite dev server (no CSP); proxies `/api` to `npm run dev:api`
-- `npm run dev:api` - the Worker locally (wrangler, port 8787); needs `.dev.vars` and a `dist/` (run `npm run build` once)
+- `npm run dev:api` - applies the migrations to the local D1, then runs the Worker locally (wrangler, port 8787); needs `.dev.vars` and a `dist/` (run `npm run build` once)
 - `npm test` - unit tests, including `src/security.test.ts`
 - `npm run build` - typecheck, unit tests, production build into `dist/` (CSP injected) and a Worker bundle dry run; a failing test stops the deploy
 - `npm run preview` - serve the built app and the Worker together, as in production
-- `npm run deploy` - deploy the Worker (normally Workers Builds does it from `main`)
+- `npm run deploy` - apply pending D1 migrations and deploy the Worker (normally Workers Builds does it from `main`)
 - `npm run docs:check` - broken links between docs, ADRs without a status, repeated ADR numbers
 
 ## Deployment
 Cloudflare Workers Builds, from the GitHub repository. Build command `npm run build`, deploy
-command `npx wrangler deploy` for `main`; other branches get a preview version (ADR-004). Cloudflare
+command `npx wrangler d1 migrations apply DB --remote && npx wrangler deploy` for `main`; other branches get a preview version (ADR-004). Cloudflare
 Access protects production; locally, `DEV_ACCESS_EMAIL` in `.dev.vars` stands in for it (ADR-007). GitHub Actions (`.github/workflows/ci.yml`) runs the same build and the docs check on every
 pull request. Branch protection on `main` requires the `build` check and a branch up to date with
 `main` (ADR-003): wait with `gh pr checks <n> --watch`, and if the merge is refused because the
