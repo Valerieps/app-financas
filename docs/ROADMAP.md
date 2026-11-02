@@ -11,8 +11,6 @@ O que ainda não está pronto.
 
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
-| Espelho noturno no desktop | 1 | `spec/cofre-de-dados.md` | Script de `wrangler d1 export` + sync do R2 |
-| Tela Cofre | 1 | `spec/cofre-de-dados.md` | Substitui a tela de exemplo do template |
 | Notificações do MacroDroid e gastos provisórios | 2 | `spec/gastos-provisorios.md` | |
 | Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
 | Categoria, caixinha, regras e Gemini | 2 | `spec/classificacao.md` | |
@@ -27,7 +25,7 @@ O que ainda não está pronto.
 
 ## O código ainda não segue o spec
 
-- Tela Cofre — por enquanto só mostra quantas conexões existem.
+(Nada: o código segue o spec da fase 1)
 
 ## Adiado
 

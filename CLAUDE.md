@@ -112,7 +112,7 @@ Each step rereads the whole conversation, so long sessions and back-and-forth co
 - `wrangler.jsonc` - the Worker: assets, D1 (`DB`), R2 (`RAW`), their preview copies, cron. Secrets via `wrangler secret put`; locally in `.dev.vars` (see `.dev.vars.example`).
 - `public/` - static files: manifest, icons, `_headers`.
 - `network-policy.ts` - the servers the app (`ALLOWED_ORIGINS`, `IMAGE_ORIGINS`) and the Worker (`SERVER_ORIGINS`) may talk to.
-- `scripts/` - `check-docs.mjs` (run by CI), `setup-repo.mjs` (once per new repository) and `pluggy-webhook.mjs` (registers the Pluggy webhook with its secret header).
+- `scripts/` - `check-docs.mjs` (run by CI), `setup-repo.mjs` (once per new repository) `pluggy-webhook.mjs` (registers the Pluggy webhook with its secret header) and `espelho.mjs` (the nightly mirror on the owner's desktop).
 
 ## Commands
 - `npm ci` - install exactly what the lockfile pins

@@ -1,8 +1,33 @@
 // The contract between the app and the server: query and command names, inputs and outputs.
 // Types only. The server imports it with `import type`, so nothing here runs on either side.
 
+/** One connection on the Cofre screen (docs/spec/cofre-de-dados.md, "Tela Cofre"). */
+export interface ConnectionView {
+  readonly itemId: string;
+  readonly institution: string | null;
+  /** Pluggy's status (UPDATED, LOGIN_ERROR, ...); null until the first read. */
+  readonly status: string | null;
+  readonly errorCode: string | null;
+  readonly errorMessage: string | null;
+  /** The app's last complete read; null while the first load has not finished. */
+  readonly lastSyncedAt: string | null;
+  readonly consentExpiresAt: string | null;
+  readonly replacedBy: string | null;
+  /** The last read that failed after the last one that worked, if any. */
+  readonly lastError: { readonly at: string; readonly message: string } | null;
+  readonly counts: {
+    readonly accounts: number;
+    readonly transactions: number;
+    readonly deletedTransactions: number;
+    readonly bills: number;
+    readonly investments: number;
+  };
+  /** Products the bank did not share (or Pluggy did not release). */
+  readonly unavailable: readonly string[];
+}
+
 export interface VaultView {
-  readonly connectionCount: number;
+  readonly connections: readonly ConnectionView[];
 }
 
 /** A device with a passkey asks for it after an hour without use (docs/spec/acesso.md). */

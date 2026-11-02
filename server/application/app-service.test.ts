@@ -12,7 +12,7 @@ function createService() {
 const NOW = '2026-11-02T12:00:00Z';
 
 describe('AppService', () => {
-  it('counts the current connections, leaving replaced ones out', async () => {
+  it('lists current connections first, then replaced ones', async () => {
     const { service, sql } = createService();
     await sql.batch([
       statement('INSERT INTO items (item_id, registered_at, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?)', 'new', NOW, NOW, NOW),
@@ -25,7 +25,11 @@ describe('AppService', () => {
         NOW,
       ),
     ]);
-    expect(await service.query('vault', {}, NO_CALLER)).toEqual({ ok: true, value: { connectionCount: 1 } });
+    const result = await service.query('vault', {}, NO_CALLER);
+    expect(result.ok && (result.value as { connections: { itemId: string; replacedBy: string | null }[] }).connections.map((c) => [c.itemId, c.replacedBy])).toEqual([
+      ['new', null],
+      ['old', 'new'],
+    ]);
   });
 
   it('answers not_found for unknown queries and commands', async () => {
