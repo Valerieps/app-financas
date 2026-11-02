@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, matchKeys, numberSuffix, saoPauloDate, saoPauloHour, toCents } from './vault';
+import { addDays, daysUntil, matchKeys, numberSuffix, saoPauloDate, saoPauloHour, toCents } from './vault';
 
 describe('vault rules', () => {
   it('turns decimal money into integer cents without float drift', () => {
@@ -30,5 +30,14 @@ describe('vault rules', () => {
     expect(keys.get(a)).toBe('p:X1');
     expect(keys.get(b)).toBe('f:2026-10-01|1000|CAFÉ DA ESQUINA|0');
     expect(keys.get(c)).toBe('f:2026-10-01|1000|CAFÉ DA ESQUINA|1');
+  });
+});
+
+describe('daysUntil', () => {
+  it('counts calendar days in Brasília', () => {
+    const now = new Date('2026-11-02T23:00:00Z'); // 20h of 2 Nov in Brasília
+    expect(daysUntil(now, '2026-11-03T02:00:00Z')).toBe(0); // 23h of 2 Nov
+    expect(daysUntil(now, '2026-11-03T03:00:00Z')).toBe(1);
+    expect(daysUntil(now, '2026-11-01T12:00:00Z')).toBe(-1);
   });
 });

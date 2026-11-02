@@ -18,6 +18,12 @@ export function saoPauloHour(instant: Date): number {
   return Number(new Intl.DateTimeFormat('en-GB', { timeZone: TIME_ZONE, hour: '2-digit', hourCycle: 'h23' }).format(instant));
 }
 
+/** Whole days from today to an instant's day, both in Brasília (negative once it has passed). */
+export function daysUntil(now: Date, instant: string): number {
+  const day = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
+  return Math.round((day(saoPauloDate(new Date(instant))) - day(saoPauloDate(now))) / 86_400_000);
+}
+
 /** Shifts a yyyy-mm-dd day by whole days. */
 export function addDays(day: string, days: number): string {
   const date = new Date(`${day}T12:00:00Z`);

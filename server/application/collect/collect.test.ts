@@ -169,7 +169,13 @@ describe('one transaction, one record', () => {
       { item_id: ITEM_ID, replaced_by: RENEWED_ITEM_ID },
       { item_id: RENEWED_ITEM_ID, replaced_by: null },
     ]);
-    expect(await service.query('vault', {}, NO_CALLER)).toEqual({ ok: true, value: { connectionCount: 1 } });
+    const view = await service.query('vault', {}, NO_CALLER);
+    expect(view.ok && view.value).toMatchObject({
+      connections: [
+        { itemId: RENEWED_ITEM_ID, replacedBy: null, counts: { accounts: 2, transactions: 3, deletedTransactions: 0 } },
+        { itemId: ITEM_ID, replacedBy: RENEWED_ITEM_ID, counts: { accounts: 0, transactions: 0 } },
+      ],
+    });
   });
 });
 
@@ -222,5 +228,44 @@ describe('the Pluggy webhook', () => {
     expect(received.status).toBe('new');
     await processEvent(ctx, 'evt-3');
     expect(await ctx.sql.all("SELECT processed_at IS NOT NULL AS done FROM webhook_events")).toEqual([{ done: 1 }]);
+  });
+});
+
+describe('the Cofre view', () => {
+  it('shows status, consent expiry, counts and what the bank did not share', async () => {
+    const { ctx } = await registered();
+    const view = await new AppService(ctx).query('vault', {}, NO_CALLER);
+    expect(view).toEqual({
+      ok: true,
+      value: {
+        connections: [
+          {
+            itemId: ITEM_ID,
+            institution: 'Banco Exemplo',
+            status: 'UPDATED',
+            errorCode: null,
+            errorMessage: null,
+            lastSyncedAt: '2026-11-02T12:00:00.000Z',
+            consentExpiresAt: '2027-10-01T00:00:00.000Z',
+            replacedBy: null,
+            lastError: null,
+            counts: { accounts: 2, transactions: 3, deletedTransactions: 0, bills: 1, investments: 1 },
+            unavailable: ['loans', 'scr'],
+          },
+        ],
+      },
+    });
+  });
+
+  it('shows the last failed read until one works', async () => {
+    const { ctx, pluggy, clock } = await registered();
+    pluggy.routes['/accounts'] = { status: 503, body: '{}' };
+    clock.set('2026-11-02T13:00:00Z');
+    await syncItem(ctx, ITEM_ID, 'webhook');
+    const view = await new AppService(ctx).query('vault', {}, NO_CALLER);
+    expect(view.ok && (view.value as { connections: { lastError: unknown }[] }).connections[0].lastError).toEqual({
+      at: '2026-11-02T13:00:00.000Z',
+      message: 'Pluggy accounts answered 503',
+    });
   });
 });
