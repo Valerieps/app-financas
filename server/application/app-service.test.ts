@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { fixedClock, memoryRawStore, memorySql, sequentialIds } from '../testing/node-sql';
 import { statement } from './ports';
 import { AppService } from './app-service';
+import { NO_CALLER } from './lock';
 
 function createService() {
   const sql = memorySql();
@@ -25,13 +26,13 @@ describe('AppService', () => {
         NOW,
       ),
     ]);
-    expect(await service.query('vault', {})).toEqual({ ok: true, value: { connectionCount: 1 } });
+    expect(await service.query('vault', {}, NO_CALLER)).toEqual({ ok: true, value: { connectionCount: 1 } });
   });
 
   it('answers not_found for unknown queries and commands', async () => {
     const { service } = createService();
-    expect(await service.query('constructor', {})).toEqual({ ok: false, error: 'not_found' });
-    expect(await service.command('item.create', {})).toEqual({ ok: false, error: 'not_found' });
+    expect(await service.query('constructor', {}, NO_CALLER)).toEqual({ ok: false, error: 'not_found' });
+    expect(await service.command('item.create', {}, NO_CALLER)).toEqual({ ok: false, error: 'not_found' });
   });
 });
 

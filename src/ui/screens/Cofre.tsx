@@ -1,8 +1,9 @@
 import { strings } from '../../domain/strings';
 import { useQuery } from '../use-query';
+import { Aparelhos } from './Aparelhos';
 
 // The vault screen (docs/spec/cofre-de-dados.md). For now it only says how many connections exist.
-export function Cofre() {
+export function Cofre({ onPasskeysChanged }: { onPasskeysChanged: () => void }) {
   const vault = useQuery('vault', {}, ['vault']);
 
   return (
@@ -25,6 +26,7 @@ export function Cofre() {
         </p>
       )}
       {vault.data && <p className="badge">{strings.cofre.connections(vault.data.connectionCount)}</p>}
+      <Aparelhos onChanged={onPasskeysChanged} />
     </section>
   );
 }
