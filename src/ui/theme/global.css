@@ -164,3 +164,82 @@ button:disabled {
   border: 1px solid var(--color-border);
   font-size: 0.85rem;
 }
+
+/* The Cofre calendar: a dot per day with the day's transactions. */
+.calendar-hint {
+  margin: 0;
+  font-size: var(--font-size-small);
+}
+
+.calendar-accounts,
+.calendar-nav {
+  margin-bottom: 0;
+  flex-wrap: wrap;
+}
+
+.calendar-month {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-1);
+  justify-items: center;
+}
+
+.calendar-weekday,
+.calendar-date {
+  font-size: var(--font-size-small);
+}
+
+.calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.calendar-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-dot);
+  height: var(--size-dot);
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+.calendar-dot.calendar-dot--some {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: var(--color-on-brand);
+}
+
+.calendar-dot.calendar-dot--missing {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-on-danger);
+}
+
+.calendar-dot.calendar-dot--confirmed {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.calendar-dot.calendar-dot--outside {
+  border-style: dashed;
+  background: transparent;
+}
+
+.calendar-dot[aria-pressed='true'] {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+.calendar-confirm {
+  margin-bottom: 0;
+}

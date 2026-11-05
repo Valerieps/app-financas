@@ -30,6 +30,24 @@ export interface VaultView {
   readonly connections: readonly ConnectionView[];
 }
 
+/** One account on the Cofre calendar: transactions per Brasília day and the empty days confirmed. */
+export interface CalendarAccountView {
+  readonly id: string;
+  readonly name: string | null;
+  /** Pluggy's account type: BANK or CREDIT. */
+  readonly type: string | null;
+  /** Transactions per day (yyyy-mm-dd); a day with none is absent. */
+  readonly counts: Readonly<Record<string, number>>;
+  readonly confirmedEmpty: readonly string[];
+}
+
+/** The last 12 months of one connection, day by day (docs/spec/cofre-de-dados.md, "Tela Cofre"). */
+export interface CalendarView {
+  readonly from: string;
+  readonly to: string;
+  readonly accounts: readonly CalendarAccountView[];
+}
+
 /** A device with a passkey asks for it after an hour without use (docs/spec/acesso.md). */
 export interface LockStatusView {
   readonly deviceHasPasskey: boolean;
@@ -76,6 +94,7 @@ export interface UnlockInput {
 export interface Queries {
   vault: { input: Record<string, never>; output: VaultView };
   passkeys: { input: Record<string, never>; output: PasskeyView[] };
+  calendar: { input: { itemId: string }; output: CalendarView };
 }
 
 /** Writes: `POST /api/command/<name>`. Each sends its writes in one atomic batch. */
@@ -83,6 +102,8 @@ export interface Commands {
   'passkey.delete': { input: { id: string }; output: null };
   /** Registers a connection by the itemId copied from the Pluggy Dashboard; the first load runs after. */
   'connection.add': { input: { itemId: string }; output: { itemId: string } };
+  /** Confirms (or, with `confirmed: false`, undoes) that an account had no transaction that day. */
+  'day.confirmEmpty': { input: { accountId: string; day: string; confirmed: boolean }; output: null };
 }
 
 export type QueryName = keyof Queries;

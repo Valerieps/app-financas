@@ -5,6 +5,7 @@ import { daysUntil } from '../../domain/vault';
 import { useServices } from '../backend-context';
 import { useQuery } from '../use-query';
 import { Aparelhos } from './Aparelhos';
+import { CofreCalendar } from './CofreCalendar';
 
 const text = strings.cofre;
 const dateTime = (iso: string) =>
@@ -84,6 +85,7 @@ function Connection({ connection }: { connection: ConnectionView }) {
           {text.notShared}: {connection.unavailable.map((product) => text.products[product] ?? product).join(', ')}
         </p>
       )}
+      <CofreCalendar itemId={connection.itemId} />
       <small className="muted">itemId {connection.itemId}</small>
     </article>
   );
