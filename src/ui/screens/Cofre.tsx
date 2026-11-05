@@ -6,6 +6,7 @@ import { useServices } from '../backend-context';
 import { useQuery } from '../use-query';
 import { Aparelhos } from './Aparelhos';
 import { CofreCalendar } from './CofreCalendar';
+import { Provisorios } from './Provisorios';
 
 const text = strings.cofre;
 const dateTime = (iso: string) =>
@@ -40,6 +41,7 @@ export function Cofre({ onPasskeysChanged }: { onPasskeysChanged: () => void }) 
       {connections.map((connection) => (
         <Connection key={connection.itemId} connection={connection} />
       ))}
+      <Provisorios />
       <AddConnection />
       <Aparelhos onChanged={onPasskeysChanged} />
     </section>
