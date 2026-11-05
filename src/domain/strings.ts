@@ -60,7 +60,8 @@ export const strings = {
       field: 'itemId',
       submit: 'Cadastrar',
       invalid: 'Esse itemId não tem o formato certo.',
-      notFound: 'O Pluggy não conhece esse itemId.',
+      // Keyed by the API error code (ApiError), so the Cofre form can look the message up directly.
+      not_found: 'O Pluggy não conhece esse itemId.',
       conflict: 'Essa conexão já está cadastrada.',
       unavailable: 'O Pluggy não respondeu. Tenta de novo daqui a pouco?',
     },
