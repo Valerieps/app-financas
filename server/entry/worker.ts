@@ -2,6 +2,7 @@
 import type { ApiError } from '../../src/application/api-contract';
 import { AppService } from '../application/app-service';
 import { processEvent, receivePluggyWebhook } from '../application/collect/webhooks';
+import { receiveNotification } from '../application/notifications';
 import type { Context } from '../application/context';
 import * as lockService from '../application/lock';
 import type { Caller } from '../application/lock';
@@ -74,6 +75,21 @@ async function pluggyWebhook(request: Request, env: Env, ctx: Context): Promise<
   if (received.status === 'invalid') return error('invalid');
   if (received.status === 'new') ctx.background(processEvent(ctx, received.eventId));
   return json({ ok: true });
+}
+
+/**
+ * /webhooks/notification: MacroDroid on the phone, with `Authorization: Bearer <secret>` (Access
+ * bypasses this path). The raw body goes to R2 first; a body that is not a notification is kept
+ * and refused.
+ */
+async function notificationWebhook(request: Request, env: Env, ctx: Context): Promise<Response> {
+  if (request.method !== 'POST') return error('not_found');
+  const secret = /^Bearer (.+)$/.exec(request.headers.get('Authorization') ?? '')?.[1] ?? '';
+  if (!env.NOTIFICATION_WEBHOOK_SECRET || !constantTimeEqual(secret, env.NOTIFICATION_WEBHOOK_SECRET)) return error('unauthenticated');
+  const body = await request.text();
+  if (new TextEncoder().encode(body).length > MAX_WEBHOOK_BYTES) return error('invalid');
+  const received = await receiveNotification(ctx, body);
+  return received === 'invalid' ? error('invalid') : json({ ok: true, result: received });
 }
 
 /** In-app requests must come from the app's own pages. */
@@ -165,6 +181,7 @@ export default {
     const url = new URL(request.url);
     const ctx = () => context(env, (task) => executionContext.waitUntil(task));
     if (url.pathname === '/webhooks/pluggy') return pluggyWebhook(request, env, ctx());
+    if (url.pathname === '/webhooks/notification') return notificationWebhook(request, env, ctx());
     if (url.pathname.startsWith('/webhooks/')) return error('not_found');
     if (url.pathname.startsWith('/api/')) return api(request, env, url, ctx());
     return env.ASSETS.fetch(request);

@@ -48,6 +48,23 @@ export interface CalendarView {
   readonly accounts: readonly CalendarAccountView[];
 }
 
+/** A provisional expense on the Cofre list (docs/spec/gastos-provisorios.md). */
+export interface ProvisionalExpenseView {
+  readonly id: string;
+  readonly source: 'nubank' | 'wise' | 'flash' | 'swile' | 'caju' | 'outra';
+  /** Card purchase or Pix/transfer sent. */
+  readonly kind: 'card' | 'pix';
+  /** Null while unreadable. */
+  readonly amountCents: number | null;
+  readonly currency: string | null;
+  readonly merchant: string | null;
+  /** When the phone showed it (or when it arrived). */
+  readonly at: string;
+  readonly status: 'provisional' | 'unreadable';
+  /** The notification's text, only when unreadable, so I see what the app could not read. */
+  readonly text: string | null;
+}
+
 /** A device with a passkey asks for it after an hour without use (docs/spec/acesso.md). */
 export interface LockStatusView {
   readonly deviceHasPasskey: boolean;
@@ -95,6 +112,7 @@ export interface Queries {
   vault: { input: Record<string, never>; output: VaultView };
   passkeys: { input: Record<string, never>; output: PasskeyView[] };
   calendar: { input: { itemId: string }; output: CalendarView };
+  provisionalExpenses: { input: Record<string, never>; output: ProvisionalExpenseView[] };
 }
 
 /** Writes: `POST /api/command/<name>`. Each sends its writes in one atomic batch. */

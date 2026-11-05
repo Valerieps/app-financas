@@ -83,6 +83,17 @@ export const strings = {
     },
   },
 
+  provisorios: {
+    title: 'Gastos provisórios',
+    subtitle: 'O que as notificações do celular registraram e o Pluggy ainda não confirmou.',
+    empty: 'Nenhuma notificação de gasto chegou ainda.',
+    badge: 'provisório',
+    unreadable: 'Notificação não lida',
+    unreadableBadge: 'não lida',
+    kinds: { card: 'Compra no cartão', pix: 'Pix ou transferência' },
+    sources: { nubank: 'Nubank', wise: 'Wise', flash: 'Flash', swile: 'Swile', caju: 'Caju', outra: 'Outro app' },
+  },
+
   aparelhos: {
     title: 'Aparelhos',
     subtitle: 'Num aparelho com a digital cadastrada, o app pede a digital depois de 1 hora sem uso.',
