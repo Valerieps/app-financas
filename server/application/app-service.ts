@@ -2,6 +2,7 @@
 // then calls it.
 import type { ApiResult, CommandName, Commands, PasskeyView, Queries, QueryName } from '../../src/application/api-contract';
 import { failure, QueryError, type CommandResult, type Context } from './context';
+import { calendar, confirmEmptyDay } from './calendar';
 import { addConnection } from './collect/connections';
 import { runSweeps } from './collect/sync';
 import { vault } from './collect/vault';
@@ -41,8 +42,9 @@ function asInput(raw: unknown): Input {
   return raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Input) : {};
 }
 
-const QUERIES: { [N in QueryName]: Handler<Queries[N]['output']> } = {
+const QUERIES: { [N in QueryName]: Handler<Queries[N]['output'] | QueryError> } = {
   vault: async (ctx) => vault(ctx),
+  calendar: async (ctx, input) => calendar(ctx, input.itemId),
   passkeys: async (ctx, _input, caller) => {
     const rows = await ctx.sql.all<Omit<PasskeyView, 'thisDevice'> & { device: string }>(
       'SELECT id, label, created_at AS createdAt, last_used_at AS lastUsedAt, device_token_hash AS device FROM passkeys ORDER BY created_at',
@@ -60,4 +62,5 @@ const COMMANDS: { [N in CommandName]: Handler<CommandResult<Commands[N]['output'
     return { ok: true, value: null, changed: ['passkeys'] };
   },
   'connection.add': async (ctx, input) => addConnection(ctx, input.itemId),
+  'day.confirmEmpty': async (ctx, input) => confirmEmptyDay(ctx, input),
 };

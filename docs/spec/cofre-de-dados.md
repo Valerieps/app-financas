@@ -82,6 +82,13 @@ Fora do escopo: pagamentos, Pix Automático, boletos e Smart Transfers.
 - Eu vejo quantas transações, contas, faturas e investimentos estão guardados por conexão, e o que o
   banco não compartilhou. *(1)*
   Por quê: é assim que eu confiro os 7 dias de sync sem perda contra o app do Nubank.
+- Eu vejo, para cada conta da conexão (a corrente e o cartão, separados), um calendário dos últimos
+  12 meses, um mês por vez, que eu troco com setinhas. Cada dia é uma bolinha com a quantidade de
+  transações daquele dia. *(1)*
+  Por quê: assim eu confiro dia a dia contra o extrato e a fatura do Nubank e acho o dia que falta.
+- Um dia sem nenhuma transação fica com a bolinha vermelha, até eu confirmar que zero é o certo
+  naquele dia; depois de confirmado, a bolinha fica neutra. Eu posso desfazer a confirmação. *(1)*
+- O dia de uma transação é o dia em Brasília. *(1)*
 
 ## Saúde das conexões
 

@@ -93,6 +93,7 @@ Coleta (fase 1):
 | `record_versions` | mudança em conta, fatura, investimento, empréstimo ou consentimento | tabela, registro, versão anterior em JSON, `changed_at` |
 | `pluggy_categories` | categoria do Pluggy | descrição, pai |
 | `job_runs` | tarefa do cron | última execução |
+| `confirmed_empty_days` | conta e dia sem transação que eu confirmei | conta, dia em Brasília, `confirmed_at` |
 
 Acesso (fase 1): `passkeys` (id da credencial, chave pública SPKI, contador de assinaturas, hash do
 token do aparelho, criada, último uso), `webauthn_challenges` (desafio de uso único, validade) e
