@@ -88,6 +88,11 @@
   --size-search: 240px;
   --size-month-label: 128px;
   --size-dialog: 560px;
+  /* Lançamentos: a filter button's widest, and its list of choices */
+  --size-filter-button: 280px;
+  --size-filter-menu-min: 220px;
+  --size-filter-menu-max: 360px;
+  --size-filter-menu-height: 320px;
   /* Gráficos: the label and value columns of a bar row, a bar's thickness, the column chart's height */
   --size-chart-label: 120px;
   --size-chart-value: 96px;

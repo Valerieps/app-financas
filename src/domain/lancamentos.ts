@@ -92,3 +92,71 @@ export function dayCell(day: string, today: string, words: { today: string; yest
   if (day === addDays(today, -1)) return words.yesterday;
   return shortDay(day);
 }
+
+/** The column the list is sorted by, as the URL carries it (`?ordem=valor&sentido=asc`). */
+export type SortColumn = 'data' | 'descricao' | 'categoria' | 'valor';
+export type SortDirection = 'asc' | 'desc';
+export interface Sort {
+  readonly column: SortColumn;
+  readonly direction: SortDirection;
+}
+
+/** Each column's first direction: newest day and biggest value first, text from A to Z. */
+const FIRST_DIRECTION: Record<SortColumn, SortDirection> = { data: 'desc', descricao: 'asc', categoria: 'asc', valor: 'desc' };
+
+export const DEFAULT_SORT: Sort = { column: 'data', direction: 'desc' };
+
+export function parseSort(column: string | null, direction: string | null): Sort {
+  const c: SortColumn = column === 'descricao' || column === 'categoria' || column === 'valor' ? column : 'data';
+  const d: SortDirection = direction === 'asc' || direction === 'desc' ? direction : FIRST_DIRECTION[c];
+  return { column: c, direction: d };
+}
+
+/** The sort after a click on `column`: the same column flips, another starts in its first direction. */
+export function nextSort(current: Sort, column: SortColumn): Sort {
+  if (current.column === column) return { column, direction: current.direction === 'asc' ? 'desc' : 'asc' };
+  return { column, direction: FIRST_DIRECTION[column] };
+}
+
+/** The URL parameters of a sort; the default leaves them out. */
+export function sortParams(sort: Sort): { ordem: string | null; sentido: string | null } {
+  if (sort.column === DEFAULT_SORT.column && sort.direction === DEFAULT_SORT.direction) return { ordem: null, sentido: null };
+  return { ordem: sort.column === 'data' ? null : sort.column, sentido: sort.direction === FIRST_DIRECTION[sort.column] ? null : sort.direction };
+}
+
+interface Sortable {
+  readonly day: string;
+  readonly description: string | null;
+  readonly category: string | null;
+  readonly amountCents: number;
+}
+
+const collator = new Intl.Collator('pt-BR', { sensitivity: 'base', numeric: true });
+
+/**
+ * Items sorted by a column. Empty text goes last in either direction; ties keep the newest day first,
+ * then the order they came in. Value is the amount, money in or out alike.
+ */
+export function sortLancamentos<T extends Sortable>(items: readonly T[], sort: Sort): T[] {
+  const sign = sort.direction === 'asc' ? 1 : -1;
+  const text = (a: string | null, b: string | null) => {
+    if (!a || !b) return a ? -1 : b ? 1 : 0;
+    return sign * collator.compare(a, b);
+  };
+  const compare = (a: T, b: T): number => {
+    switch (sort.column) {
+      case 'data':
+        return sign * a.day.localeCompare(b.day);
+      case 'descricao':
+        return text(a.description, b.description);
+      case 'categoria':
+        return text(a.category, b.category);
+      case 'valor':
+        return sign * (a.amountCents - b.amountCents);
+    }
+  };
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => compare(a.item, b.item) || b.item.day.localeCompare(a.item.day) || a.index - b.index)
+    .map(({ item }) => item);
+}
