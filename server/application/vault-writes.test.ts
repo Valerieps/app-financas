@@ -36,8 +36,8 @@ const VAULT_TABLES = [
   'pluggy_categories',
 ];
 
-/** Everything else: access, cron bookkeeping and my own decisions. */
-const OTHER_TABLES = ['job_runs', 'passkeys', 'webauthn_challenges', 'sessions', 'confirmed_empty_days'];
+/** Everything else: access, cron bookkeeping, phone notifications and my own decisions. */
+const OTHER_TABLES = ['job_runs', 'passkeys', 'webauthn_challenges', 'sessions', 'confirmed_empty_days', 'provisional_expenses'];
 
 /** The only folder whose code may write the vault. */
 const COLLECTION = 'server/application/collect/';
