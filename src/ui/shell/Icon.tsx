@@ -32,6 +32,12 @@ const PATHS: Record<string, ReactNode> = {
   ),
   previous: <path d="m15 6-6 6 6 6" />,
   next: <path d="m9 6 6 6-6 6" />,
+  sidebar: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16" />
+    </>
+  ),
   close: <path d="M6 6l12 12M18 6 6 18" />,
   search: (
     <>

@@ -1,12 +1,22 @@
 // The desktop window (docs/rascunhos/arquitetura-desktop.md, "Esqueleto da janela"): the sidebar
 // with the Livre do dia, the header with where I am and the month, the module's tabs, the content,
 // and the detail panel on the right, which closes with Esc.
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { monthKey, shiftMonth, type Month } from '../../domain/month';
 import { strings } from '../../domain/strings';
 import { Link, navigate } from '../router';
 import { Icon } from './Icon';
 import { keyAction } from './keys';
+import {
+  clampSidebarWidth,
+  loadSidebarState,
+  saveSidebarState,
+  SIDEBAR_DEFAULT,
+  SIDEBAR_MAX,
+  SIDEBAR_MIN,
+  SIDEBAR_STEP,
+  type SidebarState,
+} from './sidebarState';
 import {
   FINANCAS_TABS,
   MODULES,
@@ -61,9 +71,26 @@ export function Shell({
     return () => window.removeEventListener('keydown', onKey);
   }, [searchOpen, parent, query]);
 
+  const [sidebar, setSidebar] = useState(loadSidebarState);
+  const update = (next: SidebarState) => {
+    setSidebar(next);
+    saveSidebarState(next);
+  };
+  const narrow = useNarrow();
+  const collapsed = narrow || sidebar.collapsed;
+  const style = collapsed ? undefined : ({ '--sidebar-width': `${sidebar.width}px` } as CSSProperties);
+
   return (
-    <div className={`shell${parent ? ' shell--panel' : ''}`}>
-      <Sidebar route={route} monthParam={monthParam} />
+    <div className={`shell${parent ? ' shell--panel' : ''}${collapsed ? ' shell--collapsed' : ''}`} style={style}>
+      <Sidebar
+        route={route}
+        monthParam={monthParam}
+        collapsed={collapsed}
+        canToggle={!narrow}
+        width={sidebar.width}
+        onToggle={() => update({ ...sidebar, collapsed: !sidebar.collapsed })}
+        onResize={(width) => update({ collapsed: false, width: clampSidebarWidth(width) })}
+      />
       <div className="shell-main">
         <Header route={route} path={path} search={search} month={month} onSearch={() => setSearchOpen(true)} />
         {route.module === 'financas' && <FinancasTabs active={route.tab} monthParam={monthParam} />}
@@ -75,7 +102,75 @@ export function Shell({
   );
 }
 
-function Sidebar({ route, monthParam }: { route: Route; monthParam: string | null }) {
+/** Below 1024px the sidebar is always icons only (the same width as the CSS media query). */
+function useNarrow(): boolean {
+  const query = '(max-width: 1023px)';
+  const [narrow, setNarrow] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const list = window.matchMedia(query);
+    const onChange = () => setNarrow(list.matches);
+    list.addEventListener('change', onChange);
+    return () => list.removeEventListener('change', onChange);
+  }, []);
+  return narrow;
+}
+
+function ResizeHandle({ width, onResize }: { width: number; onResize: (width: number) => void }) {
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const handle = event.currentTarget;
+    handle.setPointerCapture(event.pointerId);
+    const left = handle.parentElement?.getBoundingClientRect().left ?? 0;
+    const move = (e: PointerEvent) => onResize(e.clientX - left);
+    const stop = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', stop);
+      handle.removeEventListener('pointercancel', stop);
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', stop);
+    handle.addEventListener('pointercancel', stop);
+  };
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'ArrowLeft') onResize(width - SIDEBAR_STEP);
+    else if (event.key === 'ArrowRight') onResize(width + SIDEBAR_STEP);
+    else return;
+    event.preventDefault();
+  };
+  return (
+    <div
+      className="sidebar-resize"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={strings.shell.sidebar.resize}
+      aria-valuemin={SIDEBAR_MIN}
+      aria-valuemax={SIDEBAR_MAX}
+      aria-valuenow={width}
+      tabIndex={0}
+      onPointerDown={onPointerDown}
+      onKeyDown={onKeyDown}
+      onDoubleClick={() => onResize(SIDEBAR_DEFAULT)}
+    />
+  );
+}
+
+function Sidebar({
+  route,
+  monthParam,
+  collapsed,
+  canToggle,
+  width,
+  onToggle,
+  onResize,
+}: {
+  route: Route;
+  monthParam: string | null;
+  collapsed: boolean;
+  canToggle: boolean;
+  width: number;
+  onToggle: () => void;
+  onResize: (width: number) => void;
+}) {
   const item = (module: ModuleId) => {
     const current = route.module === module;
     const label = strings.shell.modules[module];
@@ -97,6 +192,18 @@ function Sidebar({ route, monthParam }: { route: Route; monthParam: string | nul
       <div className="sidebar-brand">
         <span className="brand-dot" aria-hidden="true" />
         <span className="sidebar-label">{strings.appName}</span>
+        {canToggle && (
+          <button
+            type="button"
+            className="icon-button sidebar-toggle"
+            aria-label={collapsed ? strings.shell.sidebar.expand : strings.shell.sidebar.collapse}
+            title={collapsed ? strings.shell.sidebar.expand : strings.shell.sidebar.collapse}
+            aria-expanded={!collapsed}
+            onClick={onToggle}
+          >
+            <Icon name="sidebar" />
+          </button>
+        )}
       </div>
       <nav className="sidebar-nav">{MODULES.map(item)}</nav>
       <div className="grow" />
@@ -108,6 +215,7 @@ function Sidebar({ route, monthParam }: { route: Route; monthParam: string | nul
         <span className="text-over">{strings.shell.livre.label}</span>
         <span className="text-strong sidebar-label">{strings.wip}</span>
       </Link>
+      {canToggle && !collapsed && <ResizeHandle width={width} onResize={onResize} />}
     </aside>
   );
 }
