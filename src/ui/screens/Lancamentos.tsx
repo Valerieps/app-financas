@@ -5,7 +5,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LancamentoView, TagLayerView } from '../../application/api-contract';
 import { isBareDay } from '../../domain/calendar';
-import { dayCell, dayLabel, matchesAccounts, matchesFilter, parseDirectionFilter, sortByDay, toggleAccount, type DirectionFilter } from '../../domain/lancamentos';
+import {
+  dayCell,
+  dayLabel,
+  matchesAccounts,
+  matchesFilter,
+  nextSort,
+  parseDirectionFilter,
+  parseSort,
+  sortLancamentos,
+  sortParams,
+  toggleAccount,
+  type DirectionFilter,
+  type Sort,
+  type SortColumn,
+} from '../../domain/lancamentos';
 import { monthKey, type Month } from '../../domain/month';
 import { strings } from '../../domain/strings';
 import { commonTags, matchesTags, MAX_BULK_TAGGING, tagChanges, toggleTag, type TagAssignment } from '../../domain/tags';
@@ -37,6 +51,14 @@ function withList(path: string, search: URLSearchParams, key: 'conta' | 'tag', c
   return query ? `${path}?${query}` : path;
 }
 
+/** The list path with no direction, account or tag filter, keeping the sort. */
+function withoutFilters(path: string, search: URLSearchParams): string {
+  const params = new URLSearchParams(search);
+  for (const key of ['tipo', 'conta', 'tag']) params.delete(key);
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
+
 function LoadError({ error, reload }: { error: string | undefined; reload: () => void }) {
   if (!error || error === 'unauthenticated' || error === 'locked') return null;
   return (
@@ -59,11 +81,14 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
   const chosenTags = search.getAll('tag');
   const layerOf = useMemo(() => new Map(layers.flatMap((l) => l.tags.map((t) => [t.id, l.id] as const))), [layers]);
   const accounts = [...new Set([...(view?.items ?? []).map(account), ...chosenAccounts])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  const items = sortByDay(
+  const sort = parseSort(search.get('ordem'), search.get('sentido'));
+  const items = sortLancamentos(
     (view?.items ?? []).filter(
       (item) => matchesFilter(filter, item.direction) && matchesAccounts(chosenAccounts, account(item)) && matchesTags(chosenTags, layerOf, item.tags),
     ),
+    sort,
   );
+  const filtering = filter !== 'todos' || chosenAccounts.length > 0 || chosenTags.length > 0;
   const [selection, setSelection] = useState<readonly string[]>([]);
   const [tagging, setTagging] = useState(false);
   const monthId = monthKey(month);
@@ -78,94 +103,96 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
 
   return (
     <div className="lanc">
-      <section className="tile lanc-summary" aria-label={text.title}>
-        <div className="lanc-totals">
+      <section className="tile lanc-panel" aria-label={text.title}>
+        <div className="lanc-summary">
           {(monthTotals.length > 0 ? monthTotals : [{ currency: 'BRL', inCents: 0, outCents: 0 }]).map((t) => (
             <dl key={t.currency} className="lanc-figures">
               <div>
-                <dt className="text-over muted">{text.out}</dt>
-                <dd className="text-number">{money(t.outCents, t.currency)}</dd>
+                <dt className="text-label muted">{text.out}</dt>
+                <dd className="text-title lanc-figure">{money(t.outCents, t.currency)}</dd>
               </div>
               <div>
-                <dt className="text-over muted">{text.in}</dt>
-                <dd className="text-number lanc-in">{money(t.inCents, t.currency)}</dd>
+                <dt className="text-label muted">{text.in}</dt>
+                <dd className="text-title lanc-figure lanc-in">{money(t.inCents, t.currency)}</dd>
               </div>
               <div>
-                <dt className="text-over muted">{text.balance}</dt>
-                <dd className="text-number">{money(t.inCents - t.outCents, t.currency)}</dd>
+                <dt className="text-label muted">{text.balance}</dt>
+                <dd className="text-title lanc-figure">{money(t.inCents - t.outCents, t.currency)}</dd>
               </div>
             </dl>
           ))}
+          {view && (
+            <p className="text-label muted lanc-count">
+              {filtering ? text.summaryFiltered(items.length, view.items.length) : text.summary(view.items.length)}
+            </p>
+          )}
         </div>
-        {view && <p className="text-label muted">{text.summary(view.items.length)}</p>}
-      </section>
 
-      <section className="tile">
-        <div className="lanc-toolbar" role="group" aria-label={text.filters}>
-          {FILTERS.map((f) => (
-            <Link
-              key={f}
-              to={withQuery(listPath, search, { tipo: f === 'todos' ? null : f })}
-              className="chip lanc-filter"
-              aria-current={f === filter ? 'true' : undefined}
-            >
-              {text.filter[f]}
-            </Link>
-          ))}
-        </div>
-        {accounts.length > 1 && (
-          <div className="lanc-toolbar" role="group" aria-label={text.accounts}>
-            <Link
-              to={withList(listPath, search, 'conta', [])}
-              className="chip lanc-filter"
-              aria-current={chosenAccounts.length === 0 ? 'true' : undefined}
-            >
-              {text.allAccounts}
-            </Link>
-            {accounts.map((a) => (
-              <Link
-                key={a}
-                to={withList(listPath, search, 'conta', toggleAccount(chosenAccounts, a))}
-                className="chip lanc-filter"
-                aria-current={chosenAccounts.includes(a) ? 'true' : undefined}
-              >
-                {a}
-              </Link>
-            ))}
+        {selected.length > 0 ? (
+          <div className="lanc-toolbar lanc-toolbar--selection" role="group" aria-label={text.selectionActions}>
+            <span className="text-strong">{text.selected(selected.length)}</span>
+            <button type="button" className="lanc-small" onClick={() => setTagging(true)}>
+              {text.addTags}
+            </button>
+            <button type="button" className="secondary lanc-small" onClick={() => setSelection([])}>
+              {text.clearSelection}
+            </button>
           </div>
-        )}
-
-        {layers.map((layer) =>
-          layer.tags.length === 0 ? null : (
-            <div key={layer.id} className="lanc-toolbar" role="group" aria-label={text.tagFilter(layer.name)}>
-              <span className="text-label muted lanc-toolbar-label">{layer.name}</span>
-              {layer.tags.map((tag) => (
+        ) : (
+          <div className="lanc-toolbar" role="group" aria-label={text.filters}>
+            <div className="lanc-segmented" role="group" aria-label={text.directionFilter}>
+              {FILTERS.map((f) => (
                 <Link
-                  key={tag.id}
-                  to={withList(listPath, search, 'tag', toggleAccount(chosenTags, tag.id))}
-                  className="chip lanc-filter"
-                  aria-current={chosenTags.includes(tag.id) ? 'true' : undefined}
+                  key={f}
+                  to={withQuery(listPath, search, { tipo: f === 'todos' ? null : f })}
+                  className="lanc-segment"
+                  aria-current={f === filter ? 'true' : undefined}
                 >
-                  {tag.name}
+                  {text.filter[f]}
                 </Link>
               ))}
             </div>
-          ),
+            {accounts.length > 1 && (
+              <FilterMenu
+                label={text.accounts}
+                chosen={accounts.filter((a) => chosenAccounts.includes(a))}
+                clearTo={withList(listPath, search, 'conta', [])}
+                options={accounts.map((a) => ({
+                  key: a,
+                  label: a,
+                  checked: chosenAccounts.includes(a),
+                  to: withList(listPath, search, 'conta', toggleAccount(chosenAccounts, a)),
+                }))}
+              />
+            )}
+            {layers.map((layer) =>
+              layer.tags.length === 0 ? null : (
+                <FilterMenu
+                  key={layer.id}
+                  label={layer.name}
+                  chosen={layer.tags.filter((t) => chosenTags.includes(t.id)).map((t) => t.name)}
+                  clearTo={withList(
+                    listPath,
+                    search,
+                    'tag',
+                    chosenTags.filter((id) => layerOf.get(id) !== layer.id),
+                  )}
+                  options={layer.tags.map((tag) => ({
+                    key: tag.id,
+                    label: tag.name,
+                    checked: chosenTags.includes(tag.id),
+                    to: withList(listPath, search, 'tag', toggleAccount(chosenTags, tag.id)),
+                  }))}
+                />
+              ),
+            )}
+            {filtering && (
+              <Link to={withoutFilters(listPath, search)} className="lanc-clear text-label">
+                {text.clearFilters}
+              </Link>
+            )}
+          </div>
         )}
-
-        <div className="lanc-actions">
-          <button type="button" disabled={selected.length === 0} onClick={() => setTagging(true)}>
-            {text.addTags}
-          </button>
-          {selected.length > 0 && (
-            <>
-              <span className="text-label muted">{text.selected(selected.length)}</span>
-              <button type="button" className="secondary" onClick={() => setSelection([])}>
-                {text.clearSelection}
-              </button>
-            </>
-          )}
-        </div>
 
         <LoadError error={query.error} reload={query.reload} />
         {view && items.length === 0 && <p className="muted">{view.items.length === 0 ? text.empty : text.emptyFiltered}</p>}
@@ -183,12 +210,12 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
                 }}
                 onChange={() => setSelection(allSelected ? [] : items.map((i) => i.id))}
               />
-              <div className="lanc-row lanc-row--head text-over muted" aria-hidden="true">
-                <span>{text.columns.date}</span>
-                <span>{text.columns.description}</span>
-                <span>{text.columns.category}</span>
+              <div className="lanc-row lanc-row--head text-over muted">
+                <SortHeader column="data" sort={sort} path={listPath} search={search} />
+                <SortHeader column="descricao" sort={sort} path={listPath} search={search} />
+                <SortHeader column="categoria" sort={sort} path={listPath} search={search} />
                 <span>{text.columns.tags}</span>
-                <span className="lanc-amount">{text.columns.amount}</span>
+                <SortHeader column="valor" sort={sort} path={listPath} search={search} />
               </div>
             </div>
             <ul className="lanc-list">
@@ -236,6 +263,100 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
             setSelection([]);
           }}
         />
+      )}
+    </div>
+  );
+}
+
+const SORT_LABEL: Record<SortColumn, string> = {
+  data: text.columns.date,
+  descricao: text.columns.description,
+  categoria: text.columns.category,
+  valor: text.columns.amount,
+};
+
+/** A column title that sorts the list by it; a second click flips the direction. The sort lives in the URL. */
+function SortHeader({ column, sort, path, search }: { column: SortColumn; sort: Sort; path: string; search: URLSearchParams }) {
+  const active = sort.column === column;
+  const label = SORT_LABEL[column];
+  return (
+    <Link
+      to={withQuery(path, search, sortParams(nextSort(sort, column)))}
+      className={`lanc-sort${column === 'valor' ? ' lanc-amount' : ''}`}
+      aria-label={text.sortBy(label)}
+      aria-current={active ? 'true' : undefined}
+    >
+      {label}
+      <span aria-hidden="true" className="lanc-sort-arrow">
+        {active ? (sort.direction === 'asc' ? '↑' : '↓') : '↕'}
+      </span>
+    </Link>
+  );
+}
+
+interface FilterOption {
+  readonly key: string;
+  readonly label: string;
+  readonly checked: boolean;
+  readonly to: string;
+}
+
+/**
+ * One filter as a compact button that opens a list of choices. Each choice is a link (the filter lives
+ * in the URL), and the list stays open so I can pick several.
+ */
+function FilterMenu({ label, chosen, options, clearTo }: { label: string; chosen: readonly string[]; options: readonly FilterOption[]; clearTo: string }) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (event: PointerEvent) => {
+      if (root.current && !root.current.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointer);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const summary = chosen.length === 0 ? null : chosen.length === 1 ? chosen[0] : String(chosen.length);
+  return (
+    <div className="lanc-menu" ref={root}>
+      <button
+        type="button"
+        className="chip lanc-menu-button"
+        aria-expanded={open}
+        aria-current={chosen.length > 0 ? 'true' : undefined}
+        title={chosen.length > 0 ? `${label}: ${chosen.join(', ')}` : undefined}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span>{label}</span>
+        {summary && <span className="lanc-menu-value">{summary}</span>}
+        <span aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="lanc-menu-list" role="group" aria-label={text.filterBy(label)}>
+          {options.map((o) => (
+            <Link key={o.key} to={o.to} className="lanc-menu-item" aria-current={o.checked ? 'true' : undefined} title={o.label}>
+              <span aria-hidden="true" className="lanc-menu-check">
+                {o.checked ? '✓' : ''}
+              </span>
+              <span className="lanc-menu-label">{o.label}</span>
+            </Link>
+          ))}
+          {chosen.length > 0 && (
+            <Link to={clearTo} className="lanc-menu-item lanc-menu-clear">
+              <span aria-hidden="true" className="lanc-menu-check" />
+              {text.clearChoice}
+            </Link>
+          )}
+        </div>
       )}
     </div>
   );

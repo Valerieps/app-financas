@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, parseDirectionFilter, sortByDay, toggleAccount, totals } from './lancamentos';
+import { DEFAULT_SORT, dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, nextSort, parseDirectionFilter, parseSort, sortByDay, sortLancamentos, sortParams, toggleAccount, totals } from './lancamentos';
 
 describe('direction', () => {
   it("follows Pluggy's type", () => {
@@ -95,5 +95,50 @@ describe('dayCell', () => {
     expect(dayCell('2026-11-07', '2026-11-07', words)).toBe('Hoje');
     expect(dayCell('2026-11-06', '2026-11-07', words)).toBe('Ontem');
     expect(dayCell('2026-11-05', '2026-11-07', words)).toBe('qui, 5 nov');
+  });
+});
+
+describe('sorting', () => {
+  const item = (day: string, description: string | null, category: string | null, amountCents: number) => ({ day, description, category, amountCents });
+  const a = item('2026-11-03', 'Padaria', 'Mercado', 1500);
+  const b = item('2026-11-05', 'açougue', null, 9000);
+  const c = item('2026-11-01', null, 'Bares', 300);
+
+  it('reads the sort from the URL, newest day first by default', () => {
+    expect(parseSort(null, null)).toEqual({ column: 'data', direction: 'desc' });
+    expect(parseSort('valor', null)).toEqual({ column: 'valor', direction: 'desc' });
+    expect(parseSort('descricao', null)).toEqual({ column: 'descricao', direction: 'asc' });
+    expect(parseSort('outra', 'asc')).toEqual({ column: 'data', direction: 'asc' });
+  });
+
+  it('flips the same column and starts another in its first direction', () => {
+    expect(nextSort(DEFAULT_SORT, 'data')).toEqual({ column: 'data', direction: 'asc' });
+    expect(nextSort(DEFAULT_SORT, 'valor')).toEqual({ column: 'valor', direction: 'desc' });
+    expect(nextSort({ column: 'valor', direction: 'desc' }, 'categoria')).toEqual({ column: 'categoria', direction: 'asc' });
+  });
+
+  it('leaves the default out of the URL', () => {
+    expect(sortParams(DEFAULT_SORT)).toEqual({ ordem: null, sentido: null });
+    expect(sortParams({ column: 'valor', direction: 'desc' })).toEqual({ ordem: 'valor', sentido: null });
+    expect(sortParams({ column: 'valor', direction: 'asc' })).toEqual({ ordem: 'valor', sentido: 'asc' });
+    expect(parseSort('valor', 'asc')).toEqual({ column: 'valor', direction: 'asc' });
+  });
+
+  it('sorts by each column', () => {
+    expect(sortLancamentos([a, b, c], { column: 'data', direction: 'desc' })).toEqual([b, a, c]);
+    expect(sortLancamentos([a, b, c], { column: 'data', direction: 'asc' })).toEqual([c, a, b]);
+    expect(sortLancamentos([a, b, c], { column: 'valor', direction: 'desc' })).toEqual([b, a, c]);
+    expect(sortLancamentos([a, b, c], { column: 'valor', direction: 'asc' })).toEqual([c, a, b]);
+  });
+
+  it('ignores case and accents, and puts empty text last either way', () => {
+    expect(sortLancamentos([a, b, c], { column: 'descricao', direction: 'asc' })).toEqual([b, a, c]);
+    expect(sortLancamentos([a, b, c], { column: 'descricao', direction: 'desc' })).toEqual([a, b, c]);
+    expect(sortLancamentos([a, b, c], { column: 'categoria', direction: 'asc' })).toEqual([c, a, b]);
+  });
+
+  it('breaks ties by the newest day', () => {
+    const d = item('2026-11-04', 'Padaria', 'Mercado', 1500);
+    expect(sortLancamentos([a, d], { column: 'valor', direction: 'desc' })).toEqual([d, a]);
   });
 });
