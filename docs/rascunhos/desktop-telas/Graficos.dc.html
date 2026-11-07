@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Finanças: Gráficos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+.sv{--bg:#f6f5f0;--surface:#ffffff;--sunken:#efeee8;--text:#2b2e2c;--muted:#5f6661;--border:#e2e3dc;--brand:#4f7a5e;--brand-strong:#3d624b;--brand-soft:#e7efe9;--ok:#2f6243;--warn-bg:#f7eed0;--warn:#765500;font-family:Inter,system-ui,'Segoe UI',sans-serif;font-size:15px;line-height:22px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums}
+.t-title{font-size:20px;line-height:28px;font-weight:600;margin:0}
+.t-body{font-size:15px;line-height:22px;margin:0}
+.t-strong{font-size:15px;line-height:22px;font-weight:600;margin:0}
+.t-label{font-size:13px;line-height:18px;font-weight:500}
+.t-caption{font-size:12px;line-height:16px}
+.t-over{font-size:12px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;box-sizing:border-box;min-width:0}
+.tab{display:inline-block;padding:12px 0;font-size:15px;line-height:22px;font-weight:500;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent}
+.tab:hover{color:var(--text)}
+.tab[aria-current="page"]{color:var(--text);border-bottom-color:var(--brand)}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:500 15px/22px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.icon-btn{width:36px;height:36px;padding:0;justify-content:center;border-color:transparent;background:transparent}
+.segs{display:inline-flex;padding:4px;gap:4px;background:var(--sunken);border-radius:10px}
+.segs button{height:36px;padding:0 16px;border:0;border-radius:8px;background:transparent;font:500 15px/22px Inter,system-ui,sans-serif;color:var(--muted);cursor:pointer}
+.segs button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(43,46,44,.12)}
+.hb{display:grid;grid-template-columns:120px minmax(0,1fr) 96px;gap:16px;align-items:center;padding:8px 0;text-decoration:none;color:var(--text);border-radius:6px}
+.hb:hover{background:var(--bg)}
+.track{position:relative;height:20px}
+.track>i{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;background:var(--brand)}
+.track>b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);border-radius:1px}
+a{color:var(--brand-strong)}a:hover{color:var(--text)}
+svg.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+kbd{font:500 12px/16px Inter,system-ui,sans-serif;border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--muted);background:var(--bg)}
+select{height:40px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font:500 15px/22px Inter,system-ui,sans-serif;color:var(--text);background:var(--surface)}
+table{border-collapse:collapse;width:100%}
+th{text-align:left;font-size:12px;line-height:16px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:8px 0;border-bottom:1px solid var(--border)}
+td{padding:10px 0;border-bottom:1px solid var(--border);font-size:15px;line-height:22px}
+.v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+</style>
+</helmet>
+<div class="sv" style="display:flex;flex-wrap:wrap;min-height:100vh">
+<div style="flex:0 0 240px;display:flex"><dc-import name="Sidebar" active="financas" tone="verde" livre="R$ 82,40" hint-size="240px,100%"></dc-import></div>
+<main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column">
+
+<header style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 32px;min-height:64px;box-sizing:border-box;background:var(--surface);border-bottom:1px solid var(--border)">
+<nav aria-label="Você está em" class="t-body" style="display:flex;gap:8px;align-items:center"><span class="muted">Finanças</span><span class="muted" aria-hidden="true">›</span><span style="font-weight:600">Gráficos</span></nav>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:8px;height:40px;box-sizing:border-box;padding:0 2px">
+<button class="btn icon-btn" aria-label="Mês anterior"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></button>
+<span class="t-body" style="font-weight:500;min-width:128px;text-align:center">novembro 2026</span>
+<button class="btn icon-btn" aria-label="Próximo mês"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+</div>
+<button class="btn" style="min-width:240px;justify-content:flex-start;color:var(--muted)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>Buscar ou fazer…<span style="flex:1"></span><kbd>Ctrl K</kbd></button>
+</header>
+<nav aria-label="Telas de Finanças" style="display:flex;gap:32px;padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap">
+<a class="tab" href="VisaoGeral.dc.html">Visão geral</a>
+<a class="tab" href="Gastos.dc.html">Gastos</a>
+<a class="tab" href="Graficos.dc.html" aria-current="page">Gráficos</a>
+<a class="tab" href="Metas.dc.html">Metas</a>
+<a class="tab" href="Caixinhas.dc.html">Caixinhas</a>
+</nav>
+
+<div style="padding:32px;display:flex;flex-direction:column;gap:24px;max-width:1200px;width:100%;box-sizing:border-box">
+<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+<div class="segs" role="group" aria-label="Tipo de gráfico">
+<button aria-pressed="true">Por categoria</button>
+<button aria-pressed="false">Por importância</button>
+<button aria-pressed="false">Ao longo do tempo</button>
+</div>
+<span style="flex:1"></span>
+<label class="t-label muted" for="cmp" style="display:flex;align-items:center;gap:8px">Comparar com <select id="cmp"><option>Média dos últimos 3 meses</option><option>Mês anterior</option></select></label>
+</div>
+
+<section style="display:flex;flex-direction:column;gap:4px">
+<h2 class="t-title">Restaurante está R$ 62 acima da sua média.</h2>
+<p class="t-body muted">Até o dia 7, comparado com a média de agosto a outubro até o mesmo dia. Transporte e Outros estão abaixo.</p>
+</section>
+
+<div style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:24px">
+<section class="card" aria-label="Gastos por categoria, gráfico de barras" style="display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;gap:16px;margin-bottom:12px" class="t-label muted"><span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:var(--brand)"></span>novembro até o dia 7</span><span style="display:flex;align-items:center;gap:6px"><span style="width:2px;height:14px;background:var(--text)"></span>sua média até o dia 7</span></div>
+<a class="hb" href="Gastos.dc.html"><span class="t-label">Moradia</span><span class="track"><i style="width:100%"></i><b style="left:99.5%"></b></span><span class="v t-label">R$ 1,2 mil</span></a>
+<a class="hb" href="Gastos.dc.html"><span class="t-label">Mercado</span><span class="track"><i style="width:34.4%"></i><b style="left:33.2%"></b></span><span class="v t-label">R$ 412</span></a>
+<a class="hb" href="Gastos.dc.html" style="background:var(--warn-bg)"><span class="t-label">Restaurante</span><span class="track"><i style="width:15.5%;background:#a8741a"></i><b style="left:10.4%"></b></span><span class="v t-label">R$ 186</span></a>
+<a class="hb" href="Gastos.dc.html"><span class="t-label">Transporte</span><span class="track"><i style="width:9.9%"></i><b style="left:11.7%"></b></span><span class="v t-label">R$ 119</span></a>
+<a class="hb" href="Gastos.dc.html"><span class="t-label">Saúde</span><span class="track"><i style="width:8%"></i><b style="left:5.8%"></b></span><span class="v t-label">R$ 96</span></a>
+<a class="hb" href="Gastos.dc.html"><span class="t-label">Assinaturas</span><span class="track"><i style="width:6.6%"></i><b style="left:6.6%"></b></span><span class="v t-label">R$ 80</span></a>
+<a class="hb" href="Gastos.dc.html"><span class="t-label">Outros</span><span class="track"><i style="width:4.4%"></i><b style="left:7.5%"></b></span><span class="v t-label">R$ 53</span></a>
+<p class="t-caption muted" style="margin:12px 0 0">Clique numa barra para ver os gastos dela.</p>
+</section>
+
+<section class="card" aria-label="Os mesmos números em tabela">
+<table>
+<thead><tr><th>Categoria</th><th class="v">Valor</th><th class="v">% do mês</th><th class="v">vs. média</th></tr></thead>
+<tbody>
+<tr><td>Moradia</td><td class="v">R$ 1.200,00</td><td class="v muted">56%</td><td class="v muted">igual</td></tr>
+<tr><td>Mercado</td><td class="v">R$ 412,30</td><td class="v muted">19%</td><td class="v">+ R$ 14,30</td></tr>
+<tr><td style="font-weight:600">Restaurante</td><td class="v" style="font-weight:600">R$ 186,40</td><td class="v muted">9%</td><td class="v" style="color:var(--warn);font-weight:600">+ R$ 62,00</td></tr>
+<tr><td>Transporte</td><td class="v">R$ 118,90</td><td class="v muted">6%</td><td class="v" style="color:var(--ok)">− R$ 21,10</td></tr>
+<tr><td>Saúde</td><td class="v">R$ 96,00</td><td class="v muted">4%</td><td class="v">+ R$ 26,00</td></tr>
+<tr><td>Assinaturas</td><td class="v">R$ 79,70</td><td class="v muted">4%</td><td class="v muted">igual</td></tr>
+<tr><td>Outros</td><td class="v">R$ 53,00</td><td class="v muted">2%</td><td class="v" style="color:var(--ok)">− R$ 37,00</td></tr>
+<tr><td style="font-weight:600;border-bottom:0">Total</td><td class="v" style="font-weight:600;border-bottom:0">R$ 2.146,30</td><td class="v" style="border-bottom:0"></td><td class="v" style="font-weight:600;border-bottom:0">+ R$ 44,20</td></tr>
+</tbody>
+</table>
+<a class="btn" href="Metas.dc.html" style="margin-top:24px;width:100%;justify-content:center">Criar meta para Restaurante</a>
+</section>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

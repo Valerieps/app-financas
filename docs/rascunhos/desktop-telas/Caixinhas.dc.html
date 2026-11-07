@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Finanças: Caixinhas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+.sv{--bg:#f6f5f0;--surface:#ffffff;--sunken:#efeee8;--text:#2b2e2c;--muted:#5f6661;--border:#e2e3dc;--brand:#4f7a5e;--brand-strong:#3d624b;--brand-soft:#e7efe9;--ok-bg:#e4efe7;--ok:#2f6243;--risk-bg:#f6e3df;--risk:#9a3324;font-family:Inter,system-ui,'Segoe UI',sans-serif;font-size:15px;line-height:22px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums}
+.t-number{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-0.01em;margin:0}
+.t-title{font-size:20px;line-height:28px;font-weight:600;margin:0}
+.t-body{font-size:15px;line-height:22px;margin:0}
+.t-strong{font-size:15px;line-height:22px;font-weight:600;margin:0}
+.t-label{font-size:13px;line-height:18px;font-weight:500}
+.t-caption{font-size:12px;line-height:16px}
+.t-over{font-size:12px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.muted{color:var(--muted)}
+.cents{font-size:.55em;letter-spacing:0;font-weight:500;opacity:.75}
+.tab{display:inline-block;padding:12px 0;font-size:15px;line-height:22px;font-weight:500;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent}
+.tab:hover{color:var(--text)}
+.tab[aria-current="page"]{color:var(--text);border-bottom-color:var(--brand)}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:500 15px/22px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-strong);color:#fff}
+.btn-sm{height:32px;padding:0 12px;font-size:13px;line-height:18px}
+.icon-btn{width:36px;height:36px;padding:0;justify-content:center;border-color:transparent;background:transparent}
+.bar{position:relative;height:8px;border-radius:999px;background:var(--sunken)}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
+.stack{display:flex;height:16px;border-radius:999px;overflow:hidden;gap:2px;background:var(--surface)}
+.stack>span{height:100%}
+.group{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:24px}
+.box{border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;text-decoration:none;color:var(--text);min-width:0}
+.box:hover{border-color:var(--muted);color:var(--text)}
+.sq{width:10px;height:10px;border-radius:3px;flex:none;display:inline-block}
+a{color:var(--brand-strong)}a:hover{color:var(--text)}
+svg.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+kbd{font:500 12px/16px Inter,system-ui,sans-serif;border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--muted);background:var(--bg)}
+</style>
+</helmet>
+<div class="sv" style="display:flex;flex-wrap:wrap;min-height:100vh">
+<div style="flex:0 0 240px;display:flex"><dc-import name="Sidebar" active="financas" tone="verde" livre="R$ 82,40" hint-size="240px,100%"></dc-import></div>
+<main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column">
+
+<header style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 32px;min-height:64px;box-sizing:border-box;background:var(--surface);border-bottom:1px solid var(--border)">
+<nav aria-label="Você está em" class="t-body" style="display:flex;gap:8px;align-items:center"><span class="muted">Finanças</span><span class="muted" aria-hidden="true">›</span><span style="font-weight:600">Caixinhas</span></nav>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:8px;height:40px;box-sizing:border-box;padding:0 2px">
+<button class="btn icon-btn" aria-label="Mês anterior"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></button>
+<span class="t-body" style="font-weight:500;min-width:128px;text-align:center">novembro 2026</span>
+<button class="btn icon-btn" aria-label="Próximo mês"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+</div>
+<button class="btn" style="min-width:240px;justify-content:flex-start;color:var(--muted)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>Buscar ou fazer…<span style="flex:1"></span><kbd>Ctrl K</kbd></button>
+</header>
+<nav aria-label="Telas de Finanças" style="display:flex;gap:32px;padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap">
+<a class="tab" href="VisaoGeral.dc.html">Visão geral</a>
+<a class="tab" href="Gastos.dc.html">Gastos</a>
+<a class="tab" href="Graficos.dc.html">Gráficos</a>
+<a class="tab" href="Metas.dc.html">Metas</a>
+<a class="tab" href="Caixinhas.dc.html" aria-current="page">Caixinhas</a>
+</nav>
+
+<div style="padding:32px;display:flex;flex-direction:column;gap:32px;max-width:1200px;width:100%;box-sizing:border-box">
+<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+<div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:240px">
+<p class="t-number num">R$ 11.180<span class="cents">,00</span></p>
+<p class="t-body muted">separados em 4 caixinhas · R$ 2.460,00 ainda sem caixinha</p>
+</div>
+<a class="btn btn-primary" href="#"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Nova caixinha</a>
+</div>
+
+<section class="group" aria-label="Nubank conta">
+<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:50%;background:#820ad1"></span><h2 class="t-title">Nubank · Conta</h2></div>
+<span class="num t-body">Saldo <span style="font-weight:600">R$ 8.640,00</span> <span class="muted">· atualizado às 12:41</span></span>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="stack" role="img" aria-label="Reserva 3.600, Viagem 2.400, Presente da mãe 180, sem caixinha 2.460"><span style="width:41.7%;background:#3d624b"></span><span style="width:27.8%;background:#7fa38a"></span><span style="width:2.1%;background:#b9cfbf"></span><span style="flex:1;background:repeating-linear-gradient(135deg,#efeee8 0 6px,#e2e3dc 6px 8px)"></span></div>
+<div style="display:flex;gap:24px;flex-wrap:wrap" class="t-label">
+<span style="display:flex;align-items:center;gap:6px"><span class="sq" style="background:#3d624b"></span>Reserva de emergência</span>
+<span style="display:flex;align-items:center;gap:6px"><span class="sq" style="background:#7fa38a"></span>Viagem</span>
+<span style="display:flex;align-items:center;gap:6px"><span class="sq" style="background:#b9cfbf"></span>Presente da mãe</span>
+<span style="display:flex;align-items:center;gap:6px"><span class="sq" style="background:repeating-linear-gradient(135deg,#efeee8 0 3px,#c9cbc2 3px 4px)"></span>Sem caixinha</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+<a class="box" href="#">
+<span class="t-strong">Reserva de emergência</span>
+<span class="num" style="font-size:20px;line-height:28px;font-weight:600">R$ 3.600</span>
+<div class="bar"><i style="width:36%;background:#3d624b"></i></div>
+<span class="t-label muted">36% de R$ 10.000 · sem prazo</span>
+</a>
+<a class="box" href="Metas.dc.html">
+<span class="t-strong">Viagem</span>
+<span class="num" style="font-size:20px;line-height:28px;font-weight:600">R$ 2.400</span>
+<div class="bar"><i style="width:40%;background:#7fa38a"></i></div>
+<span class="t-label muted">40% de R$ 6.000 · até jul 2027</span>
+</a>
+<a class="box" href="#">
+<span class="t-strong">Presente da mãe</span>
+<span class="num" style="font-size:20px;line-height:28px;font-weight:600">R$ 180</span>
+<div class="bar"><i style="width:72%;background:#7fa38a"></i></div>
+<span class="t-label muted">72% de R$ 250 · até 20 nov</span>
+</a>
+<div class="box" style="border-style:dashed;background:var(--bg)">
+<span class="t-strong">Sem caixinha</span>
+<span class="num" style="font-size:20px;line-height:28px;font-weight:600">R$ 2.460</span>
+<span class="t-label muted">Dinheiro sem nome ainda.</span>
+<a class="btn btn-sm" href="#" style="align-self:flex-start">Dar um destino</a>
+</div>
+</div>
+</section>
+
+<section class="group" aria-label="Tesouro Selic">
+<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:50%;background:#820ad1"></span><h2 class="t-title">Tesouro Selic 2029 · Nubank</h2></div>
+<span class="num t-body">Saldo <span style="font-weight:600">R$ 4.700,00</span> <span class="muted">· retrato de hoje</span></span>
+</div>
+<div role="status" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--risk-bg);color:var(--risk);border-radius:8px;padding:12px 16px">
+<span class="t-label" style="flex:1;min-width:240px">■ O saldo ficou R$ 300 abaixo do que está nas caixinhas, depois do resgate de 3 nov. Tire R$ 300 de alguma caixinha para fechar a conta.</span>
+<a class="btn btn-sm" href="#" style="color:var(--risk);border-color:rgba(154,51,36,.35)">Ajustar caixinhas</a>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+<a class="box" href="#">
+<span class="t-strong">Carro</span>
+<span class="num" style="font-size:20px;line-height:28px;font-weight:600">R$ 5.000</span>
+<div class="bar"><i style="width:17%;background:#3d624b"></i></div>
+<span class="t-label muted">17% de R$ 30.000 · até dez 2028</span>
+</a>
+</div>
+</section>
+
+<p class="t-label muted" style="margin:0">Uma caixinha é sempre parte de um saldo que já existe. Mover dinheiro entre caixinhas, definir alvo e arquivar acontecem no painel, ao clicar numa caixinha.</p>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
