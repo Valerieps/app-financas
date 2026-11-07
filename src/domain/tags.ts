@@ -100,15 +100,24 @@ export function tagChanges(initial: TagAssignment, chosen: TagAssignment): TagCh
     .map((layerId) => ({ layerId, tagId: chosen[layerId] ?? null }));
 }
 
+const EMPTY_PREFIX = 'vazio:';
+
+/** The filter choice "Vazio" of a layer (`?tag=vazio:<layerId>`): lançamentos with no tag in it. */
+export function emptyTagKey(layerId: string): string {
+  return EMPTY_PREFIX + layerId;
+}
+
 /**
  * The tag filter (`?tag=a&tag=b`): with tags chosen in several layers, the lançamento needs one of
- * the chosen tags in each of those layers. None chosen keeps every lançamento.
+ * the chosen tags in each of those layers; a layer's "Vazio" counts as one more choice in it, met
+ * when the lançamento has no tag there. None chosen keeps every lançamento.
  */
 export function matchesTags(chosen: readonly string[], layerOf: ReadonlyMap<string, string>, assignment: TagAssignment): boolean {
-  const byLayer = new Map<string, string[]>();
-  for (const tagId of chosen) {
-    const layerId = layerOf.get(tagId);
-    if (layerId) byLayer.set(layerId, [...(byLayer.get(layerId) ?? []), tagId]);
+  const byLayer = new Map<string, (string | null)[]>();
+  for (const key of chosen) {
+    const empty = key.startsWith(EMPTY_PREFIX);
+    const layerId = empty ? key.slice(EMPTY_PREFIX.length) : layerOf.get(key);
+    if (layerId) byLayer.set(layerId, [...(byLayer.get(layerId) ?? []), empty ? null : key]);
   }
-  return [...byLayer].every(([layerId, tags]) => tags.includes(assignment[layerId] ?? ''));
+  return [...byLayer].every(([layerId, tags]) => tags.includes(assignment[layerId] ?? null));
 }

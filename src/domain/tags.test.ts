@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assignTag, canAddLayer, cleanName, clearLayer, commonTags, matchesTags, MAX_LAYERS, moveInOrder, nameKey, nameProblem, tagChanges, toggleTag } from './tags';
+import { assignTag, canAddLayer, cleanName, clearLayer, commonTags, emptyTagKey, matchesTags, MAX_LAYERS, moveInOrder, nameKey, nameProblem, tagChanges, toggleTag } from './tags';
 
 describe('names', () => {
   it('trims and collapses spaces', () => {
@@ -83,5 +83,19 @@ describe('tagging many lançamentos', () => {
     expect(matchesTags(['a', 'x'], layerOf, { tipo: 'a' })).toBe(false);
     expect(matchesTags(['a', 'x'], layerOf, { tipo: 'a', origem: 'x' })).toBe(true);
     expect(matchesTags(['sumiu'], layerOf, {})).toBe(true);
+  });
+
+  it('filters by "Vazio": no tag in that layer, alone or with tags of the same layer', () => {
+    const layerOf = new Map([
+      ['a', 'tipo'],
+      ['x', 'origem'],
+    ]);
+    const vazio = emptyTagKey('tipo');
+    expect(matchesTags([vazio], layerOf, {})).toBe(true);
+    expect(matchesTags([vazio], layerOf, { origem: 'x' })).toBe(true);
+    expect(matchesTags([vazio], layerOf, { tipo: 'a' })).toBe(false);
+    expect(matchesTags([vazio, 'a'], layerOf, { tipo: 'a' })).toBe(true);
+    expect(matchesTags([vazio, 'x'], layerOf, { origem: 'x' })).toBe(true);
+    expect(matchesTags([vazio, 'x'], layerOf, {})).toBe(false);
   });
 });

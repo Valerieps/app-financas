@@ -22,7 +22,7 @@ import {
 } from '../../domain/lancamentos';
 import { monthKey, type Month } from '../../domain/month';
 import { strings } from '../../domain/strings';
-import { commonTags, matchesTags, MAX_BULK_TAGGING, tagChanges, toggleTag, type TagAssignment } from '../../domain/tags';
+import { commonTags, emptyTagKey, matchesTags, MAX_BULK_TAGGING, tagChanges, toggleTag, type TagAssignment } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
 import { useServices } from '../backend-context';
 import { Link } from '../router';
@@ -170,14 +170,17 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
                 <FilterMenu
                   key={layer.id}
                   label={layer.name}
-                  chosen={layer.tags.filter((t) => chosenTags.includes(t.id)).map((t) => t.name)}
+                  chosen={[
+                    ...(chosenTags.includes(emptyTagKey(layer.id)) ? [text.emptyTag] : []),
+                    ...layer.tags.filter((t) => chosenTags.includes(t.id)).map((t) => t.name),
+                  ]}
                   clearTo={withList(
                     listPath,
                     search,
                     'tag',
-                    chosenTags.filter((id) => layerOf.get(id) !== layer.id),
+                    chosenTags.filter((id) => id !== emptyTagKey(layer.id) && layerOf.get(id) !== layer.id),
                   )}
-                  options={layer.tags.map((tag) => ({
+                  options={[{ id: emptyTagKey(layer.id), name: text.emptyTag }, ...layer.tags].map((tag) => ({
                     key: tag.id,
                     label: tag.name,
                     checked: chosenTags.includes(tag.id),
