@@ -28,7 +28,8 @@ O que ainda não está pronto.
 
 ## Adiado
 
-(Nada adiado)
+- Uma tela própria para os investimentos, com mais detalhes de cada um; por enquanto o Cofre mostra
+  só o nome, o CNPJ e o saldo de hoje (`spec/cofre-de-dados.md`).
 
 ## Revisar as lacunas que o agente decidiu
 

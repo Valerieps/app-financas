@@ -251,8 +251,10 @@ describe('the Cofre view', () => {
             lastError: null,
             counts: { accounts: 2, transactions: 3, deletedTransactions: 0, bills: 1, investments: 1 },
             unavailable: ['loans', 'scr'],
+            investments: [{ id: expect.any(String), name: 'CDB Exemplo', issuerCnpj: null, balanceCents: 100001, currency: 'BRL' }],
           },
         ],
+        pending: [],
       },
     });
   });

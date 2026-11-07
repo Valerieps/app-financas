@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import type { ConnectionView } from '../../application/api-contract';
+import type { ConnectionView, InvestmentView, PendingConnectionView } from '../../application/api-contract';
 import { strings } from '../../domain/strings';
 import { daysUntil } from '../../domain/vault';
 import { useServices } from '../backend-context';
@@ -11,12 +11,14 @@ import { Provisorios } from './Provisorios';
 const text = strings.cofre;
 const dateTime = (iso: string) =>
   new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
+const money = (cents: number, currency: string) => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency });
 
 // The vault screen (docs/spec/cofre-de-dados.md, "Tela Cofre"): each connection, what is stored for
 // it, and what the bank did not share; this is where the owner checks 7 days of sync against Nubank.
 export function Cofre({ onPasskeysChanged }: { onPasskeysChanged: () => void }) {
   const vault = useQuery('vault', {}, ['vault']);
   const connections = vault.data?.connections ?? [];
+  const pending = vault.data?.pending ?? [];
 
   return (
     <section className="stack">
@@ -37,6 +39,7 @@ export function Cofre({ onPasskeysChanged }: { onPasskeysChanged: () => void }) 
           </button>
         </p>
       )}
+      {pending.length > 0 && <PendingConnections pending={pending} />}
       {vault.data && connections.length === 0 && <p className="muted">{text.empty}</p>}
       {connections.map((connection) => (
         <Connection key={connection.itemId} connection={connection} />
@@ -82,6 +85,7 @@ function Connection({ connection }: { connection: ConnectionView }) {
           <li>{text.counts.investments(counts.investments)}</li>
         </ul>
       </div>
+      {connection.investments.length > 0 && <Investments investments={connection.investments} />}
       {connection.unavailable.length > 0 && (
         <p className="muted">
           {text.notShared}: {connection.unavailable.map((product) => text.products[product] ?? product).join(', ')}
@@ -89,6 +93,68 @@ function Connection({ connection }: { connection: ConnectionView }) {
       )}
       <CofreCalendar itemId={connection.itemId} />
       <small className="muted">itemId {connection.itemId}</small>
+    </article>
+  );
+}
+
+function Investments({ investments }: { investments: readonly InvestmentView[] }) {
+  return (
+    <div>
+      <strong>{text.investments.title}</strong>
+      <ul>
+        {investments.map((investment) => (
+          <li key={investment.id}>
+            {investment.name ?? '—'}
+            {investment.issuerCnpj && <span className="muted"> · {text.investments.cnpj(investment.issuerCnpj)}</span>}
+            {' · '}
+            {investment.balanceCents === null ? (
+              <span className="muted">{text.investments.noBalance}</span>
+            ) : (
+              <strong>{money(investment.balanceCents, investment.currency)}</strong>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// Connections Pluggy told about that are not registered yet: one tap registers each.
+function PendingConnections({ pending }: { pending: readonly PendingConnectionView[] }) {
+  const { backend } = useServices();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function register(itemId: string) {
+    setBusy(itemId);
+    setError(null);
+    const result = await backend.command('connection.add', { itemId });
+    setBusy(null);
+    if (result.ok) return;
+    const messages: Partial<Record<string, string>> = text.add;
+    setError(messages[result.error] ?? strings.genericError);
+  }
+
+  return (
+    <article className="card stack">
+      <h2>{text.pending.title}</h2>
+      <p className="muted">{text.pending.hint}</p>
+      {pending.map((connection) => (
+        <div key={connection.itemId} className="row space-between align-center">
+          <div>
+            <p>{text.pending.seenAt(dateTime(connection.firstSeenAt))}</p>
+            <small className="muted">itemId {connection.itemId}</small>
+          </div>
+          <button type="button" disabled={busy !== null} onClick={() => void register(connection.itemId)}>
+            {text.pending.submit}
+          </button>
+        </div>
+      ))}
+      {error && (
+        <p className="notice" role="alert">
+          {error}
+        </p>
+      )}
     </article>
   );
 }

@@ -34,6 +34,17 @@ export const strings = {
       investments: (n: number) => (n === 1 ? '1 investimento' : `${n} investimentos`),
     },
     notShared: 'O banco não compartilhou',
+    investments: {
+      title: 'Investimentos',
+      cnpj: (cnpj: string) => `CNPJ ${cnpj}`,
+      noBalance: 'saldo não informado',
+    },
+    pending: {
+      title: 'Conexão nova encontrada',
+      hint: 'O Pluggy avisou destas conexões, mas elas ainda não estão no Cofre.',
+      seenAt: (when: string) => `Primeiro aviso: ${when}`,
+      submit: 'Cadastrar',
+    },
     calendar: {
       title: 'Transações por dia',
       hint: 'Vermelho: dia sem nenhuma transação. Toque no dia para confirmar que zero está certo.',

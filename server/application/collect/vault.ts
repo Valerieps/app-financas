@@ -1,5 +1,5 @@
 // The Cofre screen's read: each connection, what is stored for it and what the bank did not share.
-import type { ConnectionView, VaultView } from '../../../src/application/api-contract';
+import type { ConnectionView, InvestmentView, PendingConnectionView, VaultView } from '../../../src/application/api-contract';
 import type { Context } from '../context';
 
 interface ConnectionRow {
@@ -36,6 +36,20 @@ export async function vault(ctx: Context): Promise<VaultView> {
      WHERE r.error IS NOT NULL AND r.started_at = (SELECT MAX(started_at) FROM sync_runs WHERE item_id = r.item_id AND finished_at IS NOT NULL)`,
   );
 
+  const investments = await ctx.sql.all<{ id: string; item_id: string; name: string | null; cnpj: string | null; balance_cents: number | null; currency_code: string }>(
+    `SELECT id, item_id, name, json_extract(raw_json, '$.issuerCNPJ') AS cnpj, balance_cents, currency_code FROM investments
+     ORDER BY balance_cents IS NULL, balance_cents DESC, name`,
+  );
+  // Pluggy's events name connections the vault does not keep yet; the deleted ones are left out.
+  const pendingRows = await ctx.sql.all<{ item_id: string; first_seen_at: string }>(
+    `SELECT e.item_id, MIN(e.received_at) AS first_seen_at FROM webhook_events e
+     WHERE e.source = 'pluggy' AND e.item_id IS NOT NULL
+       AND e.item_id NOT IN (SELECT item_id FROM items)
+       AND e.item_id NOT IN (SELECT item_id FROM webhook_events WHERE event = 'item/deleted' AND item_id IS NOT NULL)
+     GROUP BY e.item_id ORDER BY first_seen_at`,
+  );
+  const pending: PendingConnectionView[] = pendingRows.map((row) => ({ itemId: row.item_id, firstSeenAt: row.first_seen_at }));
+
   const connections: ConnectionView[] = rows.map((row) => {
     const failure = failures.find((f) => f.item_id === row.item_id);
     return {
@@ -56,7 +70,10 @@ export async function vault(ctx: Context): Promise<VaultView> {
         investments: row.investments,
       },
       unavailable: unavailable.filter((u) => u.item_id === row.item_id).map((u) => u.product),
+      investments: investments
+        .filter((v) => v.item_id === row.item_id)
+        .map((v): InvestmentView => ({ id: v.id, name: v.name, issuerCnpj: v.cnpj, balanceCents: v.balance_cents, currency: v.currency_code })),
     };
   });
-  return { connections };
+  return { connections, pending };
 }
