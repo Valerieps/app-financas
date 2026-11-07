@@ -5,7 +5,7 @@ real time with no manual entry, and keeps, forever, every piece of financial dat
 collect (Nubank now, Wise later). Her daily loop: she pays for something, the phone's bank
 notification (via MacroDroid) and Pluggy record it, and within seconds Telegram tells her how much
 is still free to spend today (the "Livre do dia") with a traffic-light color; when she wants, she
-opens the phone app, glances at the color and moves an expense to another "caixinha" with one tap.
+opens the phone app, glances at the color and changes an expense's "importância" with one tap.
 
 ## Docs
 

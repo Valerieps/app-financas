@@ -23,7 +23,7 @@ cada dia restante, sem quebrar o mês.
 
 - Livre hoje = (orçamento flexível − gasto flexível até ontem) ÷ dias restantes no mês, contando
   hoje. *(3)*
-- Entram no gasto flexível os gastos provisórios e definitivos cuja caixinha conta no orçamento.
+- Entram no gasto flexível os gastos provisórios e definitivos cuja importância conta no orçamento.
   Projetos especiais e o que não é gasto ficam de fora. *(3)*
 - O Livre de hoje é fixado na virada do dia, no horário de Brasília, e não muda a cada compra. *(3)*
 
@@ -35,4 +35,4 @@ cada dia restante, sem quebrar o mês.
 
 ## Termômetro de impulso
 
-- O termômetro mostra a soma do mês na caixinha Impulso contra um teto mensal que eu defino. *(3)*
+- O termômetro mostra a soma do mês na importância Impulso contra um teto mensal que eu defino. *(3)*

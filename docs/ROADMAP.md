@@ -12,7 +12,7 @@ O que ainda não está pronto.
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
 | Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
-| Categoria, caixinha, regras e Gemini | 2 | `spec/classificacao.md` | |
+| Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
 | Bot do Telegram | 3 | `spec/telegram.md` | |
 | Tela do semáforo | 3 | `spec/tela-do-celular.md` | |

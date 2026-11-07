@@ -27,7 +27,7 @@ Dado bancário completo: é tudo sensível.
 - Contas, saldos, transações (com pagador e recebedor, documento e banco), faturas, investimentos,
   empréstimos, consentimentos, dados cadastrais (identidade) e o relatório do SCR do Banco Central.
 - O texto bruto das notificações de compra do celular.
-- As minhas decisões: categoria, caixinha, notas, reembolsos, regras.
+- As minhas decisões: categoria, importância, notas, reembolsos, regras.
 - Tudo fica no D1 e no R2 da conta Cloudflare, mais o espelho noturno no desktop, com uma cópia
   criptografada fora da máquina. Tudo pode ser exportado em JSON, CSV e SQLite.
 - CPF, números de conta e dados cadastrais nunca vão para logs nem para o Telegram.
