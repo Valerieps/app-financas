@@ -5,6 +5,7 @@ import { App } from './ui/App';
 import { ServicesProvider } from './ui/backend-context';
 import './ui/theme/tokens.css';
 import './ui/theme/global.css';
+import './ui/theme/desktop.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -1,5 +1,7 @@
 // Every user-facing text, in Brazilian Portuguese, in the app's voice.
 // The UI imports from here; it never writes its own text.
+const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
 export const strings = {
   appName: 'Sinal Verde',
   genericError: 'Algo deu errado. Tenta de novo?',
@@ -103,6 +105,76 @@ export const strings = {
     unreadableBadge: 'não lida',
     kinds: { card: 'Compra no cartão', pix: 'Pix ou transferência' },
     sources: { nubank: 'Nubank', wise: 'Wise', flash: 'Flash', swile: 'Swile', caju: 'Caju', outra: 'Outro app' },
+  },
+
+  // The desktop shell (docs/rascunhos/arquitetura-desktop.md): sidebar, header, tabs, detail panel.
+  shell: {
+    mainNav: 'Navegação principal',
+    systemNav: 'Sistema',
+    youAreHere: 'Você está em',
+    modules: {
+      inicio: 'Início',
+      financas: 'Finanças',
+      investimentos: 'Investimentos',
+      patrimonio: 'Patrimônio',
+      cofre: 'Cofre',
+      ajustes: 'Ajustes',
+    },
+    financasTabs: 'Telas de Finanças',
+    tabs: {
+      'visao-geral': 'Visão geral',
+      gastos: 'Gastos',
+      graficos: 'Gráficos',
+      metas: 'Metas',
+      caixinhas: 'Caixinhas',
+    },
+    livre: {
+      label: 'Livre do dia',
+      openOverview: 'Livre do dia: abre a Visão geral de Finanças',
+    },
+    month: {
+      label: (year: number, month: number) => `${MONTHS[month - 1]} ${year}`,
+      previous: 'Mês anterior',
+      next: 'Próximo mês',
+    },
+    search: {
+      open: 'Buscar ou fazer…',
+      shortcut: 'Ctrl K',
+      title: 'Buscar ou fazer',
+      hint: 'Aqui vou poder buscar um gasto, uma meta ou uma tela, e fazer as ações mais comuns sem o mouse.',
+    },
+    panel: {
+      title: 'Detalhe',
+      close: 'Fechar (Esc)',
+      hint: 'Aqui vou poder ver e editar o item sem sair da tela.',
+    },
+    lockNow: 'Trancar o app',
+    notFound: 'Essa página não existe.',
+    backHome: 'Voltar ao início',
+  },
+
+  // Everything the code does not do yet shows this, in the place it will take.
+  wip: 'Em construção',
+
+  screens: {
+    inicio: 'Aqui vai aparecer o resumo de tudo: Finanças, Investimentos e Patrimônio.',
+    investimentos: 'Aqui vão aparecer os meus investimentos e como eles andam.',
+    patrimonio: 'Aqui vai aparecer tudo o que eu tenho, menos o que eu devo.',
+    ajustes: 'Aqui vão ficar as regras, as categorias e as preferências do app.',
+    gastos: 'Aqui vai aparecer a lista de gastos do mês, com filtros e revisão em lote.',
+    graficos: 'Aqui vão aparecer os gráficos do mês, por categoria e por importância.',
+    metas: 'Aqui vão aparecer as minhas metas e como cada uma está.',
+    caixinhas: 'Aqui vão aparecer as minhas caixinhas e quanto falta para cada uma.',
+  },
+
+  visaoGeral: {
+    livre: { title: 'Livre do dia', hint: 'Quanto ainda posso gastar hoje, com a cor do semáforo.' },
+    hoje: { title: 'Gastos de hoje', hint: 'O que eu gastei hoje.', link: 'Ver todos' },
+    mes: { title: 'O mês até aqui', hint: 'Quanto gastei do orçamento flexível, contra quanto do mês já passou.' },
+    termometro: { title: 'Termômetro de impulso', hint: 'Quanto gastei por impulso, contra o teto do mês.' },
+    revisar: { title: 'Gastos para revisar', hint: 'Gastos órfãos e sem importância. Cada um abre no painel.', link: 'Ver gastos' },
+    metas: { title: 'Metas em risco', hint: 'Só as metas amarelas ou vermelhas.', link: 'Todas as metas' },
+    caixinhas: { title: 'Caixinhas com prazo perto', hint: 'As caixinhas que vencem logo e quanto falta.', link: 'Todas as caixinhas' },
   },
 
   aparelhos: {
