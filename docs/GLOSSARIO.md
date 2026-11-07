@@ -16,6 +16,7 @@ Um termo, um sentido. Estes nomes valem para os textos da interface e para as do
 - **Gasto provisório:** gasto criado por uma notificação do celular ou pelo `/gastei`, antes da confirmação do Pluggy. (`spec/gastos-provisorios.md`)
 - **Holerite:** o demonstrativo de pagamento mensal da empresa, enviado em PDF. (`spec/holerite.md`)
 - **Importância:** como eu julgo um gasto: Obrigatório, Rotina, Impulso ou Projetos especiais. Alimenta o orçamento e o semáforo. Não confundir com categoria nem com caixinha. (`spec/classificacao.md`)
+- **Lançamento:** toda transação de uma conta ou de um cartão, de saída (gasto) ou de entrada (crédito). Dá nome à aba Lançamentos. (`spec/lancamentos.md`)
 - **Lançamento do holerite:** uma linha do holerite, com código, descrição, tipo e valor, de vencimento ou de desconto. (`spec/holerite.md`)
 - **Livre do dia:** quanto eu posso gastar hoje sem prejudicar o mês. (`spec/livre-do-dia.md`)
 - **Orçamento flexível:** a renda líquida menos custos fixos, parcelas do mês e meta de reserva. (`spec/livre-do-dia.md`)

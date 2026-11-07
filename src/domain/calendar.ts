@@ -10,9 +10,14 @@ export const CALENDAR_MONTHS = 12;
  * UTC; read through the time zone, that would fall on the day before, so it is taken as written.
  */
 export function transactionDay(date: string): string {
-  if (/^\d{4}-\d{2}-\d{2}(T00:00(:00(\.0+)?)?(Z|\+00:00)?)?$/.test(date)) return date.slice(0, 10);
+  if (isBareDay(date)) return date.slice(0, 10);
   const instant = new Date(date);
   return Number.isNaN(instant.getTime()) ? date.slice(0, 10) : saoPauloDate(instant);
+}
+
+/** Whether a Pluggy date carries only a day (midnight UTC), with no time of its own. */
+export function isBareDay(date: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}(T00:00(:00(\.0+)?)?(Z|\+00:00)?)?$/.test(date);
 }
 
 /** The first day the calendar shows: the same day, 12 months before today (yyyy-mm-dd). */

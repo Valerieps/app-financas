@@ -42,7 +42,7 @@ Sinal Verde (desktop)
 │
 ├── Finanças
 │   ├── Visão geral ................... Livre do dia, semáforo, mês até aqui, metas em risco
-│   ├── Gastos ........................ lista, filtros, cadastro, mudar categoria e importância
+│   ├── Lançamentos ................... lista, filtros, cadastro, mudar categoria e importância
 │   ├── Gráficos ...................... por categoria, por importância, evolução no tempo
 │   ├── Metas ......................... todas as metas e o progresso de cada uma
 │   └── Caixinhas ..................... o saldo de cada conta e investimento dividido em caixinhas
@@ -66,9 +66,9 @@ Investimentos e Patrimônio ao mesmo tempo.
 
 ```
 ┌────────────┬──────────────────────────────────────────────────────┬────────────────┐
-│ ● Sinal    │  Finanças › Gastos                  ◀ nov 2026 ▶ Ctrl+K│                │
+│ ● Sinal    │  Finanças › Lançamentos             ◀ nov 2026 ▶ Ctrl+K│                │
 │   Verde    ├──────────────────────────────────────────────────────┤  Painel de     │
-│            │  [Visão geral] [Gastos] [Gráficos] [Metas] [Caixinhas]│  detalhe       │
+│            │[Visão geral][Lançamentos][Gráficos][Metas][Caixinhas]│  detalhe       │
 │ Início     ├──────────────────────────────────────────────────────┤  (abre ao      │
 │ Finanças ◀ │                                                      │  clicar num    │
 │ Investim.  │                 conteúdo da tela                     │  gasto, meta   │
@@ -103,9 +103,10 @@ A resposta do mês em um olhar. De cima para baixo:
 
 Daqui tudo é atalho: nada é editado nesta tela.
 
-### Gastos
+### Lançamentos
 
-A casa dos gastos.
+A casa dos lançamentos: gastos e créditos. As regras da lista já construída estão em
+[`spec/lancamentos.md`](../spec/lancamentos.md).
 
 - Tabela com data, descrição, valor, categoria, importância, conta e estado (provisório, definitivo ou
   manual).
@@ -124,7 +125,7 @@ Leitura, não edição.
 
 - Seletor: **Por categoria**, **Por importância**, **Ao longo do tempo**.
 - Cada gráfico tem ao lado a tabela dos mesmos números.
-- Clicar numa fatia ou barra abre **Gastos** filtrado por ela.
+- Clicar numa fatia ou barra abre **Lançamentos** filtrado por ela.
 - Comparar com o mês anterior ou com a média dos últimos 3 meses.
 
 ### Metas
@@ -149,7 +150,7 @@ A casa das metas. Todas as metas têm a mesma forma: **o que mede**, **o alvo**,
 - Lista agrupada por estado: em risco, no caminho, cumpridas.
 - **Nova meta** abre o painel: primeiro escolho o tipo de meta, depois só os campos daquele tipo.
 - Clicar numa meta abre o painel com o histórico mês a mês e um link "ver os gastos" para
-  **Gastos** filtrado.
+  **Lançamentos** filtrado.
 - Investimentos e Patrimônio poderão adicionar tipos de meta aqui (ex.: patrimônio de R$ X até
   2030) sem mudar a tela.
 
@@ -171,12 +172,12 @@ um investimento.
 ## Fluxos principais
 
 **Ver por que o semáforo ficou vermelho**
-Barra lateral (Livre do dia vermelho) → Finanças › Visão geral → "Gastos de hoje" → Gastos filtrado
+Barra lateral (Livre do dia vermelho) → Finanças › Visão geral → "Gastos de hoje" → Lançamentos filtrado
 por hoje → clique num gasto → painel → troco a importância para Projetos especiais → o Livre do dia na
 barra lateral atualiza.
 
 **Descobrir para onde foi o dinheiro**
-Finanças › Gráficos › Por categoria → clique em "Restaurante" → Gastos filtrado por Restaurante no
+Finanças › Gráficos › Por categoria → clique em "Restaurante" → Lançamentos filtrado por Restaurante no
 mês → "Criar meta para esta categoria" → painel de nova meta já preenchido.
 
 **Criar uma meta**
@@ -188,11 +189,11 @@ Finanças › Caixinhas → conta Nubank → "Sem caixinha: R$ 2.400" → Nova c
 R$ 6.000, prazo julho → mover R$ 1.000 → a caixinha aparece em Metas como objetivo.
 
 **Cadastrar um gasto que o banco não vê**
-Finanças › Gastos → Novo gasto → valor, descrição, categoria, importância, conta ou "dinheiro" → salvar →
+Finanças › Lançamentos → Novo gasto → valor, descrição, categoria, importância, conta ou "dinheiro" → salvar →
 o gasto entra na lista e no Livre do dia na hora.
 
 **Revisar o que o automático não resolveu**
-Início ou Finanças › Visão geral → "3 gastos para revisar" → Gastos filtrado por "precisa de
+Início ou Finanças › Visão geral → "3 gastos para revisar" → Lançamentos filtrado por "precisa de
 revisão" → resolvo cada um no painel, um depois do outro, sem voltar à lista.
 
 ## Como Investimentos e Patrimônio entram
@@ -224,8 +225,8 @@ filtradas:
 ```
 /                         Início
 /financas                 Visão geral
-/financas/gastos?categoria=restaurante&mes=2026-11
-/financas/gastos/:id      (abre o painel por cima da lista)
+/financas/lancamentos?categoria=restaurante&mes=2026-11
+/financas/lancamentos/:id      (abre o painel por cima da lista)
 /financas/graficos/categoria
 /financas/metas  /financas/metas/:id
 /financas/caixinhas  /financas/caixinhas/:id

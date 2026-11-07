@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addMonths, calendarStart, dayState, monthGrid, transactionDay } from './calendar';
+import { addMonths, calendarStart, dayState, isBareDay, monthGrid, transactionDay } from './calendar';
 
 describe('Cofre calendar', () => {
   it('takes a bare Pluggy day as written and a real instant in Brasília', () => {
@@ -31,5 +31,13 @@ describe('Cofre calendar', () => {
     expect(dayState('2026-11-03', range, 0, true)).toBe('confirmed');
     expect(dayState('2026-11-05', range, 0, false)).toBe('outside');
     expect(dayState('2025-11-03', range, 0, false)).toBe('outside');
+  });
+});
+
+describe('isBareDay', () => {
+  it('tells a bare day from an instant', () => {
+    expect(isBareDay('2026-11-01')).toBe(true);
+    expect(isBareDay('2026-11-01T00:00:00.000Z')).toBe(true);
+    expect(isBareDay('2026-11-01T15:30:00.000Z')).toBe(false);
   });
 });
