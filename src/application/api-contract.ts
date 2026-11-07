@@ -83,6 +83,48 @@ export interface ProvisionalExpenseView {
   readonly text: string | null;
 }
 
+/** One transaction on the Lançamentos list (docs/spec/lancamentos.md). */
+export interface LancamentoView {
+  readonly id: string;
+  /** The Brasília day (yyyy-mm-dd). */
+  readonly day: string;
+  readonly description: string | null;
+  /** Pluggy's category, translated; null when it has none. */
+  readonly category: string | null;
+  /** Always positive; `direction` says whether it came in or went out. */
+  readonly amountCents: number;
+  readonly currency: string;
+  readonly direction: 'in' | 'out';
+  readonly accountName: string | null;
+  /** Pluggy's account type: BANK or CREDIT. */
+  readonly accountType: string | null;
+  /** Pluggy has not posted it yet (PENDING). */
+  readonly pending: boolean;
+  readonly installment: { readonly number: number; readonly total: number } | null;
+}
+
+export interface LancamentosView {
+  readonly month: string;
+  readonly items: readonly LancamentoView[];
+  readonly totals: readonly { readonly currency: string; readonly inCents: number; readonly outCents: number }[];
+}
+
+/** One transaction in the detail panel: the list's fields and what the bank told about it. */
+export interface LancamentoDetailView extends LancamentoView {
+  /** When it happened, as Pluggy sent it. */
+  readonly date: string;
+  /** The bank's own text, when it differs from the description. */
+  readonly descriptionRaw: string | null;
+  /** Pluggy's operation type (PIX, CARTAO, TED...). */
+  readonly operationType: string | null;
+  readonly paymentMethod: string | null;
+  /** Who paid, on money in; who received, on money out. */
+  readonly counterpart: string | null;
+  readonly cardDigits: string | null;
+  /** When the app first saw it. */
+  readonly firstSeenAt: string;
+}
+
 /** A device with a passkey asks for it after an hour without use (docs/spec/acesso.md). */
 export interface LockStatusView {
   readonly deviceHasPasskey: boolean;
@@ -131,6 +173,9 @@ export interface Queries {
   passkeys: { input: Record<string, never>; output: PasskeyView[] };
   calendar: { input: { itemId: string }; output: CalendarView };
   provisionalExpenses: { input: Record<string, never>; output: ProvisionalExpenseView[] };
+  /** The month's transactions (yyyy-mm), newest first. */
+  lancamentos: { input: { month: string }; output: LancamentosView };
+  lancamento: { input: { id: string }; output: LancamentoDetailView };
 }
 
 /** Writes: `POST /api/command/<name>`. Each sends its writes in one atomic batch. */

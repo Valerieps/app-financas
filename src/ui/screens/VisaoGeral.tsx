@@ -18,14 +18,14 @@ export function VisaoGeral({ monthParam }: { monthParam: string | null }) {
     <div className="overview">
       <div className="overview-answer">
         <EmConstrucao className="overview-livre" title={text.livre.title} hint={text.livre.hint} tall />
-        <EmConstrucao title={text.hoje.title} hint={text.hoje.hint} action={link(tabPath('gastos'), text.hoje.link)} />
+        <EmConstrucao title={text.hoje.title} hint={text.hoje.hint} action={link(tabPath('lancamentos'), text.hoje.link)} />
       </div>
       <div className="overview-pair">
         <EmConstrucao title={text.mes.title} hint={text.mes.hint} />
         <EmConstrucao title={text.termometro.title} hint={text.termometro.hint} />
       </div>
       <div className="overview-pair">
-        <EmConstrucao title={text.revisar.title} hint={text.revisar.hint} action={link(tabPath('gastos'), text.revisar.link)} />
+        <EmConstrucao title={text.revisar.title} hint={text.revisar.hint} action={link(tabPath('lancamentos'), text.revisar.link)} />
         <EmConstrucao title={text.metas.title} hint={text.metas.hint} action={link(tabPath('metas'), text.metas.link)} />
       </div>
       <EmConstrucao title={text.caixinhas.title} hint={text.caixinhas.hint} action={link(tabPath('caixinhas'), text.caixinhas.link)} />

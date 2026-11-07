@@ -2,11 +2,11 @@
 // URL, and the detail panel opens over a list at /financas/<list>/:id.
 
 export type ModuleId = 'inicio' | 'financas' | 'investimentos' | 'patrimonio' | 'cofre' | 'ajustes';
-export type FinancasTab = 'visao-geral' | 'gastos' | 'graficos' | 'metas' | 'caixinhas';
+export type FinancasTab = 'visao-geral' | 'lancamentos' | 'graficos' | 'metas' | 'caixinhas';
 
 export const MODULES: readonly ModuleId[] = ['inicio', 'financas', 'investimentos', 'patrimonio'];
 export const SYSTEM_MODULES: readonly ModuleId[] = ['cofre', 'ajustes'];
-export const FINANCAS_TABS: readonly FinancasTab[] = ['visao-geral', 'gastos', 'graficos', 'metas', 'caixinhas'];
+export const FINANCAS_TABS: readonly FinancasTab[] = ['visao-geral', 'lancamentos', 'graficos', 'metas', 'caixinhas'];
 
 export type Route =
   | { readonly module: Exclude<ModuleId, 'financas'> }
@@ -14,7 +14,7 @@ export type Route =
   | { readonly module: 'not_found' };
 
 /** The lists whose items open in the detail panel. */
-const PANEL_TABS: ReadonlySet<FinancasTab> = new Set(['gastos', 'metas', 'caixinhas']);
+const PANEL_TABS: ReadonlySet<FinancasTab> = new Set(['lancamentos', 'metas', 'caixinhas']);
 
 export function modulePath(module: ModuleId): string {
   return module === 'inicio' ? '/' : `/${module}`;
@@ -61,4 +61,18 @@ export function showsMonth(route: Route): boolean {
 /** Adds the selected month to an internal link, so moving between screens keeps it. */
 export function withMonth(path: string, monthKey: string | null): string {
   return monthKey ? `${path}?mes=${encodeURIComponent(monthKey)}` : path;
+}
+
+/**
+ * An internal link that keeps the current query (the month and the list's filters), changing only
+ * `changes`; a null value drops that parameter.
+ */
+export function withQuery(path: string, search: URLSearchParams, changes: Readonly<Record<string, string | null>> = {}): string {
+  const params = new URLSearchParams(search);
+  for (const [key, value] of Object.entries(changes)) {
+    if (value === null) params.delete(key);
+    else params.set(key, value);
+  }
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
 }
