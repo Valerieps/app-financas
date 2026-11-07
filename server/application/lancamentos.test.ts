@@ -117,3 +117,64 @@ describe('lancamento', () => {
     expect(await service.query('lancamento', { id: 'nada' }, NO_CALLER)).toEqual({ ok: false, error: 'not_found' });
   });
 });
+
+describe('lancamentos.tag', () => {
+  async function tagged() {
+    const service = await seed();
+    const command = (input: Record<string, unknown>) => service.command('lancamentos.tag', input, NO_CALLER);
+    const create = async (name: string, input: Record<string, unknown>) => {
+      const result = await service.command(name, input, NO_CALLER);
+      return (result as { value: { id: string } }).value.id;
+    };
+    const tipo = await create('tagLayer.create', { name: 'Tipo' });
+    const origem = await create('tagLayer.create', { name: 'Origem' });
+    const mercado = await create('tag.create', { layerId: tipo, name: 'Mercado' });
+    const lazer = await create('tag.create', { layerId: tipo, name: 'Lazer' });
+    const impulso = await create('tag.create', { layerId: origem, name: 'Impulso' });
+    const tagsOf = async () => {
+      const result = await service.query('lancamentos', { month: '2026-11' }, NO_CALLER);
+      return Object.fromEntries((result as { value: LancamentosView }).value.items.map((i) => [i.id, i.tags]));
+    };
+    return { service, command, tagsOf, tipo, origem, mercado, lazer, impulso };
+  }
+
+  it('puts tags on many lançamentos, replacing the layer’s tag and keeping the other layers', async () => {
+    const { command, tagsOf, tipo, origem, mercado, lazer, impulso } = await tagged();
+    expect(await command({ ids: ['mercado', 'loja'], changes: [{ layerId: tipo, tagId: mercado }, { layerId: origem, tagId: impulso }] })).toEqual({
+      ok: true,
+      value: null,
+      changed: ['tags'],
+    });
+    expect(await command({ ids: ['loja', 'salario'], changes: [{ layerId: tipo, tagId: lazer }] })).toMatchObject({ ok: true });
+    expect(await tagsOf()).toEqual({
+      virada: {},
+      loja: { [tipo]: lazer, [origem]: impulso },
+      mercado: { [tipo]: mercado, [origem]: impulso },
+      salario: { [tipo]: lazer },
+    });
+  });
+
+  it('takes a layer’s tag off', async () => {
+    const { command, tagsOf, tipo, origem, mercado, impulso } = await tagged();
+    await command({ ids: ['mercado', 'loja'], changes: [{ layerId: tipo, tagId: mercado }, { layerId: origem, tagId: impulso }] });
+    await command({ ids: ['mercado', 'loja'], changes: [{ layerId: tipo, tagId: null }] });
+    expect((await tagsOf()).mercado).toEqual({ [origem]: impulso });
+  });
+
+  it('shows the tags on the detail panel', async () => {
+    const { service, command, tipo, mercado } = await tagged();
+    await command({ ids: ['mercado'], changes: [{ layerId: tipo, tagId: mercado }] });
+    const result = await service.query('lancamento', { id: 'mercado' }, NO_CALLER);
+    expect((result as { value: LancamentoDetailView }).value.tags).toEqual({ [tipo]: mercado });
+  });
+
+  it('refuses malformed input, unknown lançamentos and a tag from another layer', async () => {
+    const { command, tipo, origem, mercado } = await tagged();
+    expect(await command({ ids: [], changes: [{ layerId: tipo, tagId: mercado }] })).toEqual({ ok: false, error: 'invalid' });
+    expect(await command({ ids: ['mercado'], changes: [] })).toEqual({ ok: false, error: 'invalid' });
+    expect(await command({ ids: ['mercado'], changes: [{ layerId: tipo, tagId: mercado }, { layerId: tipo, tagId: null }] })).toEqual({ ok: false, error: 'invalid' });
+    expect(await command({ ids: ['mercado', 'apagada'], changes: [{ layerId: tipo, tagId: mercado }] })).toEqual({ ok: false, error: 'not_found' });
+    expect(await command({ ids: ['mercado'], changes: [{ layerId: origem, tagId: mercado }] })).toEqual({ ok: false, error: 'not_found' });
+    expect(await command({ ids: ['mercado'], changes: [{ layerId: 'nada', tagId: null }] })).toEqual({ ok: false, error: 'not_found' });
+  });
+});

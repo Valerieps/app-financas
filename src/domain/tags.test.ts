@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assignTag, canAddLayer, cleanName, clearLayer, MAX_LAYERS, moveInOrder, nameKey, nameProblem } from './tags';
+import { assignTag, canAddLayer, cleanName, clearLayer, commonTags, matchesTags, MAX_LAYERS, moveInOrder, nameKey, nameProblem, tagChanges, toggleTag } from './tags';
 
 describe('names', () => {
   it('trims and collapses spaces', () => {
@@ -43,5 +43,45 @@ describe('a lançamento’s tags', () => {
     expect(tags).toEqual({ origem: 'planejado', tipo: 'mercado' });
     expect(clearLayer(tags, 'tipo')).toEqual({ origem: 'planejado' });
     expect(clearLayer(tags, 'nada')).toEqual(tags);
+  });
+});
+
+describe('tagging many lançamentos', () => {
+  const a = { id: 'a', layerId: 'tipo' };
+  const b = { id: 'b', layerId: 'tipo' };
+
+  it('starts the form with the tags all of them share', () => {
+    expect(commonTags([])).toEqual({});
+    expect(commonTags([{ tipo: 'a', origem: 'x' }])).toEqual({ tipo: 'a', origem: 'x' });
+    expect(commonTags([{ tipo: 'a', origem: 'x' }, { tipo: 'a', origem: 'y' }, { tipo: 'a' }])).toEqual({ tipo: 'a' });
+  });
+
+  it('marks one tag per layer, and a second tap unmarks it', () => {
+    expect(toggleTag({}, a)).toEqual({ tipo: 'a' });
+    expect(toggleTag({ tipo: 'a' }, b)).toEqual({ tipo: 'b' });
+    expect(toggleTag({ tipo: 'a', origem: 'x' }, a)).toEqual({ origem: 'x' });
+  });
+
+  it('saves only the layers I changed', () => {
+    expect(tagChanges({ tipo: 'a' }, { tipo: 'a' })).toEqual([]);
+    expect(tagChanges({ tipo: 'a' }, { tipo: 'b', origem: 'x' })).toEqual([
+      { layerId: 'tipo', tagId: 'b' },
+      { layerId: 'origem', tagId: 'x' },
+    ]);
+    expect(tagChanges({ tipo: 'a', origem: 'x' }, { origem: 'x' })).toEqual([{ layerId: 'tipo', tagId: null }]);
+  });
+
+  it('filters by any chosen tag within a layer and every chosen layer', () => {
+    const layerOf = new Map([
+      ['a', 'tipo'],
+      ['b', 'tipo'],
+      ['x', 'origem'],
+    ]);
+    expect(matchesTags([], layerOf, {})).toBe(true);
+    expect(matchesTags(['a', 'b'], layerOf, { tipo: 'b' })).toBe(true);
+    expect(matchesTags(['a'], layerOf, {})).toBe(false);
+    expect(matchesTags(['a', 'x'], layerOf, { tipo: 'a' })).toBe(false);
+    expect(matchesTags(['a', 'x'], layerOf, { tipo: 'a', origem: 'x' })).toBe(true);
+    expect(matchesTags(['sumiu'], layerOf, {})).toBe(true);
   });
 });

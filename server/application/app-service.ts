@@ -7,7 +7,7 @@ import { addConnection } from './collect/connections';
 import { runSweeps } from './collect/sync';
 import { vault } from './collect/vault';
 import { processPendingEvents } from './collect/webhooks';
-import { lancamento, lancamentos } from './lancamentos';
+import { lancamento, lancamentos, tagLancamentos } from './lancamentos';
 import { cleanUpLock, type Caller } from './lock';
 import { provisionalExpenses } from './notifications';
 import { statement } from './ports';
@@ -80,4 +80,5 @@ const COMMANDS: { [N in CommandName]: Handler<CommandResult<Commands[N]['output'
   'tag.create': async (ctx, input) => createTag(ctx, input),
   'tag.rename': async (ctx, input) => renameTag(ctx, input),
   'tag.delete': async (ctx, input) => deleteTag(ctx, input),
+  'lancamentos.tag': async (ctx, input) => tagLancamentos(ctx, input),
 };
