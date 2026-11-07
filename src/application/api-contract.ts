@@ -24,10 +24,28 @@ export interface ConnectionView {
   };
   /** Products the bank did not share (or Pluggy did not release). */
   readonly unavailable: readonly string[];
+  readonly investments: readonly InvestmentView[];
+}
+
+/** One investment on the Cofre: name, issuer's CNPJ and today's total balance. */
+export interface InvestmentView {
+  readonly id: string;
+  readonly name: string | null;
+  readonly issuerCnpj: string | null;
+  readonly balanceCents: number | null;
+  readonly currency: string;
+}
+
+/** A connection Pluggy told about (by webhook) that is not registered yet. */
+export interface PendingConnectionView {
+  readonly itemId: string;
+  /** When the first event about it arrived. */
+  readonly firstSeenAt: string;
 }
 
 export interface VaultView {
   readonly connections: readonly ConnectionView[];
+  readonly pending: readonly PendingConnectionView[];
 }
 
 /** One account on the Cofre calendar: transactions per Brasília day and the empty days confirmed. */

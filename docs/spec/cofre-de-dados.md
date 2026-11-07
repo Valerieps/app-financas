@@ -16,6 +16,9 @@ Guardar para sempre tudo o que o Pluggy deixar coletar das minhas contas, sem pe
 - As minhas conexões são o Nubank (fase 1) e a Wise (fase 5), pelo Meu Pluggy, até o limite de 5. *(1)*
 - Eu cadastro cada conexão com o itemId copiado do Pluggy Dashboard. *(1)*
   Por quê: o Meu Pluggy não lista as conexões pela API.
+- Quando o Pluggy avisa de uma conexão que ainda não está cadastrada, o Cofre a mostra como
+  "conexão nova encontrada", com um botão para cadastrar com um toque, sem copiar o itemId. *(1)*
+  Por quê: o aviso do Pluggy é o único jeito de o app saber de uma conexão nova.
 - Ao cadastrar uma conexão, o app baixa tudo o que ela oferece, incluindo os 12 meses de transações
   disponíveis. *(1)*
 - A autorização do Meu Pluggy vence em 1 ano. Ao renovar, o Pluggy pode dar um itemId novo para a
@@ -82,6 +85,7 @@ Fora do escopo: pagamentos, Pix Automático, boletos e Smart Transfers.
 - Eu vejo quantas transações, contas, faturas e investimentos estão guardados por conexão, e o que o
   banco não compartilhou. *(1)*
   Por quê: é assim que eu confiro os 7 dias de sync sem perda contra o app do Nubank.
+- Eu vejo cada investimento da conexão com o nome, o CNPJ do emissor e o saldo total de hoje. *(1)*
 - Eu vejo, para cada conta da conexão (a corrente e o cartão, separados), um calendário dos últimos
   12 meses, um mês por vez, que eu troco com setinhas. Cada dia é uma bolinha com a quantidade de
   transações daquele dia. *(1)*
