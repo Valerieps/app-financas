@@ -48,7 +48,7 @@ Para onde foi o meu dinheiro no mês, comparado comigo mesma, sem eu ter que mon
   A maior vem primeiro e Outros por último. *(2)*
 - Ao lado, a tabela dos mesmos números: valor, % do mês e a diferença para a comparação, com o
   total. *(2)*
-- Clicar numa barra abre Gastos filtrado por aquela categoria no mês. *(2)*
+- Clicar numa barra abre Lançamentos filtrado por aquela categoria no mês. *(2)*
 - O botão "Criar meta para <categoria>" abre uma meta nova de teto para a categoria da frase. *(2)*
 
 ## Por importância

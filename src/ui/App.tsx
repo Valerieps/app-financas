@@ -6,6 +6,7 @@ import { useServices } from './backend-context';
 import { Link, useLocation } from './router';
 import { Cofre } from './screens/Cofre';
 import { Graficos } from './screens/Graficos';
+import { LancamentoDetail, Lancamentos } from './screens/Lancamentos';
 import { Locked } from './screens/Locked';
 import { VisaoGeral } from './screens/VisaoGeral';
 import { EmConstrucao } from './shell/EmConstrucao';
@@ -47,31 +48,39 @@ export function App() {
   const month = parsed ?? monthOf(new Date());
 
   return (
-    <Shell route={route} path={path} month={month} monthParam={monthParam}>
+    <Shell route={route} path={path} month={month} monthParam={monthParam} search={search} panel={<Panel route={route} />}>
       <Screen
         route={route}
         path={path}
-        search={search}
         month={month}
+        search={search}
         monthParam={monthParam}
-        onPasskeysChanged={check} onLock={status.deviceHasPasskey ? () => void lockNow() : null} />
+        onPasskeysChanged={check}
+        onLock={status.deviceHasPasskey ? () => void lockNow() : null}
+      />
     </Shell>
   );
+}
+
+/** What the detail panel shows for the item in the URL; null keeps it under construction. */
+function Panel({ route }: { route: Route }) {
+  if (route.module === 'financas' && route.tab === 'lancamentos' && route.detailId) return <LancamentoDetail id={route.detailId} />;
+  return null;
 }
 
 function Screen({
   route,
   path,
-  search,
   month,
+  search,
   monthParam,
   onPasskeysChanged,
   onLock,
 }: {
   route: Route;
   path: string;
-  search: URLSearchParams;
   month: Month;
+  search: URLSearchParams;
   monthParam: string | null;
   onPasskeysChanged: () => void;
   onLock: (() => void) | null;
@@ -79,6 +88,7 @@ function Screen({
   switch (route.module) {
     case 'financas':
       if (route.tab === 'visao-geral') return <VisaoGeral monthParam={monthParam} />;
+      if (route.tab === 'lancamentos') return <Lancamentos month={month} search={search} selectedId={route.detailId ?? null} />;
       if (route.tab === 'graficos')
         return <Graficos chart={graficosChart(path)} month={monthKey(month)} monthParam={monthParam} compareParam={search.get('comparar')} />;
       return <EmConstrucao title={strings.shell.tabs[route.tab]} hint={strings.screens[route.tab]} tall />;

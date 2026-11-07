@@ -7,6 +7,7 @@ import { addConnection } from './collect/connections';
 import { runSweeps } from './collect/sync';
 import { vault } from './collect/vault';
 import { processPendingEvents } from './collect/webhooks';
+import { lancamento, lancamentos } from './lancamentos';
 import { cleanUpLock, type Caller } from './lock';
 import { provisionalExpenses } from './notifications';
 import { statement } from './ports';
@@ -50,6 +51,8 @@ const QUERIES: { [N in QueryName]: Handler<Queries[N]['output'] | QueryError> } 
   provisionalExpenses: async (ctx) => provisionalExpenses(ctx),
   spendingByCategory: async (ctx, input) => spendingByCategory(ctx, input),
   spendingByMonth: async (ctx, input) => spendingByMonth(ctx, input),
+  lancamentos: async (ctx, input) => lancamentos(ctx, input.month),
+  lancamento: async (ctx, input) => lancamento(ctx, input.id),
   passkeys: async (ctx, _input, caller) => {
     const rows = await ctx.sql.all<Omit<PasskeyView, 'thisDevice'> & { device: string }>(
       'SELECT id, label, created_at AS createdAt, last_used_at AS lastUsedAt, device_token_hash AS device FROM passkeys ORDER BY created_at',

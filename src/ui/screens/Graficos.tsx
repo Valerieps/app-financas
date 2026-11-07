@@ -14,6 +14,7 @@ const text = strings.graficos;
 
 /** `comparar` in the URL: absent for the average, `mes-anterior` for the month before. */
 const PREVIOUS = 'mes-anterior';
+const NO_PARAMS = new URLSearchParams();
 
 export function Graficos({
   chart,
@@ -29,7 +30,7 @@ export function Graficos({
 }) {
   const compare: Comparison = compareParam === PREVIOUS ? 'previous' : 'average';
   const link = (to: GraficosChart, over: { mes?: string | null; comparar?: string | null } = {}) =>
-    withQuery(graficosPath(to), { mes: monthParam, comparar: compare === 'previous' ? PREVIOUS : null, ...over });
+    withQuery(graficosPath(to), NO_PARAMS, { mes: monthParam, comparar: compare === 'previous' ? PREVIOUS : null, ...over });
 
   const onCompare = (event: ChangeEvent<HTMLSelectElement>) =>
     navigate(link(chart, { comparar: event.target.value === 'previous' ? PREVIOUS : null }), { replace: true });
@@ -105,7 +106,7 @@ function CategoryView({ chart, monthParam }: { chart: CategoryChart; monthParam:
 
   const scale = Math.max(1, ...chart.rows.map((r) => Math.max(r.cents, r.baselineCents ?? 0)));
   const width = (cents: number) => `${(Math.max(0, cents) / scale) * 100}%`;
-  const gastos = (category: string) => withQuery(tabPath('gastos'), { categoria: category, mes: monthParam });
+  const lancamentos = (category: string) => withQuery(tabPath('lancamentos'), NO_PARAMS, { categoria: category, mes: monthParam });
   const lastCompared = chart.compareMonths[chart.compareMonths.length - 1];
 
   return (
@@ -133,7 +134,7 @@ function CategoryView({ chart, monthParam }: { chart: CategoryChart; monthParam:
               {chart.rows.map((row) => (
                 <Link
                   key={row.category}
-                  to={gastos(row.category)}
+                  to={lancamentos(row.category)}
                   className={`hbar${top?.category === row.category ? ' hbar--warn' : ''}`}
                   title={t.barTitle(name(row.category))}
                 >
@@ -181,7 +182,7 @@ function CategoryView({ chart, monthParam }: { chart: CategoryChart; monthParam:
               </tfoot>
             </table>
             {top && (
-              <Link to={withQuery(tabPath('metas'), { nova: 'teto-categoria', categoria: top.category })} className="button-outline">
+              <Link to={withQuery(tabPath('metas'), NO_PARAMS, { nova: 'teto-categoria', categoria: top.category })} className="button-outline">
                 {t.createGoal(name(top.category))}
               </Link>
             )}

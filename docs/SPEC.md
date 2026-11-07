@@ -46,6 +46,7 @@ do Pluggy apaga.
 | --- | --- |
 | [spec/acesso.md](spec/acesso.md) | Login Google e a digital no celular |
 | [spec/cofre-de-dados.md](spec/cofre-de-dados.md) | Coleta do Pluggy, como os dados são guardados, conexões, tela Cofre, várias moedas |
+| [spec/lancamentos.md](spec/lancamentos.md) | A lista de lançamentos do mês no desktop, os filtros e o painel de detalhe |
 | [spec/gastos-provisorios.md](spec/gastos-provisorios.md) | Notificações do celular, `/gastei` e o casamento com o Pluggy |
 | [spec/classificacao.md](spec/classificacao.md) | Categoria, importância, regras, o que não é gasto, entradas e reembolsos |
 | [spec/livre-do-dia.md](spec/livre-do-dia.md) | Orçamento flexível, Livre do dia, semáforo, termômetro de impulso, custos fixos |

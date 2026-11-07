@@ -16,6 +16,7 @@ import {
   showsMonth,
   tabPath,
   withMonth,
+  withQuery,
   type ModuleId,
   type Route,
 } from './routes';
@@ -25,6 +26,8 @@ export function Shell({
   path,
   month,
   monthParam,
+  search,
+  panel,
   children,
 }: {
   route: Route;
@@ -32,12 +35,17 @@ export function Shell({
   month: Month;
   /** The `mes` in the URL, carried by internal links; null when the URL has none. */
   monthParam: string | null;
+  /** The URL's query: the month and the list's filters, kept when the month or the panel changes. */
+  search: URLSearchParams;
+  /** What the detail panel shows; without it, the panel says it is under construction. */
+  panel?: ReactNode;
   children: ReactNode;
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const parent = panelParentPath(route);
+  const query = search.toString();
   const closePanel = () => {
-    if (parent) navigate(withMonth(parent, monthParam));
+    if (parent) navigate(withQuery(parent, new URLSearchParams(query)));
   };
 
   useEffect(() => {
@@ -47,21 +55,21 @@ export function Shell({
       event.preventDefault();
       if (action === 'open-search') setSearchOpen(true);
       else if (action === 'close-search') setSearchOpen(false);
-      else if (parent) navigate(withMonth(parent, monthParam));
+      else if (parent) navigate(withQuery(parent, new URLSearchParams(query)));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [searchOpen, parent, monthParam]);
+  }, [searchOpen, parent, query]);
 
   return (
     <div className={`shell${parent ? ' shell--panel' : ''}`}>
       <Sidebar route={route} monthParam={monthParam} />
       <div className="shell-main">
-        <Header route={route} path={path} month={month} onSearch={() => setSearchOpen(true)} />
+        <Header route={route} path={path} search={search} month={month} onSearch={() => setSearchOpen(true)} />
         {route.module === 'financas' && <FinancasTabs active={route.tab} monthParam={monthParam} />}
         <main className="shell-content">{children}</main>
       </div>
-      {parent && <DetailPanel onClose={closePanel} />}
+      {parent && <DetailPanel onClose={closePanel}>{panel}</DetailPanel>}
       {searchOpen && <SearchDialog onClose={() => setSearchOpen(false)} />}
     </div>
   );
@@ -104,14 +112,14 @@ function Sidebar({ route, monthParam }: { route: Route; monthParam: string | nul
   );
 }
 
-function Header({ route, path, month, onSearch }: { route: Route; path: string; month: Month; onSearch: () => void }) {
+function Header({ route, path, search, month, onSearch }: { route: Route; path: string; search: URLSearchParams; month: Month; onSearch: () => void }) {
   const trail =
     route.module === 'not_found'
       ? []
       : route.module === 'financas'
         ? [strings.shell.modules.financas, strings.shell.tabs[route.tab]]
         : [strings.shell.modules[route.module]];
-  const goToMonth = (delta: number) => navigate(withMonth(path, monthKey(shiftMonth(month, delta))));
+  const goToMonth = (delta: number) => navigate(withQuery(path, search, { mes: monthKey(shiftMonth(month, delta)) }));
   return (
     <header className="topbar">
       <nav aria-label={strings.shell.youAreHere} className="breadcrumb">
@@ -163,7 +171,7 @@ function FinancasTabs({ active, monthParam }: { active: string; monthParam: stri
   );
 }
 
-function DetailPanel({ onClose }: { onClose: () => void }) {
+function DetailPanel({ onClose, children }: { onClose: () => void; children?: ReactNode }) {
   const close = useRef<HTMLButtonElement>(null);
   useEffect(() => close.current?.focus(), []);
   return (
@@ -174,10 +182,12 @@ function DetailPanel({ onClose }: { onClose: () => void }) {
           <Icon name="close" />
         </button>
       </div>
-      <div className="wip wip--tall">
-        <span className="chip">{strings.wip}</span>
-        <p className="text-label muted">{strings.shell.panel.hint}</p>
-      </div>
+      {children ?? (
+        <div className="wip wip--tall">
+          <span className="chip">{strings.wip}</span>
+          <p className="text-label muted">{strings.shell.panel.hint}</p>
+        </div>
+      )}
     </aside>
   );
 }

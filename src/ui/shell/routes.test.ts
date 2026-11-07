@@ -6,8 +6,8 @@ describe('parseRoute', () => {
     expect(parseRoute('/')).toEqual({ module: 'inicio' });
     expect(parseRoute('/financas')).toEqual({ module: 'financas', tab: 'visao-geral' });
     expect(parseRoute('/financas/')).toEqual({ module: 'financas', tab: 'visao-geral' });
-    expect(parseRoute('/financas/gastos')).toEqual({ module: 'financas', tab: 'gastos' });
-    expect(parseRoute('/financas/gastos/abc')).toEqual({ module: 'financas', tab: 'gastos', detailId: 'abc' });
+    expect(parseRoute('/financas/lancamentos')).toEqual({ module: 'financas', tab: 'lancamentos' });
+    expect(parseRoute('/financas/lancamentos/abc')).toEqual({ module: 'financas', tab: 'lancamentos', detailId: 'abc' });
     expect(parseRoute('/financas/metas/m1')).toEqual({ module: 'financas', tab: 'metas', detailId: 'm1' });
     expect(parseRoute('/financas/caixinhas/c1')).toEqual({ module: 'financas', tab: 'caixinhas', detailId: 'c1' });
     expect(parseRoute('/financas/graficos/categoria')).toEqual({ module: 'financas', tab: 'graficos' });
@@ -19,7 +19,7 @@ describe('parseRoute', () => {
   });
 
   it('rejects anything else', () => {
-    for (const path of ['/inicio', '/financas/visao-geral', '/financas/nada', '/financas/gastos/a/b', '/cofre/x', '/membros', '/financas/gastos/%E0']) {
+    for (const path of ['/inicio', '/financas/visao-geral', '/financas/nada', '/financas/lancamentos/a/b', '/cofre/x', '/membros', '/financas/lancamentos/%E0']) {
       expect(parseRoute(path), path).toEqual({ module: 'not_found' });
     }
   });
@@ -27,8 +27,8 @@ describe('parseRoute', () => {
 
 describe('the detail panel', () => {
   it('closes back to the list it opened over', () => {
-    expect(panelParentPath(parseRoute('/financas/gastos/abc'))).toBe('/financas/gastos');
-    expect(panelParentPath(parseRoute('/financas/gastos'))).toBeNull();
+    expect(panelParentPath(parseRoute('/financas/lancamentos/abc'))).toBe('/financas/lancamentos');
+    expect(panelParentPath(parseRoute('/financas/lancamentos'))).toBeNull();
     expect(panelParentPath(parseRoute('/cofre'))).toBeNull();
   });
 });
@@ -39,8 +39,15 @@ describe('links', () => {
     expect(withMonth(tabPath('visao-geral'), null)).toBe('/financas');
   });
 
+  it('keep the filters and change only what is asked', () => {
+    const search = new URLSearchParams('mes=2026-10&tipo=entradas');
+    expect(withQuery('/financas/lancamentos/t1', search)).toBe('/financas/lancamentos/t1?mes=2026-10&tipo=entradas');
+    expect(withQuery('/financas/lancamentos', search, { mes: '2026-11' })).toBe('/financas/lancamentos?mes=2026-11&tipo=entradas');
+    expect(withQuery('/financas/lancamentos', search, { tipo: null, mes: null })).toBe('/financas/lancamentos');
+  });
+
   it('show the month selector only where a month matters', () => {
-    expect(showsMonth(parseRoute('/financas/gastos'))).toBe(true);
+    expect(showsMonth(parseRoute('/financas/lancamentos'))).toBe(true);
     expect(showsMonth(parseRoute('/cofre'))).toBe(false);
   });
 });
@@ -52,10 +59,5 @@ describe('Gráficos', () => {
     expect(graficosChart('/financas/graficos')).toBe('categoria');
     expect(graficosChart('/financas/graficos/importancia')).toBe('importancia');
     expect(graficosPath('tempo')).toBe('/financas/graficos/tempo');
-  });
-
-  it('builds links with only the parameters that have a value', () => {
-    expect(withQuery('/financas/gastos', { categoria: 'restaurante', mes: null })).toBe('/financas/gastos?categoria=restaurante');
-    expect(withQuery('/financas/graficos', { mes: null })).toBe('/financas/graficos');
   });
 });

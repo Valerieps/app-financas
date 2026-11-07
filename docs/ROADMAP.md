@@ -12,6 +12,7 @@ O que ainda não está pronto.
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
 | Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
+| Lançamentos: filtros por categoria, importância, caixinha, valor e texto; seleção múltipla; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
 | Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | |
 | Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
