@@ -23,16 +23,53 @@ export function monthDays(month: string): { first: string; last: string } {
   return { first: `${month}-01`, last: addDays(`${next}-01`, -1) };
 }
 
+/** Pluggy's category for a card bill payment ("Credit card payment"), on either side. */
+const CARD_PAYMENT_CATEGORY = '0510';
+
+/**
+ * Descriptions that name a card bill payment, as lowercase prefixes: the debit in the bank account,
+ * and the credit that lands on the card. migrations/0005_card_payment.sql applies the same prefixes
+ * with LIKE to what was stored before the rule existed.
+ */
+export const CARD_PAYMENT_BANK_PREFIXES: readonly string[] = ['pagamento de fatura', 'pagamento da fatura', 'pagamento fatura'];
+export const CARD_PAYMENT_CARD_PREFIXES: readonly string[] = [...CARD_PAYMENT_BANK_PREFIXES, 'pagamento recebido'];
+
+export interface CardPaymentSource {
+  readonly type: string | null;
+  readonly amountCents: number;
+  readonly accountType: string | null;
+  readonly pluggyCategoryId: string | null;
+  readonly description: string | null;
+}
+
+/**
+ * Whether a transaction is a card bill payment (docs/spec/lancamentos.md): the money that leaves the
+ * bank account to pay the bill, or the payment the card receives. Pluggy's category says it; without
+ * it, the description does, on money out of an account or money into a card.
+ */
+export function isCardPayment(t: CardPaymentSource): boolean {
+  if (t.pluggyCategoryId?.startsWith(CARD_PAYMENT_CATEGORY)) return true;
+  const text = (t.description ?? '').trim().toLowerCase();
+  if (!text) return false;
+  const card = t.accountType === 'CREDIT';
+  if (direction(t.type, t.amountCents, t.accountType) !== (card ? 'in' : 'out')) return false;
+  return (card ? CARD_PAYMENT_CARD_PREFIXES : CARD_PAYMENT_BANK_PREFIXES).some((prefix) => text.startsWith(prefix));
+}
+
 export interface Totals {
   readonly currency: string;
   readonly inCents: number;
   readonly outCents: number;
 }
 
-/** What came in and went out, per currency, BRL first. */
-export function totals(items: readonly { currency: string; direction: Direction; amountCents: number }[]): Totals[] {
+/**
+ * What came in and went out, per currency, BRL first. Card bill payments stay out: they move money
+ * between my own accounts, and the purchases on the card already count as saídas.
+ */
+export function totals(items: readonly { currency: string; direction: Direction; amountCents: number; cardPayment?: boolean }[]): Totals[] {
   const byCurrency = new Map<string, { inCents: number; outCents: number }>();
   for (const item of items) {
+    if (item.cardPayment) continue;
     const sum = byCurrency.get(item.currency) ?? { inCents: 0, outCents: 0 };
     if (item.direction === 'in') sum.inCents += item.amountCents;
     else sum.outCents += item.amountCents;
@@ -48,15 +85,20 @@ export function sortByDay<T extends { day: string }>(items: readonly T[]): T[] {
   return [...items].sort((a, b) => b.day.localeCompare(a.day));
 }
 
-/** The list's filter, as the URL carries it (`?tipo=entradas`). */
-export type DirectionFilter = 'todos' | 'saidas' | 'entradas';
+/**
+ * The list's filter, as the URL carries it (`?tipo=entradas`). Card bill payments show only under
+ * `cartao` (and `todos`), never as saídas or entradas.
+ */
+export type DirectionFilter = 'todos' | 'saidas' | 'entradas' | 'cartao';
 
 export function parseDirectionFilter(value: string | null): DirectionFilter {
-  return value === 'saidas' || value === 'entradas' ? value : 'todos';
+  return value === 'saidas' || value === 'entradas' || value === 'cartao' ? value : 'todos';
 }
 
-export function matchesFilter(filter: DirectionFilter, value: Direction): boolean {
-  return filter === 'todos' || (filter === 'entradas') === (value === 'in');
+export function matchesFilter(filter: DirectionFilter, item: { direction: Direction; cardPayment: boolean }): boolean {
+  if (filter === 'todos') return true;
+  if (filter === 'cartao') return item.cardPayment;
+  return !item.cardPayment && (filter === 'entradas') === (item.direction === 'in');
 }
 
 /** The account filter, as the URL carries it (`?conta=a&conta=b`); none chosen keeps every account. */

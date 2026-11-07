@@ -2,6 +2,7 @@
 // id may (the card deletes and recreates a transaction when its date, amount or description
 // change), so a fetched transaction is recognized by its Pluggy id or else by its match key.
 // Nothing is deleted: a transaction that disappears gets deleted_at, and may come back.
+import { isCardPayment } from '../../../src/domain/lancamentos';
 import { matchKeys, toCents } from '../../../src/domain/vault';
 import { nowIso, type Context } from '../context';
 import { statement, type SqlValue, type Statement } from '../ports';
@@ -59,6 +60,8 @@ export interface AccountRef {
   readonly id: string;
   readonly pluggyId: string;
   readonly itemId: string;
+  /** Pluggy's account type: BANK or CREDIT. */
+  readonly type: string | null;
 }
 
 export interface TransactionSyncOptions {
@@ -138,7 +141,7 @@ export async function syncTransactions(ctx: Context, account: AccountRef, option
       }
       current = candidate;
     }
-    const columns = transactionColumns(transaction, account.id, matchKey);
+    const columns = transactionColumns(transaction, account, matchKey);
     const group: Statement[] = [];
     let id: string;
     if (!current) {
@@ -186,15 +189,24 @@ export async function syncTransactions(ctx: Context, account: AccountRef, option
   return counts;
 }
 
-function transactionColumns(t: PluggyTransaction, accountId: string, matchKey: string): Row {
+function transactionColumns(t: PluggyTransaction, account: AccountRef, matchKey: string): Row {
+  const amountCents = toCents(t.amount) ?? 0;
+  // Every write decides it again, so a payment that Pluggy recategorizes or renames follows.
+  const cardPayment = isCardPayment({
+    type: t.type ?? null,
+    amountCents,
+    accountType: account.type,
+    pluggyCategoryId: t.categoryId ?? null,
+    description: t.description ?? null,
+  });
   return {
     pluggy_id: t.id,
-    account_id: accountId,
+    account_id: account.id,
     match_key: matchKey,
     provider_id: t.providerId ?? null,
     provider_code: t.providerCode ?? null,
     date: t.date,
-    amount_cents: toCents(t.amount) ?? 0,
+    amount_cents: amountCents,
     currency_code: t.currencyCode,
     amount_in_account_currency_cents: toCents(t.amountInAccountCurrency),
     balance_cents: toCents(t.balance),
@@ -207,6 +219,7 @@ function transactionColumns(t: PluggyTransaction, accountId: string, matchKey: s
     bill_id: t.creditCardMetadata?.billId ?? null,
     pluggy_created_at: t.createdAt ?? null,
     pluggy_updated_at: t.updatedAt ?? null,
+    card_payment: cardPayment ? 1 : 0,
   };
 }
 

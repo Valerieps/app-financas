@@ -102,6 +102,8 @@ export interface LancamentoView {
   readonly accountType: string | null;
   /** Pluggy has not posted it yet (PENDING). */
   readonly pending: boolean;
+  /** A card bill payment: the bank debit that pays the bill or the credit on the card; out of the totals. */
+  readonly cardPayment: boolean;
   readonly installment: { readonly number: number; readonly total: number } | null;
   /** My tags on it: for each layer that has one, the tag id (docs/spec/categorias.md). */
   readonly tags: TagAssignment;
@@ -110,6 +112,7 @@ export interface LancamentoView {
 export interface LancamentosView {
   readonly month: string;
   readonly items: readonly LancamentoView[];
+  /** Saídas and entradas of the month, without the card bill payments. */
   readonly totals: readonly { readonly currency: string; readonly inCents: number; readonly outCents: number }[];
 }
 

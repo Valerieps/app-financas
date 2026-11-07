@@ -22,6 +22,7 @@ Um termo, um sentido. Estes nomes valem para os textos da interface e para as do
 - **Livre do dia:** quanto eu posso gastar hoje sem prejudicar o mês. (`spec/livre-do-dia.md`)
 - **Orçamento flexível:** a renda líquida menos custos fixos, parcelas do mês e meta de reserva. (`spec/livre-do-dia.md`)
 - **Órfão:** gasto provisório que não casou com nenhuma transação do Pluggy dentro da janela. (`spec/gastos-provisorios.md`)
+- **Pagamento de cartão:** o débito na conta que paga a fatura do cartão e o crédito que entra no cartão por ele. Fica fora dos totais de Lançamentos. (`spec/lancamentos.md`)
 - **Projetos especiais:** a importância que fica fora do orçamento. (`spec/classificacao.md`)
 - **Renovação:** a autorização anual do Meu Pluggy, que precisa ser renovada para a coleta continuar. (`spec/cofre-de-dados.md`)
 - **Retrato do dia:** os saldos e as posições de investimento guardados uma vez por dia. (`spec/cofre-de-dados.md`)

@@ -32,7 +32,7 @@ import { modulePath, tabPath, withQuery } from '../shell/routes';
 import { useQuery } from '../use-query';
 
 const text = strings.lancamentos;
-const FILTERS: readonly DirectionFilter[] = ['todos', 'saidas', 'entradas'];
+const FILTERS: readonly DirectionFilter[] = ['todos', 'saidas', 'entradas', 'cartao'];
 
 const money = (cents: number, currency: string) => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency });
 const signed = (item: { amountCents: number; currency: string; direction: 'in' | 'out' }) =>
@@ -85,7 +85,7 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
   const sort = parseSort(search.get('ordem'), search.get('sentido'));
   const items = sortLancamentos(
     (view?.items ?? []).filter(
-      (item) => matchesFilter(filter, item.direction) && matchesAccounts(chosenAccounts, account(item)) && matchesTags(chosenTags, layerOf, item.tags),
+      (item) => matchesFilter(filter, item) && matchesAccounts(chosenAccounts, account(item)) && matchesTags(chosenTags, layerOf, item.tags),
     ),
     sort,
   );
@@ -105,6 +105,11 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
     anchor.current = id;
   };
   const monthTotals = view?.totals ?? [];
+  // What left the accounts to pay the card, per currency: out of the totals, but said so.
+  const cardPaid = new Map<string, number>();
+  for (const item of view?.items ?? []) {
+    if (item.cardPayment && item.direction === 'out') cardPaid.set(item.currency, (cardPaid.get(item.currency) ?? 0) + item.amountCents);
+  }
   const today = saoPauloDate(new Date());
   const listPath = tabPath('lancamentos');
 
@@ -133,6 +138,11 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
               {filtering ? text.summaryFiltered(items.length, view.items.length) : text.summary(view.items.length)}
             </p>
           )}
+          {[...cardPaid].map(([currency, cents]) => (
+            <p key={currency} className="text-label muted lanc-count">
+              {text.cardPaymentsOut(money(cents, currency))}
+            </p>
+          ))}
         </div>
 
         {selected.length > 0 ? (

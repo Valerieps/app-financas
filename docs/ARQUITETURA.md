@@ -86,7 +86,7 @@ Coleta (fase 1):
 | `item_resources` | produto por conexão | produto, disponível, motivo |
 | `accounts` | conta | `id` próprio, `pluggy_id`, tipo, subtipo, final do número, moeda, limite |
 | `account_balance_snapshots` | conta por dia | saldo, limite disponível, data |
-| `transactions` | transação definitiva | `id` próprio, `pluggy_id`, `provider_id`, `provider_code`, data, valor, moeda, valor em reais, status, tipo, `operation_type`, descrição, conta, fatura, `deleted_at` |
+| `transactions` | transação definitiva | `id` próprio, `pluggy_id`, `provider_id`, `provider_code`, data, valor, moeda, valor em reais, status, tipo, `operation_type`, descrição, conta, fatura, `card_payment` (pagamento de cartão, decidido a cada escrita pela coleta), `deleted_at` |
 | `transaction_versions` | mudança numa transação | transação, versão anterior em JSON, `changed_at` |
 | `transaction_payment_data` | transação com pagamento | pagador e recebedor (nome, documento, banco), método, motivo, boleto |
 | `transaction_card_data` | transação de cartão | parcela n/total, valor total, data da compra, MCC, final do cartão |

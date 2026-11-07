@@ -78,7 +78,7 @@ export async function syncItem(ctx: Context, itemId: string, kind: SyncKind): Pr
     for (const account of accounts) {
       const result = await syncTransactions(
         ctx,
-        { id: account.id, pluggyId: account.pluggyId, itemId },
+        { id: account.id, pluggyId: account.pluggyId, itemId, type: account.type },
         kind === 'initial' ? {} : { dateFrom: addDays(today, -RECENT_DAYS), markMissing: healthy(item) },
       );
       if (!result) throw new PluggyUnavailable('transactions', 502);
@@ -116,7 +116,7 @@ export async function syncAccountTransactions(
   pluggyAccountId: string,
   event: { createdAtFrom?: string; deletedIds?: readonly string[] },
 ): Promise<boolean> {
-  const [account] = await ctx.sql.all<{ id: string }>('SELECT id FROM accounts WHERE pluggy_id = ? AND item_id = ?', pluggyAccountId, itemId);
+  const [account] = await ctx.sql.all<{ id: string; type: string | null }>('SELECT id, type FROM accounts WHERE pluggy_id = ? AND item_id = ?', pluggyAccountId, itemId);
   // An account the vault does not know yet comes with the whole connection.
   if (!account) return syncItem(ctx, itemId, 'webhook');
 
@@ -126,7 +126,7 @@ export async function syncAccountTransactions(
     const today = saoPauloDate(ctx.clock.now());
     const counts = await syncTransactions(
       ctx,
-      { id: account.id, pluggyId: pluggyAccountId, itemId },
+      { id: account.id, pluggyId: pluggyAccountId, itemId, type: account.type },
       {
         dateFrom: addDays(today, -RECENT_DAYS),
         createdAtFrom: event.createdAtFrom,

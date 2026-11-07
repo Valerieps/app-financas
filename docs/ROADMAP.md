@@ -54,3 +54,4 @@ O que ainda não está pronto.
 - [ ] Um lançamento escondido por um filtro sai da seleção; trocar de mês ou salvar limpa a seleção; até 500 de uma vez (`spec/categorias.md`).
 - [ ] No filtro por tags, tags da mesma camada somam e camadas diferentes se cruzam (`spec/lancamentos.md`).
 - [ ] Uma conexão substituída fica de fora dos gráficos, e os gastos provisórios ainda não entram (`spec/graficos.md`).
+- [ ] Pagamento de cartão: as descrições que o reconhecem sem a categoria do Pluggy, Todos ainda o mostra, e o topo diz à parte quanto foi pago (`spec/lancamentos.md`).
