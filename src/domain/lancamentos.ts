@@ -1,5 +1,5 @@
 // The Lançamentos list (docs/spec/lancamentos.md): every transaction of the month, money out
-// (gastos) and money in (créditos), grouped by Brasília day.
+// (gastos) and money in (créditos), newest Brasília day first.
 import { addDays } from './vault';
 
 export type Direction = 'in' | 'out';
@@ -43,20 +43,9 @@ export function totals(items: readonly { currency: string; direction: Direction;
     .sort((a, b) => (a.currency === 'BRL' ? -1 : b.currency === 'BRL' ? 1 : a.currency.localeCompare(b.currency)));
 }
 
-export interface DayGroup<T> {
-  readonly day: string;
-  readonly items: readonly T[];
-}
-
-/** Items grouped by day, newest day first, keeping each day's order. */
-export function groupByDay<T extends { day: string }>(items: readonly T[]): DayGroup<T>[] {
-  const days = new Map<string, T[]>();
-  for (const item of items) {
-    const list = days.get(item.day);
-    if (list) list.push(item);
-    else days.set(item.day, [item]);
-  }
-  return [...days.entries()].sort(([a], [b]) => b.localeCompare(a)).map(([day, list]) => ({ day, items: list }));
+/** Items sorted newest day first, keeping each day's order. */
+export function sortByDay<T extends { day: string }>(items: readonly T[]): T[] {
+  return [...items].sort((a, b) => b.day.localeCompare(a.day));
 }
 
 /** The list's filter, as the URL carries it (`?tipo=entradas`). */
@@ -70,15 +59,36 @@ export function matchesFilter(filter: DirectionFilter, value: Direction): boolea
   return filter === 'todos' || (filter === 'entradas') === (value === 'in');
 }
 
+/** The account filter, as the URL carries it (`?conta=a&conta=b`); none chosen keeps every account. */
+export function matchesAccounts(chosen: readonly string[], account: string): boolean {
+  return chosen.length === 0 || chosen.includes(account);
+}
+
+/** The accounts chosen after a tap on one: adds it, or takes it out when it was chosen. */
+export function toggleAccount(chosen: readonly string[], account: string): string[] {
+  return chosen.includes(account) ? chosen.filter((a) => a !== account) : [...chosen, account];
+}
+
 const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
-/** A day's heading on the list: "Hoje · sáb, 7 nov", "Ontem · sex, 6 nov", "qui, 5 nov". */
-export function dayLabel(day: string, today: string, words: { today: string; yesterday: string }): string {
+function shortDay(day: string): string {
   const [year, month, date] = day.split('-').map(Number) as [number, number, number];
   const weekday = new Date(Date.UTC(year, month - 1, date)).getUTCDay();
-  const short = `${WEEKDAYS[weekday]}, ${date} ${MONTHS_SHORT[month - 1]}`;
+  return `${WEEKDAYS[weekday]}, ${date} ${MONTHS_SHORT[month - 1]}`;
+}
+
+/** A day in full: "Hoje · sáb, 7 nov", "Ontem · sex, 6 nov", "qui, 5 nov". */
+export function dayLabel(day: string, today: string, words: { today: string; yesterday: string }): string {
+  const short = shortDay(day);
   if (day === today) return `${words.today} · ${short}`;
   if (day === addDays(today, -1)) return `${words.yesterday} · ${short}`;
   return short;
+}
+
+/** A day in the list's Data column: "Hoje", "Ontem", "qui, 5 nov". */
+export function dayCell(day: string, today: string, words: { today: string; yesterday: string }): string {
+  if (day === today) return words.today;
+  if (day === addDays(today, -1)) return words.yesterday;
+  return shortDay(day);
 }
