@@ -15,18 +15,89 @@
   --color-on-brand: #ffffff;
   --color-danger: #b3261e;
   --color-on-danger: #ffffff;
+  /* Bar tracks and inset areas, a step darker than --color-bg */
+  --color-sunken: #efeee8;
+  --color-brand-strong: #3d624b;
+  --color-brand-soft: #e7efe9;
+
+  /* Semáforo: a soft background and a text color for each light; text passes 4.5:1 on its background */
+  --color-ok-bg: #e4efe7;
+  --color-ok: #2f6243;
+  --color-warn-bg: #f7eed0;
+  --color-warn: #765500;
+  --color-risk-bg: #f6e3df;
+  --color-risk: #9a3324;
+
+  /* Importâncias (dots and bars). Impulso is orange so it never reads as the red of the semáforo */
+  --color-obrigatorio: #4a6178;
+  --color-rotina: #5f7f52;
+  --color-impulso: #b4561a;
+  --color-projetos: #7457a3;
 
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-size-base: 15px;
 
+  /*
+   * Type scale (docs/rascunhos/desktop-visual.md): six sizes, weights 400/500/600 only.
+   * Display is the one answer number of a screen; at most one per screen.
+   */
+  --font-size-display: 56px;
+  --line-height-display: 64px;
+  --font-size-number: 32px;
+  --line-height-number: 40px;
+  --font-size-title: 20px;
+  --line-height-title: 28px;
+  --font-size-body: 15px;
+  --line-height-body: 22px;
+  --font-size-label: 13px;
+  --line-height-label: 18px;
+  --font-size-caption: 12px;
+  --line-height-caption: 16px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-strong: 600;
+
+  /* Spacing: a 4px grid. Space inside a group is always smaller than space between groups */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
 
   --radius: 8px;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+
+  /* Desktop layout */
+  --size-sidebar: 240px;
+  --size-detail-panel: 400px;
+  --size-content-max: 1200px;
+  /* Below 1024px wide the sidebar shows only icons; below 1280px the detail panel opens over the
+     content. CSS cannot read variables in media queries, so desktop.css repeats these two widths. */
+  --size-sidebar-collapsed: 72px;
+  --size-header: 64px;
+  --size-control: 40px;
+  --size-control-small: 32px;
+  --size-icon: 18px;
+  --icon-stroke: 1.75;
+  --size-dot-small: 8px;
+  --size-brand-dot: 12px;
+  --size-search: 240px;
+  --size-month-label: 128px;
+  --size-dialog: 560px;
+  --border-width: 1px;
+  --border-width-strong: 2px;
+  --radius-small: 4px;
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-over: 0.06em;
+  /* Only the detail panel and the Ctrl+K dialog cast a shadow; everything else is a 1px border */
+  --shadow-overlay: 0 12px 32px rgb(0 0 0 / 0.16);
+  --color-scrim: rgb(0 0 0 / 0.32);
+  --z-panel: 10;
+  --z-dialog: 20;
 
   /* The dots of the Cofre calendar */
   --size-dot: 34px;
@@ -46,5 +117,23 @@
     --color-on-brand: #161917;
     --color-danger: #f2b8b5;
     --color-on-danger: #161917;
+    --color-sunken: #1a1e1b;
+    --color-brand-strong: #b8d9c2;
+    --color-brand-soft: #26332b;
+
+    --color-ok-bg: #213a2a;
+    --color-ok: #a9d6b6;
+    --color-warn-bg: #3a3218;
+    --color-warn: #e9cf7a;
+    --color-risk-bg: #3e2420;
+    --color-risk: #f2b8b5;
+
+    --color-obrigatorio: #9fb4c9;
+    --color-rotina: #a8c79b;
+    --color-impulso: #e9a06e;
+    --color-projetos: #c3aee6;
+
+    --shadow-overlay: 0 12px 32px rgb(0 0 0 / 0.48);
+    --color-scrim: rgb(0 0 0 / 0.56);
   }
 }

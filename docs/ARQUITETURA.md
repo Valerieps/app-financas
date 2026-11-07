@@ -61,8 +61,13 @@ espelho noturno (desktop) ◄── wrangler d1 export + sync do R2
   quando o cartão recria a transação. Contas de uma conexão renovada são ligadas às da antiga por
   tipo + subtipo + final do número; faturas, investimentos e empréstimos da conexão nova começam
   registros novos.
-- **Decisões separadas:** `user_overrides`, `classification_rules` e `category_bucket_map` nunca são
+- **Decisões separadas:** `user_overrides`, `classification_rules` e `category_importance_map` nunca são
   tocadas pela sincronização.
+- **Só a coleta grava o cofre:** as tabelas que guardam o que o Pluggy devolveu (do `raw_payloads`
+  ao `pluggy_categories` na tabela abaixo) só são escritas pelo código de
+  `server/application/collect/`. Ajustes manuais, categorias e importâncias vão para tabelas próprias,
+  nunca editam o cofre. O `server/application/vault-writes.test.ts` confere isso em todo build e
+  obriga cada tabela nova a ser classificada como cofre ou não.
 - Valores em centavos (inteiro), sempre com a moeda; datas em UTC, convertidas para
   `America/Sao_Paulo` só na exibição e na virada do dia.
 - Toda tabela que espelha a API tem `raw_json`, `first_seen_at` e `last_seen_at`.
@@ -109,14 +114,14 @@ Classificação, orçamento e decisões (fases 2 a 4):
 | `fixed_expenses` | custo fixo | nome, valor, dia de vencimento, ativo |
 | `provisional_expenses` | notificação de gasto (compra ou Pix enviado) | fonte, app, título e texto, tipo, valor, moeda, estabelecimento, `posted_at`, `received_at`, bruto, status (`provisional`, `unreadable`), transação casada |
 | `categories` | categoria | nome, pai, id do Pluggy de origem |
-| `value_buckets` | caixinha | nome, conta no orçamento, ordem |
-| `category_bucket_map` | ligação categoria → caixinha | categoria, caixinha, vigente de/até |
-| `classification_rules` | regra | condição (estabelecimento, pagador, `operation_type`), categoria e/ou caixinha |
-| `user_overrides` | decisão sobre uma transação | categoria, caixinha, reembolsável (%), nota |
+| `importance_levels` | importância | nome, conta no orçamento, ordem |
+| `category_importance_map` | ligação categoria → importância | categoria, importância, vigente de/até |
+| `classification_rules` | regra | condição (estabelecimento, pagador, `operation_type`), categoria e/ou importância |
+| `user_overrides` | decisão sobre uma transação | categoria, importância, reembolsável (%), nota |
 | `reimbursements` | reembolso ↔ gasto | gasto, reembolso, valor coberto |
 
-O mapa categoria → caixinha tem vigência para que mudar o mapa hoje não reescreva meses fechados.
-No código e no banco, caixinha é `bucket` (`value_buckets`).
+O mapa categoria → importância tem vigência para que mudar o mapa hoje não reescreva meses fechados.
+No código e no banco, importância é `importance` (`importance_levels`).
 
 ## Migrações
 

@@ -13,10 +13,10 @@ O feedback chega no Telegram segundos depois da compra, ligando o gasto ao que s
 ## Resposta a cada gasto
 
 - Quando um gasto chega, o bot me responde em menos de 3 segundos com o valor, o estabelecimento, a
-  categoria, a caixinha, o Livre de hoje com a cor do semáforo e o termômetro de impulso. *(3)*
-  Exemplo: **R$ 38,50** no **iFood** · Restaurante · caixinha Impulso. **R$ 71,50** livres para hoje
+  categoria, a importância, o Livre de hoje com a cor do semáforo e o termômetro de impulso. *(3)*
+  Exemplo: **R$ 38,50** no **iFood** · Restaurante · importância Impulso. **R$ 71,50** livres para hoje
   (verde). Impulso no mês: R$ 320 / R$ 500.
-- A resposta tem os botões "Mudar caixinha" e "Ver semáforo". O botão mexe só na caixinha, não na
+- A resposta tem os botões "Mudar importância" e "Ver semáforo". O botão mexe só na importância, não na
   categoria. *(3)*
 
 ## Comandos

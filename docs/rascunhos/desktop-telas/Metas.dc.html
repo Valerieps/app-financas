@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Finanças: Metas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+.sv{--bg:#f6f5f0;--surface:#ffffff;--sunken:#efeee8;--text:#2b2e2c;--muted:#5f6661;--border:#e2e3dc;--brand:#4f7a5e;--brand-strong:#3d624b;--brand-soft:#e7efe9;--ok-bg:#e4efe7;--ok:#2f6243;--warn-bg:#f7eed0;--warn:#765500;--impulso:#b4561a;font-family:Inter,system-ui,'Segoe UI',sans-serif;font-size:15px;line-height:22px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums}
+.t-title{font-size:20px;line-height:28px;font-weight:600;margin:0}
+.t-body{font-size:15px;line-height:22px;margin:0}
+.t-strong{font-size:15px;line-height:22px;font-weight:600;margin:0}
+.t-label{font-size:13px;line-height:18px;font-weight:500}
+.t-caption{font-size:12px;line-height:16px}
+.t-over{font-size:12px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.muted{color:var(--muted)}
+.tab{display:inline-block;padding:12px 0;font-size:15px;line-height:22px;font-weight:500;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent}
+.tab:hover{color:var(--text)}
+.tab[aria-current="page"]{color:var(--text);border-bottom-color:var(--brand)}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:500 15px/22px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-strong);color:#fff}
+.icon-btn{width:36px;height:36px;padding:0;justify-content:center;border-color:transparent;background:transparent}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;font-size:13px;line-height:18px;font-weight:500;box-sizing:border-box;white-space:nowrap}
+.bar{position:relative;height:8px;border-radius:999px;background:var(--sunken)}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
+.pace{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--text);border-radius:1px}
+.goal{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,2fr) minmax(0,1.6fr) 128px;gap:24px;align-items:center;padding:20px 24px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text)}
+.goal:hover{background:var(--bg);color:var(--text)}
+.group{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+a{color:var(--brand-strong)}a:hover{color:var(--text)}
+svg.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+kbd{font:500 12px/16px Inter,system-ui,sans-serif;border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--muted);background:var(--bg)}
+</style>
+</helmet>
+<div class="sv" style="display:flex;flex-wrap:wrap;min-height:100vh">
+<div style="flex:0 0 240px;display:flex"><dc-import name="Sidebar" active="financas" tone="verde" livre="R$ 82,40" hint-size="240px,100%"></dc-import></div>
+<main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column">
+
+<header style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 32px;min-height:64px;box-sizing:border-box;background:var(--surface);border-bottom:1px solid var(--border)">
+<nav aria-label="Você está em" class="t-body" style="display:flex;gap:8px;align-items:center"><span class="muted">Finanças</span><span class="muted" aria-hidden="true">›</span><span style="font-weight:600">Metas</span></nav>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:8px;height:40px;box-sizing:border-box;padding:0 2px">
+<button class="btn icon-btn" aria-label="Mês anterior"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></button>
+<span class="t-body" style="font-weight:500;min-width:128px;text-align:center">novembro 2026</span>
+<button class="btn icon-btn" aria-label="Próximo mês"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+</div>
+<button class="btn" style="min-width:240px;justify-content:flex-start;color:var(--muted)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>Buscar ou fazer…<span style="flex:1"></span><kbd>Ctrl K</kbd></button>
+</header>
+<nav aria-label="Telas de Finanças" style="display:flex;gap:32px;padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap">
+<a class="tab" href="VisaoGeral.dc.html">Visão geral</a>
+<a class="tab" href="Gastos.dc.html">Gastos</a>
+<a class="tab" href="Graficos.dc.html">Gráficos</a>
+<a class="tab" href="Metas.dc.html" aria-current="page">Metas</a>
+<a class="tab" href="Caixinhas.dc.html">Caixinhas</a>
+</nav>
+
+<div style="padding:32px;display:flex;flex-direction:column;gap:32px;max-width:1200px;width:100%;box-sizing:border-box">
+<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:240px">
+<h2 class="t-title">4 de 5 metas do mês no caminho</h2>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip" style="background:var(--warn-bg);color:var(--warn)">▲ 1 pede atenção</span><span class="chip" style="background:var(--ok-bg);color:var(--ok)">● 4 no caminho</span><span class="chip" style="background:var(--sunken);color:var(--text)">✓ 1 cumprida</span></div>
+</div>
+<a class="btn btn-primary" href="#"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Nova meta</a>
+</div>
+
+<section style="display:flex;flex-direction:column;gap:12px">
+<h3 class="t-over" style="margin:0">Pede atenção</h3>
+<div class="group">
+<a class="goal" href="Gastos.dc.html" style="border-bottom:0">
+<div style="display:flex;flex-direction:column;gap:2px"><span class="t-strong">Restaurante até R$ 250/mês</span><span class="t-label muted">Teto por categoria</span></div>
+<div class="bar" role="img" aria-label="75% do teto; 23% do mês passou"><i style="width:75%;background:var(--warn)"></i><span class="pace" style="left:23%"></span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span class="num">R$ 186,40 <span class="muted">de R$ 250</span></span><span class="t-label" style="color:var(--warn)">R$ 2,65 por dia até o fim do mês</span></div>
+<span class="chip" style="background:var(--warn-bg);color:var(--warn);justify-self:end">▲ Atenção</span>
+</a>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:12px">
+<h3 class="t-over" style="margin:0">No caminho</h3>
+<div class="group">
+<a class="goal" href="#">
+<div style="display:flex;flex-direction:column;gap:2px"><span class="t-strong">Impulso até R$ 300/mês</span><span class="t-label muted">Teto por importância · termômetro de impulso</span></div>
+<div class="bar"><i style="width:39%;background:var(--impulso)"></i><span class="pace" style="left:23%"></span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span class="num">R$ 118,00 <span class="muted">de R$ 300</span></span><span class="t-label muted">faltam R$ 182,00</span></div>
+<span class="chip" style="background:var(--ok-bg);color:var(--ok);justify-self:end">● No caminho</span>
+</a>
+<a class="goal" href="#">
+<div style="display:flex;flex-direction:column;gap:2px"><span class="t-strong">Gastos até 70% da renda</span><span class="t-label muted">Proporção</span></div>
+<div class="bar"><i style="width:41%;background:var(--brand)"></i><span class="pace" style="left:70%;background:var(--muted)"></span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span class="num">41% <span class="muted">de 70%</span></span><span class="t-label muted">R$ 2.146,30 de R$ 5.200,00 de entradas</span></div>
+<span class="chip" style="background:var(--ok-bg);color:var(--ok);justify-self:end">● No caminho</span>
+</a>
+<a class="goal" href="#">
+<div style="display:flex;flex-direction:column;gap:2px"><span class="t-strong">Guardar R$ 1.000/mês</span><span class="t-label muted">Economia mensal · alimenta o Livre do dia</span></div>
+<div class="bar"><i style="width:100%;background:var(--brand)"></i></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span class="num">R$ 3.053,70 <span class="muted">até agora</span></span><span class="t-label muted">entradas − gastos; o mês não acabou</span></div>
+<span class="chip" style="background:var(--ok-bg);color:var(--ok);justify-self:end">● No caminho</span>
+</a>
+<a class="goal" href="Caixinhas.dc.html" style="border-bottom:0">
+<div style="display:flex;flex-direction:column;gap:2px"><span class="t-strong">Viagem: R$ 6.000 até julho 2027</span><span class="t-label muted">Objetivo de caixinha · mora em Caixinhas</span></div>
+<div class="bar"><i style="width:40%;background:var(--brand)"></i></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span class="num">R$ 2.400 <span class="muted">de R$ 6.000</span></span><span class="t-label muted">R$ 450 por mês até lá</span></div>
+<span class="chip" style="background:var(--ok-bg);color:var(--ok);justify-self:end">● No caminho</span>
+</a>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:12px">
+<h3 class="t-over" style="margin:0">Cumpridas</h3>
+<div class="group">
+<a class="goal" href="#" style="border-bottom:0">
+<div style="display:flex;flex-direction:column;gap:2px"><span class="t-strong">Notebook novo: R$ 4.500</span><span class="t-label muted">Objetivo de caixinha · cumprida em 28 out</span></div>
+<div class="bar"><i style="width:100%;background:var(--ok)"></i></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span class="num">R$ 4.500 <span class="muted">de R$ 4.500</span></span><span class="t-label muted">em 9 meses</span></div>
+<span class="chip" style="background:var(--sunken);color:var(--text);justify-self:end">✓ Cumprida</span>
+</a>
+</div>
+</section>
+
+<p class="t-label muted" style="margin:0">A linha preta em cada barra é onde eu deveria estar hoje, se o gasto fosse igual todos os dias. Clicar numa meta abre o painel com o histórico mês a mês.</p>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

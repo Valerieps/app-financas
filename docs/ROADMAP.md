@@ -12,13 +12,15 @@ O que ainda não está pronto.
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
 | Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
-| Categoria, caixinha, regras e Gemini | 2 | `spec/classificacao.md` | |
+| Lançamentos: filtros por categoria, importância, conta, caixinha, valor e texto; seleção múltipla; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
+| Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
 | Bot do Telegram | 3 | `spec/telegram.md` | |
 | Tela do semáforo | 3 | `spec/tela-do-celular.md` | |
 | Faturas e parcelas futuras | 4 | `spec/cartao-de-credito.md` | |
 | Reembolsos | 4 | `spec/classificacao.md` | |
 | Avisos de renovação e de erro nas conexões | 4 | `spec/cofre-de-dados.md` | |
+| Holerite e conferência do líquido | 4 | `spec/holerite.md` | Responder o "Em aberto" antes de construir |
 | Exportação e API de dados | 4 | `spec/exportacao-e-api.md` | |
 | Wise e várias moedas | 5 | `spec/cofre-de-dados.md` | |
 
@@ -28,7 +30,11 @@ O que ainda não está pronto.
 
 ## Adiado
 
-(Nada adiado)
+- Uma tela própria para os investimentos, com mais detalhes de cada um; por enquanto o Cofre mostra
+  só o nome, o CNPJ e o saldo de hoje (`spec/cofre-de-dados.md`).
+
+- Os lançamentos de ações do holerite ligados à emissão do Carnê-leão; por enquanto o app só guarda
+  esses lançamentos com o tipo Ações (`spec/holerite.md`).
 
 ## Revisar as lacunas que o agente decidiu
 

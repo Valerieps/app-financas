@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fundamentos do desktop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+.sv{--bg:#f6f5f0;--surface:#ffffff;--sunken:#efeee8;--text:#2b2e2c;--muted:#5f6661;--border:#e2e3dc;--brand:#4f7a5e;--brand-strong:#3d624b;--brand-soft:#e7efe9;--ok-bg:#e4efe7;--ok:#2f6243;--warn-bg:#f7eed0;--warn:#765500;--risk-bg:#f6e3df;--risk:#9a3324;--obrig:#4a6178;--rotina:#5f7f52;--impulso:#b4561a;--projetos:#7457a3;font-family:Inter,system-ui,'Segoe UI',sans-serif;font-size:15px;line-height:22px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums}
+.t-display{font-size:56px;line-height:64px;font-weight:600;letter-spacing:-0.02em;margin:0}
+.t-number{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-0.01em;margin:0}
+.t-title{font-size:20px;line-height:28px;font-weight:600;margin:0}
+.t-body{font-size:15px;line-height:22px;margin:0}
+.t-strong{font-size:15px;line-height:22px;font-weight:600;margin:0}
+.t-label{font-size:13px;line-height:18px;font-weight:500}
+.t-caption{font-size:12px;line-height:16px}
+.t-over{font-size:12px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.muted{color:var(--muted)}
+.cents{font-size:.55em;letter-spacing:0;color:var(--muted);font-weight:500}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;box-sizing:border-box;min-width:0}
+.row{display:grid;grid-template-columns:160px minmax(0,1fr) 150px 260px;gap:24px;align-items:center;padding:16px 0;border-bottom:1px solid var(--border)}
+.sw{height:56px;border-radius:8px;border:1px solid rgba(0,0,0,.06)}
+a{color:var(--brand-strong)}a:hover{color:var(--text)}
+</style>
+</helmet>
+<div class="sv" style="min-height:100vh;box-sizing:border-box;padding:64px 32px 96px">
+<div style="max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:64px">
+
+<header style="display:flex;flex-direction:column;gap:12px;max-width:760px">
+<span class="t-over">Sinal Verde · desktop · proposta visual</span>
+<h1 class="t-display">O celular responde. O desktop explica.</h1>
+<p class="t-body muted" style="font-size:17px;line-height:26px">No celular eu vejo a cor e o Livre do dia. No desktop eu olho para trás e planejo: gastos, gráficos, metas e caixinhas. Esta página reúne as regras visuais que todas as telas seguem; as telas estão à direita.</p>
+</header>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:4px"><span class="t-over">1 · Psicologia financeira</span><h2 class="t-title">Oito princípios, cada um com uma regra de tela</h2></div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px">
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><span class="t-over">Carga cognitiva</span><h3 class="t-strong">Uma resposta por tela</h3><p class="t-body muted">Com TDAH, cada decisão extra custa caro. A tela abre com um único número grande e o resto espera.</p><p class="t-label" style="margin:8px 0 0">Na tela: um só Display por tela.</p></div>
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><span class="t-over">Enquadramento</span><h3 class="t-strong">Dizer o que sobra</h3><p class="t-body muted">"Sobram R$ 82" convida a escolher; "gastei R$ 31" convida a culpa. O número grande é sempre o que ainda está livre.</p><p class="t-label" style="margin:8px 0 0">Na tela: o Display mostra o livre, não o gasto.</p></div>
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><span class="t-over">Efeito avestruz</span><h3 class="t-strong">Vermelho sem vergonha</h3><p class="t-body muted">Quem se sente julgada para de olhar o app. Alerta é um fundo suave e uma frase neutra, nunca a tela inteira gritando.</p><p class="t-label" style="margin:8px 0 0">Na tela: "passou R$ 12 do livre", nunca "estourou".</p></div>
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><span class="t-over">Gradiente da meta</span><h3 class="t-strong">Progresso visível</h3><p class="t-body muted">A motivação cresce quando eu vejo quanto falta. Toda barra mostra também onde eu deveria estar hoje.</p><p class="t-label" style="margin:8px 0 0">Na tela: barra + marcador de ritmo.</p></div>
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><span class="t-over">Contabilidade mental</span><h3 class="t-strong">Dinheiro com nome</h3><p class="t-body muted">Dinheiro com propósito é menos gasto por impulso. Cada caixinha tem nome, e o "Sem caixinha" fica à vista.</p><p class="t-label" style="margin:8px 0 0">Na tela: barra empilhada do saldo.</p></div>
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><span class="t-over">Âncora realista</span><h3 class="t-strong">Comparar comigo mesma</h3><p class="t-body muted">Comparar com um ideal desanima. Comparo com a minha média dos últimos 3 meses, que eu já sei que é possível.</p><p class="t-label" style="margin:8px 0 0">Na tela: "R$ 62 acima da sua média".</p></div>
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><span class="t-over">Fricção certa</span><h3 class="t-strong">Corrigir em um clique</h3><p class="t-body muted">Trocar importância ou categoria é um clique, sem "tem certeza?". O que dá para desfazer não pede confirmação.</p><p class="t-label" style="margin:8px 0 0">Na tela: botões segmentados + "Desfazer".</p></div>
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><span class="t-over">Fechar o ciclo</span><h3 class="t-strong">Terminar é visível</h3><p class="t-body muted">Uma lista que nunca acaba cansa. A revisão anda de um gasto para o próximo e termina em "tudo revisado".</p><p class="t-label" style="margin:8px 0 0">Na tela: contador que chega a zero.</p></div>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:4px"><span class="t-over">2 · Tipografia</span><h2 class="t-title">Seis tamanhos, três pesos, uma família</h2><p class="t-body muted" style="max-width:760px">Inter, empacotada com o app (woff2 próprio, sem CDN). Pesos 400, 500 e 600. Todo número usa algarismos tabulares, para as colunas de valores alinharem. No Display e no Número, os centavos ficam menores e mais claros: o olho lê os reais primeiro.</p></div>
+<div class="card" style="padding:8px 24px">
+<div class="row" style="padding:12px 0"><span class="t-over">Estilo</span><span class="t-over">Amostra</span><span class="t-over">Tamanho / altura</span><span class="t-over">Uso</span></div>
+<div class="row"><span class="t-label">Display</span><span class="t-display num">R$ 82<span class="cents">,40</span></span><span class="t-label muted num">56 / 64 · 600 · −2%</span><span class="t-body muted">O número-resposta da tela. Um por tela, no máximo.</span></div>
+<div class="row"><span class="t-label">Número</span><span class="t-number num">R$ 715<span class="cents">,60</span></span><span class="t-label muted num">32 / 40 · 600 · −1%</span><span class="t-body muted">O valor principal de cada cartão.</span></div>
+<div class="row"><span class="t-label">Título</span><span class="t-title">Metas em risco</span><span class="t-label muted num">20 / 28 · 600</span><span class="t-body muted">Títulos de tela e de seção.</span></div>
+<div class="row"><span class="t-label">Corpo forte</span><span class="t-strong">O mês até aqui</span><span class="t-label muted num">15 / 22 · 600</span><span class="t-body muted">Título de cartão, nome de meta e de caixinha.</span></div>
+<div class="row"><span class="t-label">Corpo</span><span class="t-body">Restam R$ 63,60 para 24 dias.</span><span class="t-label muted num">15 / 22 · 400</span><span class="t-body muted">Texto, linhas de tabela, botões (500).</span></div>
+<div class="row"><span class="t-label">Rótulo</span><span class="t-label">Restaurante · Nubank crédito</span><span class="t-label muted num">13 / 18 · 500</span><span class="t-body muted">Chips, rótulos de campo, metadados.</span></div>
+<div class="row" style="border-bottom:0"><span class="t-label">Legenda</span><span class="t-caption muted">Atualizado às 12:41 · CABEÇALHO</span><span class="t-label muted num">12 / 16 · 400–500</span><span class="t-body muted">Horários, cabeçalhos de tabela (maiúsculas, +6%).</span></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px">
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><h3 class="t-strong">No máximo três níveis por cartão</h3><p class="t-body muted">Rótulo, Número e uma linha de Corpo. Se precisar de um quarto nível, é outro cartão ou o painel de detalhe.</p></div>
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><h3 class="t-strong">Hierarquia por tamanho e cor, não por caixa</h3><p class="t-body muted">Nada em negrito dentro de parágrafos, nada sublinhado que não seja link. O cinza (muted) faz o papel do "menos importante".</p></div>
+<div class="card" style="display:flex;flex-direction:column;gap:8px"><h3 class="t-strong">Linhas curtas</h3><p class="t-body muted">Texto corrido com no máximo 72 caracteres por linha (cerca de 640 px). Números à direita nas tabelas, texto à esquerda.</p></div>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:4px"><span class="t-over">3 · Espaçamento</span><h2 class="t-title">Grade de 4 px, oito passos</h2><p class="t-body muted" style="max-width:760px">Os passos de 4 a 32 já existem em <code>tokens.css</code>; entram 48 e 64. A regra que mantém a tela limpa: o espaço de dentro de um grupo é sempre menor que o espaço entre grupos.</p></div>
+<div class="card" style="padding:8px 24px">
+<div style="display:grid;grid-template-columns:120px 60px 80px minmax(0,1fr);gap:24px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)"><span class="t-label">--space-1</span><span class="t-label muted num">4</span><div style="width:4px;height:16px;background:var(--brand);border-radius:2px"></div><span class="t-body muted">Ícone e texto dentro de um chip; centavos e reais.</span></div>
+<div style="display:grid;grid-template-columns:120px 60px 80px minmax(0,1fr);gap:24px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)"><span class="t-label">--space-2</span><span class="t-label muted num">8</span><div style="width:8px;height:16px;background:var(--brand);border-radius:2px"></div><span class="t-body muted">Rótulo e valor; ícone e texto do botão; entre chips.</span></div>
+<div style="display:grid;grid-template-columns:120px 60px 80px minmax(0,1fr);gap:24px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)"><span class="t-label">--space-3</span><span class="t-label muted num">12</span><div style="width:12px;height:16px;background:var(--brand);border-radius:2px"></div><span class="t-body muted">Padding das células de tabela; itens de lista.</span></div>
+<div style="display:grid;grid-template-columns:120px 60px 80px minmax(0,1fr);gap:24px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)"><span class="t-label">--space-4</span><span class="t-label muted num">16</span><div style="width:16px;height:16px;background:var(--brand);border-radius:2px"></div><span class="t-body muted">Entre blocos dentro de um cartão; entre campos do formulário.</span></div>
+<div style="display:grid;grid-template-columns:120px 60px 80px minmax(0,1fr);gap:24px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)"><span class="t-label">--space-6</span><span class="t-label muted num">24</span><div style="width:24px;height:16px;background:var(--brand);border-radius:2px"></div><span class="t-body muted">Padding do cartão; entre cartões; padding do painel de detalhe.</span></div>
+<div style="display:grid;grid-template-columns:120px 60px 80px minmax(0,1fr);gap:24px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)"><span class="t-label">--space-8</span><span class="t-label muted num">32</span><div style="width:32px;height:16px;background:var(--brand);border-radius:2px"></div><span class="t-body muted">Margem da página; entre seções de uma tela.</span></div>
+<div style="display:grid;grid-template-columns:120px 60px 80px minmax(0,1fr);gap:24px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)"><span class="t-label">--space-12 <span class="muted">novo</span></span><span class="t-label muted num">48</span><div style="width:48px;height:16px;background:var(--brand);border-radius:2px"></div><span class="t-body muted">Separar o bloco-resposta do resto, na Visão geral e no Início.</span></div>
+<div style="display:grid;grid-template-columns:120px 60px 80px minmax(0,1fr);gap:24px;align-items:center;padding:12px 0"><span class="t-label">--space-16 <span class="muted">novo</span></span><span class="t-label muted num">64</span><div style="width:64px;height:16px;background:var(--brand);border-radius:2px"></div><span class="t-body muted">Respiro de topo em telas sem cabeçalho (estados vazios).</span></div>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:4px"><span class="t-over">4 · Layout</span><h2 class="t-title">Três colunas, só a do meio rola</h2></div>
+<div class="card" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:8px;height:220px">
+<div style="flex:0 0 120px;background:var(--surface);border:1px dashed var(--muted);border-radius:8px;display:flex;flex-direction:column;justify-content:space-between;padding:12px;box-sizing:border-box"><span class="t-label">Barra lateral</span><span class="t-caption muted num">240 px fixa</span></div>
+<div style="flex:1;background:var(--brand-soft);border-radius:8px;display:flex;flex-direction:column;padding:12px;gap:8px;box-sizing:border-box">
+<div style="height:28px;border-radius:4px;background:rgba(255,255,255,.7);display:flex;align-items:center;padding:0 8px" class="t-caption">Cabeçalho 64 px · abas 46 px</div>
+<div style="flex:1;border:1px dashed var(--brand);border-radius:6px;display:flex;align-items:center;justify-content:center" class="t-label">Conteúdo · máx. 1200 px · margem 32 px · 12 colunas, calha 24 px</div>
+</div>
+<div style="flex:0 0 200px;background:var(--surface);border:1px dashed var(--muted);border-radius:8px;display:flex;flex-direction:column;justify-content:space-between;padding:12px;box-sizing:border-box"><span class="t-label">Painel de detalhe</span><span class="t-caption muted num">400 px · abre por cima abaixo de 1280 px · Esc fecha</span></div>
+</div>
+<p class="t-body muted" style="margin:0">Cantos: 8 px em controles, 12 px em cartões, pílula em chips. Sombra só no painel de detalhe e no Ctrl+K, que ficam por cima; o resto é borda de 1 px. Abaixo de 1024 px a barra lateral vira só ícones.</p>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:4px"><span class="t-over">5 · Cor</span><h2 class="t-title">A base de hoje, mais semáforo e importâncias</h2><p class="t-body muted" style="max-width:760px">A cor só aparece onde significa algo. O semáforo sempre vem com palavra e ícone, nunca só a cor. Impulso é laranja, não vermelho: vermelho é do semáforo.</p></div>
+<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px"><div class="sw" style="background:#f6f5f0"></div><span class="t-label">Fundo</span><span class="t-caption muted num">#F6F5F0</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div class="sw" style="background:#ffffff"></div><span class="t-label">Superfície</span><span class="t-caption muted num">#FFFFFF</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div class="sw" style="background:#efeee8"></div><span class="t-label">Rebaixado <span class="muted">novo</span></span><span class="t-caption muted num">#EFEEE8</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div class="sw" style="background:#e2e3dc"></div><span class="t-label">Borda</span><span class="t-caption muted num">#E2E3DC</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div class="sw" style="background:#2b2e2c"></div><span class="t-label">Texto</span><span class="t-caption muted num">#2B2E2C</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div class="sw" style="background:#5f6661"></div><span class="t-label">Texto suave</span><span class="t-caption muted num">#5F6661</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div class="sw" style="background:#4f7a5e"></div><span class="t-label">Marca</span><span class="t-caption muted num">#4F7A5E</span></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+<div style="background:#e4efe7;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px"><span class="t-label" style="color:#2f6243">● Verde · dentro do livre</span><span class="t-caption" style="color:#2f6243">fundo #E4EFE7 · texto #2F6243</span></div>
+<div style="background:#f7eed0;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px"><span class="t-label" style="color:#765500">▲ Amarelo · até 130% do livre</span><span class="t-caption" style="color:#765500">fundo #F7EED0 · texto #765500</span></div>
+<div style="background:#f6e3df;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px"><span class="t-label" style="color:#9a3324">■ Vermelho · passou de 130%</span><span class="t-caption" style="color:#9a3324">fundo #F6E3DF · texto #9A3324</span></div>
+</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+<span style="display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface)" class="t-label"><span style="width:8px;height:8px;border-radius:50%;background:#4a6178"></span>Obrigatório #4A6178</span>
+<span style="display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface)" class="t-label"><span style="width:8px;height:8px;border-radius:50%;background:#5f7f52"></span>Rotina #5F7F52</span>
+<span style="display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface)" class="t-label"><span style="width:8px;height:8px;border-radius:50%;background:#b4561a"></span>Impulso #B4561A</span>
+<span style="display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface)" class="t-label"><span style="width:8px;height:8px;border-radius:50%;background:#7457a3"></span>Projetos especiais #7457A3</span>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:4px"><span class="t-over">6 · Números e palavras</span><h2 class="t-title">Como o dinheiro aparece</h2></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px">
+<div class="card" style="display:flex;flex-direction:column;gap:12px"><span class="t-over">Valores</span><span class="t-body num">Gasto: R$ 46,90 <span class="muted">(sem sinal)</span></span><span class="t-body num" style="color:#2f6243">Entrada: + R$ 5.200,00</span><span class="t-body num">Gráficos: R$ 1,2 mil <span class="muted">(sem centavos)</span></span></div>
+<div class="card" style="display:flex;flex-direction:column;gap:12px"><span class="t-over">Datas</span><span class="t-body">Hoje · Ontem · qui, 5 nov</span><span class="t-body">Período: novembro 2026</span><span class="t-body muted">Horário só onde importa: "às 12:41".</span></div>
+<div class="card" style="display:flex;flex-direction:column;gap:12px"><span class="t-over">Tom</span><span class="t-body">"Passou R$ 12 do livre de hoje. Amanhã o livre se ajusta."</span><span class="t-body muted">Sem "estourou", "cuidado!", "você falhou". Toda frase de alerta diz o que acontece a seguir.</span></div>
+</div>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2700}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

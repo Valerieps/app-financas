@@ -24,10 +24,28 @@ export interface ConnectionView {
   };
   /** Products the bank did not share (or Pluggy did not release). */
   readonly unavailable: readonly string[];
+  readonly investments: readonly InvestmentView[];
+}
+
+/** One investment on the Cofre: name, issuer's CNPJ and today's total balance. */
+export interface InvestmentView {
+  readonly id: string;
+  readonly name: string | null;
+  readonly issuerCnpj: string | null;
+  readonly balanceCents: number | null;
+  readonly currency: string;
+}
+
+/** A connection Pluggy told about (by webhook) that is not registered yet. */
+export interface PendingConnectionView {
+  readonly itemId: string;
+  /** When the first event about it arrived. */
+  readonly firstSeenAt: string;
 }
 
 export interface VaultView {
   readonly connections: readonly ConnectionView[];
+  readonly pending: readonly PendingConnectionView[];
 }
 
 /** One account on the Cofre calendar: transactions per Brasília day and the empty days confirmed. */
@@ -63,6 +81,48 @@ export interface ProvisionalExpenseView {
   readonly status: 'provisional' | 'unreadable';
   /** The notification's text, only when unreadable, so I see what the app could not read. */
   readonly text: string | null;
+}
+
+/** One transaction on the Lançamentos list (docs/spec/lancamentos.md). */
+export interface LancamentoView {
+  readonly id: string;
+  /** The Brasília day (yyyy-mm-dd). */
+  readonly day: string;
+  readonly description: string | null;
+  /** Pluggy's category, translated; null when it has none. */
+  readonly category: string | null;
+  /** Always positive; `direction` says whether it came in or went out. */
+  readonly amountCents: number;
+  readonly currency: string;
+  readonly direction: 'in' | 'out';
+  readonly accountName: string | null;
+  /** Pluggy's account type: BANK or CREDIT. */
+  readonly accountType: string | null;
+  /** Pluggy has not posted it yet (PENDING). */
+  readonly pending: boolean;
+  readonly installment: { readonly number: number; readonly total: number } | null;
+}
+
+export interface LancamentosView {
+  readonly month: string;
+  readonly items: readonly LancamentoView[];
+  readonly totals: readonly { readonly currency: string; readonly inCents: number; readonly outCents: number }[];
+}
+
+/** One transaction in the detail panel: the list's fields and what the bank told about it. */
+export interface LancamentoDetailView extends LancamentoView {
+  /** When it happened, as Pluggy sent it. */
+  readonly date: string;
+  /** The bank's own text, when it differs from the description. */
+  readonly descriptionRaw: string | null;
+  /** Pluggy's operation type (PIX, CARTAO, TED...). */
+  readonly operationType: string | null;
+  readonly paymentMethod: string | null;
+  /** Who paid, on money in; who received, on money out. */
+  readonly counterpart: string | null;
+  readonly cardDigits: string | null;
+  /** When the app first saw it. */
+  readonly firstSeenAt: string;
 }
 
 /** A device with a passkey asks for it after an hour without use (docs/spec/acesso.md). */
@@ -113,6 +173,9 @@ export interface Queries {
   passkeys: { input: Record<string, never>; output: PasskeyView[] };
   calendar: { input: { itemId: string }; output: CalendarView };
   provisionalExpenses: { input: Record<string, never>; output: ProvisionalExpenseView[] };
+  /** The month's transactions (yyyy-mm), newest first. */
+  lancamentos: { input: { month: string }; output: LancamentosView };
+  lancamento: { input: { id: string }; output: LancamentoDetailView };
 }
 
 /** Writes: `POST /api/command/<name>`. Each sends its writes in one atomic batch. */
