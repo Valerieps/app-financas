@@ -9,12 +9,11 @@
     "Inicio.dc.html": {"x": 1520, "y": 0, "w": 1440, "h": 1000, "title": "Início", "expand": "fill", "is_interactive": true},
     "VisaoGeral.dc.html": {"x": 3040, "y": 0, "w": 1440, "h": 1240, "title": "Finanças › Visão geral", "expand": "fill", "is_interactive": true},
     "Gastos.dc.html": {"x": 4560, "y": 0, "w": 1440, "h": 1100, "title": "Finanças › Gastos (painel aberto)", "expand": "fill", "is_interactive": true},
-    "Graficos.dc.html": {"x": 1520, "y": 1480, "w": 1440, "h": 1000, "title": "Finanças › Gráficos", "expand": "fill", "is_interactive": true},
     "Metas.dc.html": {"x": 3040, "y": 1480, "w": 1440, "h": 1240, "title": "Finanças › Metas", "expand": "fill", "is_interactive": true},
     "Caixinhas.dc.html": {"x": 4560, "y": 1480, "w": 1440, "h": 1240, "title": "Finanças › Caixinhas", "expand": "fill", "is_interactive": true},
     "Sidebar.dc.html": {"x": 6080, "y": 0, "w": 240, "h": 900, "title": "Componente: barra lateral"}
   },
-  "order": ["Main.dc.html", "Inicio.dc.html", "VisaoGeral.dc.html", "Gastos.dc.html", "Graficos.dc.html", "Metas.dc.html", "Caixinhas.dc.html", "Sidebar.dc.html"],
+  "order": ["Main.dc.html", "Inicio.dc.html", "VisaoGeral.dc.html", "Gastos.dc.html", "Metas.dc.html", "Caixinhas.dc.html", "Sidebar.dc.html"],
   "notes": {
     "fund": {"x": 0, "y": -300, "text": "Fundamentos", "kind": "title1", "maxW": 1440},
     "telas": {"x": 1520, "y": -300, "text": "Telas do desktop", "kind": "title1", "maxW": 4800}

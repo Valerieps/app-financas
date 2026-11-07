@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { panelParentPath, parseRoute, showsMonth, tabPath, withMonth } from './routes';
+import { graficosChart, graficosPath, panelParentPath, parseRoute, showsMonth, tabPath, withMonth, withQuery } from './routes';
 
 describe('parseRoute', () => {
   it('maps the documented addresses', () => {
@@ -42,5 +42,20 @@ describe('links', () => {
   it('show the month selector only where a month matters', () => {
     expect(showsMonth(parseRoute('/financas/gastos'))).toBe(true);
     expect(showsMonth(parseRoute('/cofre'))).toBe(false);
+  });
+});
+
+describe('Gráficos', () => {
+  it('knows its three charts and nothing else', () => {
+    expect(parseRoute('/financas/graficos/tempo')).toEqual({ module: 'financas', tab: 'graficos' });
+    expect(parseRoute('/financas/graficos/pizza')).toEqual({ module: 'not_found' });
+    expect(graficosChart('/financas/graficos')).toBe('categoria');
+    expect(graficosChart('/financas/graficos/importancia')).toBe('importancia');
+    expect(graficosPath('tempo')).toBe('/financas/graficos/tempo');
+  });
+
+  it('builds links with only the parameters that have a value', () => {
+    expect(withQuery('/financas/gastos', { categoria: 'restaurante', mes: null })).toBe('/financas/gastos?categoria=restaurante');
+    expect(withQuery('/financas/graficos', { mes: null })).toBe('/financas/graficos');
   });
 });

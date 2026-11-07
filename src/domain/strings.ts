@@ -1,5 +1,6 @@
 // Every user-facing text, in Brazilian Portuguese, in the app's voice.
 // The UI imports from here; it never writes its own text.
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
 export const strings = {
@@ -175,6 +176,91 @@ export const strings = {
     revisar: { title: 'Gastos para revisar', hint: 'Gastos órfãos e sem importância. Cada um abre no painel.', link: 'Ver gastos' },
     metas: { title: 'Metas em risco', hint: 'Só as metas amarelas ou vermelhas.', link: 'Todas as metas' },
     caixinhas: { title: 'Caixinhas com prazo perto', hint: 'As caixinhas que vencem logo e quanto falta.', link: 'Todas as caixinhas' },
+  },
+
+  // The categorias (docs/spec/graficos.md); the ids come from src/domain/spending.ts.
+  categories: {
+    moradia: 'Moradia',
+    mercado: 'Mercado',
+    restaurante: 'Restaurante',
+    transporte: 'Transporte',
+    saude: 'Saúde',
+    assinaturas: 'Assinaturas',
+    servicos: 'Serviços',
+    educacao: 'Educação',
+    compras: 'Compras',
+    lazer: 'Lazer',
+    viagem: 'Viagem',
+    seguros: 'Seguros',
+    impostos: 'Impostos',
+    tarifas: 'Tarifas do banco',
+    emprestimos: 'Empréstimos',
+    transferencias: 'Transferências',
+    doacoes: 'Doações',
+    apostas: 'Apostas',
+    outros: 'Outros',
+  },
+
+  // Finanças › Gráficos (docs/spec/graficos.md).
+  graficos: {
+    charts: { categoria: 'Por categoria', importancia: 'Por importância', tempo: 'Ao longo do tempo' },
+    chartsLabel: 'Tipo de gráfico',
+    compareLabel: 'Comparar com',
+    compare: { average: 'Média dos últimos 3 meses', previous: 'Mês anterior' },
+    loading: 'Carregando…',
+    importancia: {
+      title: 'Por importância',
+      hint: 'Aqui vai aparecer quanto gastei em cada importância (Obrigatório, Rotina, Impulso e Projetos especiais). Chega com a classificação.',
+    },
+    categoria: {
+      future: 'Este mês ainda não começou.',
+      empty: 'Nenhum gasto neste mês ainda.',
+      noBaseline: 'Ainda não tenho meses anteriores para comparar.',
+      above: (category: string, value: string, compare: 'average' | 'previous') =>
+        `${category} está ${value} acima ${compare === 'average' ? 'da sua média' : 'do mês anterior'}.`,
+      noneAbove: (compare: 'average' | 'previous') =>
+        compare === 'average' ? 'Nenhuma categoria está acima da sua média.' : 'Nenhuma categoria está acima do mês anterior.',
+      // "Até o dia 7, comparado com a média de agosto a outubro até o mesmo dia."
+      period: (throughDay: number | null, months: readonly number[], compare: 'average' | 'previous') => {
+        const names = months.map((m) => MONTHS[m - 1]);
+        const against =
+          compare === 'average' && names.length > 1 ? `a média de ${names[0]} a ${names[names.length - 1]}` : (names[names.length - 1] ?? '');
+        return throughDay === null ? `No mês inteiro, comparado com ${against}.` : `Até o dia ${throughDay}, comparado com ${against} até o mesmo dia.`;
+      },
+      below: (categories: readonly string[]) =>
+        categories.length === 0
+          ? ''
+          : categories.length === 1
+            ? `${categories[0]} está abaixo.`
+            : `${categories.slice(0, -1).join(', ')} e ${categories[categories.length - 1]} estão abaixo.`,
+      legendMonth: (month: number, throughDay: number | null) => (throughDay === null ? MONTHS[month - 1] : `${MONTHS[month - 1]} até o dia ${throughDay}`),
+      legendBaseline: (compare: 'average' | 'previous', month: number, throughDay: number | null) =>
+        `${compare === 'average' ? 'sua média' : MONTHS[month - 1]}${throughDay === null ? '' : ` até o dia ${throughDay}`}`,
+      chartLabel: 'Gastos por categoria, gráfico de barras',
+      tableLabel: 'Os mesmos números em tabela',
+      barTitle: (category: string) => `Ver os gastos de ${category}`,
+      hint: 'Clique numa barra para ver os gastos dela.',
+      columns: { category: 'Categoria', value: 'Valor', share: '% do mês', diff: (compare: 'average' | 'previous') => (compare === 'average' ? 'vs. média' : 'vs. mês anterior') },
+      same: 'igual',
+      none: '—',
+      total: 'Total',
+      createGoal: (category: string) => `Criar meta para ${category}`,
+    },
+    tempo: {
+      title: (average: string) => `Você gasta em média ${average} por mês.`,
+      noAverage: 'Ainda não tenho um mês completo para tirar a média.',
+      subtitle: 'Média dos meses completos dos últimos 12 meses. Clique num mês para ver as categorias dele.',
+      running: (month: number) => `${capitalize(MONTHS[month - 1] ?? '')} ainda não acabou.`,
+      chartLabel: 'Gastos por mês, gráfico de colunas',
+      tableLabel: 'Os mesmos números em tabela',
+      averageLegend: 'média dos meses completos',
+      legendMonths: 'gasto do mês',
+      monthShort: (month: number) => (MONTHS[month - 1] ?? '').slice(0, 3),
+      monthLong: (year: number, month: number) => `${MONTHS[month - 1]} ${year}`,
+      barTitle: (year: number, month: number) => `Ver as categorias de ${MONTHS[month - 1]} ${year}`,
+      columns: { month: 'Mês', value: 'Valor', diff: 'vs. média' },
+      noData: 'sem dados',
+    },
   },
 
   aparelhos: {

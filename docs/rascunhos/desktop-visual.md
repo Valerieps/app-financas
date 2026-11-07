@@ -18,8 +18,6 @@ tipografia, o espaçamento, as cores, o layout e o rascunho de cada tela.
       do mês" (o que falta ÷ dias restantes). O spec ainda não tem essa regra.
 - [ ] **Marcador de ritmo.** A linha preta nas barras é onde eu estaria hoje se gastasse igual todos
       os dias (dia de hoje ÷ dias do mês). Vale para tetos mensais; para proporção, a linha é o alvo.
-- [ ] **Comparar "até o mesmo dia".** Gráficos compara o mês até hoje com a média dos 3 meses
-      anteriores até o mesmo dia, não com o mês inteiro.
 
 ## As pranchas
 
@@ -36,7 +34,6 @@ R$ 3.420,00), não dados reais.
 | `Inicio.dc.html` | A frase-resposta, "Precisa de você" e um cartão por módulo |
 | `VisaoGeral.dc.html` | Livre do dia em destaque, mês até aqui, termômetro, revisar, metas em risco, caixinhas com prazo |
 | `Gastos.dc.html` | Total do mês, filtros, tabela agrupada por dia e o painel de detalhe aberto |
-| `Graficos.dc.html` | Frase-resposta, barras com a média como marcador e a tabela dos mesmos números |
 | `Metas.dc.html` | Metas agrupadas por estado, com barra, ritmo e o que falta |
 | `Caixinhas.dc.html` | Cada saldo como barra empilhada, as caixinhas e o "Sem caixinha"; um saldo abaixo das caixinhas |
 

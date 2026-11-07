@@ -13,6 +13,7 @@ O que ainda não está pronto.
 | --- | --- | --- | --- |
 | Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
 | Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | |
+| Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
 | Bot do Telegram | 3 | `spec/telegram.md` | |
 | Tela do semáforo | 3 | `spec/tela-do-celular.md` | |
@@ -41,3 +42,7 @@ O que ainda não está pronto.
 - [ ] Num aparelho sem digital cadastrada, o login Google basta (`spec/acesso.md`).
 - [ ] O `/gastei` vale a partir da fase 3, junto com o bot (`spec/gastos-provisorios.md`).
 - [ ] A mesma notificação repetida em até 2 minutos conta uma vez (`spec/gastos-provisorios.md`).
+- [ ] Os nomes das categorias e como a árvore do Pluggy se agrupa nelas (`spec/graficos.md`).
+- [ ] Nos gráficos, uma diferença menor que R$ 10 e menor que 10% aparece como "igual" (`spec/graficos.md`).
+- [ ] A média conta só os meses que têm algum gasto (`spec/graficos.md`).
+- [ ] Uma conexão substituída fica de fora dos gráficos, e os gastos provisórios ainda não entram (`spec/graficos.md`).

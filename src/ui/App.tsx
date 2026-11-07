@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { LockStatusView } from '../application/api-contract';
-import { monthKey, monthOf, parseMonth } from '../domain/month';
+import { monthKey, monthOf, parseMonth, type Month } from '../domain/month';
 import { strings } from '../domain/strings';
 import { useServices } from './backend-context';
 import { Link, useLocation } from './router';
 import { Cofre } from './screens/Cofre';
+import { Graficos } from './screens/Graficos';
 import { Locked } from './screens/Locked';
 import { VisaoGeral } from './screens/VisaoGeral';
 import { EmConstrucao } from './shell/EmConstrucao';
-import { parseRoute, type Route } from './shell/routes';
+import { graficosChart, parseRoute, type Route } from './shell/routes';
 import { Shell } from './shell/Shell';
 
 // Cloudflare Access signs the owner in before the app loads (ADR-007), so there is no login
@@ -47,18 +48,30 @@ export function App() {
 
   return (
     <Shell route={route} path={path} month={month} monthParam={monthParam}>
-      <Screen route={route} monthParam={monthParam} onPasskeysChanged={check} onLock={status.deviceHasPasskey ? () => void lockNow() : null} />
+      <Screen
+        route={route}
+        path={path}
+        search={search}
+        month={month}
+        monthParam={monthParam}
+        onPasskeysChanged={check} onLock={status.deviceHasPasskey ? () => void lockNow() : null} />
     </Shell>
   );
 }
 
 function Screen({
   route,
+  path,
+  search,
+  month,
   monthParam,
   onPasskeysChanged,
   onLock,
 }: {
   route: Route;
+  path: string;
+  search: URLSearchParams;
+  month: Month;
   monthParam: string | null;
   onPasskeysChanged: () => void;
   onLock: (() => void) | null;
@@ -66,6 +79,8 @@ function Screen({
   switch (route.module) {
     case 'financas':
       if (route.tab === 'visao-geral') return <VisaoGeral monthParam={monthParam} />;
+      if (route.tab === 'graficos')
+        return <Graficos chart={graficosChart(path)} month={monthKey(month)} monthParam={monthParam} compareParam={search.get('comparar')} />;
       return <EmConstrucao title={strings.shell.tabs[route.tab]} hint={strings.screens[route.tab]} tall />;
     case 'cofre':
       return <Cofre onPasskeysChanged={onPasskeysChanged} />;

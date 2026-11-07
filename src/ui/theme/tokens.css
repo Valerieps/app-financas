@@ -88,6 +88,13 @@
   --size-search: 240px;
   --size-month-label: 128px;
   --size-dialog: 560px;
+  /* Gráficos: the label and value columns of a bar row, a bar's thickness, the column chart's height */
+  --size-chart-label: 120px;
+  --size-chart-value: 96px;
+  --size-chart-bar: 20px;
+  --size-chart-height: 240px;
+  /* The marker overhang above and below a bar */
+  --size-chart-marker-overhang: 3px;
   --border-width: 1px;
   --border-width-strong: 2px;
   --radius-small: 4px;
