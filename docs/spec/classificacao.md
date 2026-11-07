@@ -1,10 +1,10 @@
 # Classificação
 
-Todo gasto ganha uma categoria (o que ele é) e uma caixinha (como eu o julgo), sem eu ter que fazer nada.
+Todo gasto ganha uma categoria (o que ele é) e uma importância (como eu o julgo), sem eu ter que fazer nada.
 
-- **Entra aqui:** categoria, caixinha, a ordem de decisão, as regras, o que não é gasto, as entradas e
+- **Entra aqui:** categoria, importância, a ordem de decisão, as regras, o que não é gasto, as entradas e
   os reembolsos.
-- **Não entra aqui:** como a caixinha entra no orçamento (`livre-do-dia.md`) e o botão do Telegram
+- **Não entra aqui:** como a importância entra no orçamento (`livre-do-dia.md`) e o botão do Telegram
   (`telegram.md`).
 
 ## Em aberto
@@ -12,16 +12,16 @@ Todo gasto ganha uma categoria (o que ele é) e uma caixinha (como eu o julgo), 
 - [ ] **Modelo do Gemini.** O Gemini 1.5 Flash foi desligado. No começo da fase 2, escolher um modelo
   Flash atual (2.5 ou 3 Flash-Lite) e conferir a cota gratuita dele.
 
-## Categoria e caixinha
+## Categoria e importância
 
 - Toda transação tem uma **categoria** (o que é: Mercado, Restaurante, Assinatura), que parte da
-  árvore do Pluggy, e uma **caixinha** (como eu julgo o gasto), que alimenta o orçamento e o
+  árvore do Pluggy, e uma **importância** (como eu julgo o gasto), que alimenta o orçamento e o
   semáforo. *(2)*
-- As caixinhas iniciais são Obrigatório, Rotina, Impulso e Projetos especiais. Projetos especiais
+- As importâncias iniciais são Obrigatório, Rotina, Impulso e Projetos especiais. Projetos especiais
   fica fora do orçamento. *(2)*
-- Eu posso editar as duas listas: criar, renomear e reordenar categorias e caixinhas, e dizer se uma
-  caixinha conta no orçamento. *(2)*
-- Cada categoria aponta para uma caixinha padrão. Quando eu mudo esse mapa, o mês corrente é
+- Eu posso editar as duas listas: criar, renomear e reordenar categorias e importâncias, e dizer se uma
+  importância conta no orçamento. *(2)*
+- Cada categoria aponta para uma importância padrão. Quando eu mudo esse mapa, o mês corrente é
   recalculado e os meses fechados ficam como estavam. *(2)*
 - Eu posso abrir exceções por estabelecimento ou por transação. *(2)*
 
@@ -29,7 +29,7 @@ Todo gasto ganha uma categoria (o que ele é) e uma caixinha (como eu o julgo), 
 
 - O app decide nesta ordem: as minhas regras; o tipo de operação e quem pagou ou recebeu; a categoria
   e o estabelecimento que o Pluggy manda; e, só para o que sobrar, o Gemini. *(2)*
-- Quando eu mudo a categoria ou a caixinha de um gasto, o app me oferece criar uma regra para aquele
+- Quando eu mudo a categoria ou a importância de um gasto, o app me oferece criar uma regra para aquele
   estabelecimento ou pagador. *(2)*
 
 ## O que não é gasto

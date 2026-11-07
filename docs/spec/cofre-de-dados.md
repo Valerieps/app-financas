@@ -68,7 +68,7 @@ Fora do escopo: pagamentos, Pix Automático, boletos e Smart Transfers.
   no sync seguinte. *(1)*
 - **Uma transação, um registro.** No cartão, quando a data, o valor ou a descrição mudam, o Pluggy
   devolve a mesma transação com outro id; o app a reconhece e não duplica. *(1)*
-- **As minhas decisões ficam separadas.** Categoria, caixinha, notas, reembolso e projeto especial
+- **As minhas decisões ficam separadas.** Categoria, importância, notas, reembolso e projeto especial
   sobrevivem a qualquer nova sincronização. *(2)*
 - Valores em centavos, com a moeda sempre junto. Datas guardadas em UTC e mostradas no horário de
   Brasília. *(1)*

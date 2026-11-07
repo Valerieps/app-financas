@@ -9,3 +9,4 @@ Quando a tela de um rascunho fica pronta, o rascunho é apagado: o código passa
 
 | Rascunho | Status |
 | --- | --- |
+| [arquitetura-desktop.md](arquitetura-desktop.md) | Proposta de arquitetura de informação e navegação do desktop; aguarda as respostas do "Em aberto" |

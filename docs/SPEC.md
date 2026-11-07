@@ -15,7 +15,7 @@ o registro, e segundos depois de uma compra o Telegram me diz quanto ainda posso
 também guarda para sempre todos os meus dados financeiros que o Pluggy deixar coletar.
 
 A minha rotina: eu compro, o Telegram me responde com o Livre do dia e o semáforo; quando quero,
-abro o app no celular, olho a cor e troco a caixinha de um gasto com um toque.
+abro o app no celular, olho a cor e troco a importância de um gasto com um toque.
 
 ## Princípios
 
@@ -35,7 +35,7 @@ do Pluggy apaga.
 | Fase | O que entra | Pronto quando |
 | --- | --- | --- |
 | 1 | **Cofre de dados:** acesso, carga inicial do Nubank, webhooks do Pluggy, varredura diária, retratos diários, espelho noturno e a tela Cofre | 7 dias seguidos de sync sem perda, conferidos contra o app do Nubank |
-| 2 | **Classificação e reconciliação:** notificações do MacroDroid, gastos provisórios, casamento, categoria e caixinha, regras, separação do que não é gasto | 2 semanas de gastos reais com todos os provisórios casados ou explicados |
+| 2 | **Classificação e reconciliação:** notificações do MacroDroid, gastos provisórios, casamento, categoria e importância, regras, separação do que não é gasto | 2 semanas de gastos reais com todos os provisórios casados ou explicados |
 | 3 | **Feedback:** Livre do dia, bot do Telegram e a tela do semáforo | O alerta chega em menos de 3 segundos depois da notificação |
 | 4 | **Visão completa:** faturas e parcelas futuras, investimentos, reembolsos, saúde das conexões, exportação e API de dados | |
 | 5 | **Wise e demais conexões:** várias moedas, até o limite de 5 conexões | |
@@ -47,7 +47,7 @@ do Pluggy apaga.
 | [spec/acesso.md](spec/acesso.md) | Login Google e a digital no celular |
 | [spec/cofre-de-dados.md](spec/cofre-de-dados.md) | Coleta do Pluggy, como os dados são guardados, conexões, tela Cofre, várias moedas |
 | [spec/gastos-provisorios.md](spec/gastos-provisorios.md) | Notificações do celular, `/gastei` e o casamento com o Pluggy |
-| [spec/classificacao.md](spec/classificacao.md) | Categoria, caixinha, regras, o que não é gasto, entradas e reembolsos |
+| [spec/classificacao.md](spec/classificacao.md) | Categoria, importância, regras, o que não é gasto, entradas e reembolsos |
 | [spec/livre-do-dia.md](spec/livre-do-dia.md) | Orçamento flexível, Livre do dia, semáforo, termômetro de impulso, custos fixos |
 | [spec/telegram.md](spec/telegram.md) | Alertas e comandos do bot |
 | [spec/tela-do-celular.md](spec/tela-do-celular.md) | A tela do semáforo e as configurações |

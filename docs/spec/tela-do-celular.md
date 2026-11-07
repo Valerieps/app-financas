@@ -18,11 +18,11 @@ Uma tela única, para bater o olho: a cor me diz se estou bem hoje.
   estimado, marcado como "estimado". *(3)*
 - O termômetro de impulso do mês. *(3)*
 - Os últimos gastos, em cartões com a cor do banco (roxo Nubank, verde Wise), o valor, a categoria
-  e a caixinha. Gastos provisórios aparecem marcados. *(3)*
-- Eu toco na caixinha de um gasto e troco na hora. *(3)*
+  e a importância. Gastos provisórios aparecem marcados. *(3)*
+- Eu toco na importância de um gasto e troco na hora. *(3)*
 - O app é instalável na tela de início do celular. *(1)*
 
 ## Configurações
 
 - Numa gaveta, eu configuro a renda, os custos fixos, a meta de reserva, o teto de impulso, as
-  caixinhas e o mapa de categoria para caixinha. *(3)*
+  importâncias e o mapa de categoria para importância. *(3)*

@@ -37,7 +37,7 @@ Cada gasto nasce provisório pela notificação do celular e vira definitivo qua
 - Quando a transação do Pluggy chega, o app procura um provisório da mesma fonte, com o mesmo valor e
   data próxima, e casa os dois. *(2)*
 - A janela de casamento é de 3 dias, e eu posso mudá-la. *(2)*
-- A categoria, a caixinha e as notas do provisório passam para o definitivo. *(2)*
+- A categoria, a importância e as notas do provisório passam para o definitivo. *(2)*
 
 ## Órfãos
 
