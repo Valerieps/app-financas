@@ -37,7 +37,7 @@ do Pluggy apaga.
 | 1 | **Cofre de dados:** acesso, carga inicial do Nubank, webhooks do Pluggy, varredura diária, retratos diários, espelho noturno e a tela Cofre | 7 dias seguidos de sync sem perda, conferidos contra o app do Nubank |
 | 2 | **Classificação e reconciliação:** notificações do MacroDroid, gastos provisórios, casamento, categoria e importância, regras, separação do que não é gasto | 2 semanas de gastos reais com todos os provisórios casados ou explicados |
 | 3 | **Feedback:** Livre do dia, bot do Telegram e a tela do semáforo | O alerta chega em menos de 3 segundos depois da notificação |
-| 4 | **Visão completa:** faturas e parcelas futuras, investimentos, reembolsos, saúde das conexões, exportação e API de dados | |
+| 4 | **Visão completa:** faturas e parcelas futuras, investimentos, reembolsos, holerites, saúde das conexões, exportação e API de dados | |
 | 5 | **Wise e demais conexões:** várias moedas, até o limite de 5 conexões | |
 
 ## Arquivos
@@ -53,6 +53,7 @@ do Pluggy apaga.
 | [spec/tela-do-celular.md](spec/tela-do-celular.md) | A tela do semáforo e as configurações |
 | [spec/cartao-de-credito.md](spec/cartao-de-credito.md) | Faturas e parcelas futuras |
 | [spec/exportacao-e-api.md](spec/exportacao-e-api.md) | Exportação e a API de dados para outros apps |
+| [spec/holerite.md](spec/holerite.md) | Envio do holerite, leitura dos lançamentos e conferência do líquido |
 | [spec/_modelo.md](spec/_modelo.md) | Modelo para um arquivo de feature novo |
 
 Os termos estão definidos em [GLOSSARIO.md](GLOSSARIO.md).
