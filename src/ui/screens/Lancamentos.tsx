@@ -1,9 +1,9 @@
 // Finanças › Lançamentos (docs/spec/lancamentos.md): every transaction of the month, money out and
-// money in, by day; each row opens in the detail panel. Categoria and importância arrive with
+// money in, newest day first; each row opens in the detail panel. Categoria and importância arrive with
 // phase 2; the category shown is Pluggy's.
 import type { LancamentoView } from '../../application/api-contract';
 import { isBareDay } from '../../domain/calendar';
-import { dayLabel, groupByDay, matchesFilter, parseDirectionFilter, totals, type DirectionFilter } from '../../domain/lancamentos';
+import { dayCell, dayLabel, matchesAccounts, matchesFilter, parseDirectionFilter, sortByDay, toggleAccount, type DirectionFilter } from '../../domain/lancamentos';
 import { monthKey, type Month } from '../../domain/month';
 import { strings } from '../../domain/strings';
 import { saoPauloDate } from '../../domain/vault';
@@ -23,6 +23,15 @@ function account(item: LancamentoView): string {
   return [item.accountName, type].filter(Boolean).join(' ') || '—';
 }
 
+/** The list path with the account filter set to `chosen` (`?conta=a&conta=b`). */
+function withAccounts(path: string, search: URLSearchParams, chosen: readonly string[]): string {
+  const params = new URLSearchParams(search);
+  params.delete('conta');
+  for (const a of chosen) params.append('conta', a);
+  const query = params.toString();
+  return query ? `${path}?${query}` : path;
+}
+
 function LoadError({ error, reload }: { error: string | undefined; reload: () => void }) {
   if (!error || error === 'unauthenticated' || error === 'locked') return null;
   return (
@@ -39,7 +48,11 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
   const query = useQuery('lancamentos', { month: monthKey(month) }, ['vault']);
   const filter = parseDirectionFilter(search.get('tipo'));
   const view = query.data?.month === monthKey(month) ? query.data : undefined;
-  const items = (view?.items ?? []).filter((item) => matchesFilter(filter, item.direction));
+  const chosenAccounts = search.getAll('conta');
+  const accounts = [...new Set([...(view?.items ?? []).map(account), ...chosenAccounts])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const items = sortByDay(
+    (view?.items ?? []).filter((item) => matchesFilter(filter, item.direction) && matchesAccounts(chosenAccounts, account(item))),
+  );
   const monthTotals = view?.totals ?? [];
   const today = saoPauloDate(new Date());
   const listPath = tabPath('lancamentos');
@@ -81,6 +94,27 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
             </Link>
           ))}
         </div>
+        {accounts.length > 1 && (
+          <div className="lanc-toolbar" role="group" aria-label={text.accounts}>
+            <Link
+              to={withAccounts(listPath, search, [])}
+              className="chip lanc-filter"
+              aria-current={chosenAccounts.length === 0 ? 'true' : undefined}
+            >
+              {text.allAccounts}
+            </Link>
+            {accounts.map((a) => (
+              <Link
+                key={a}
+                to={withAccounts(listPath, search, toggleAccount(chosenAccounts, a))}
+                className="chip lanc-filter"
+                aria-current={chosenAccounts.includes(a) ? 'true' : undefined}
+              >
+                {a}
+              </Link>
+            ))}
+          </div>
+        )}
 
         <LoadError error={query.error} reload={query.reload} />
         {view && items.length === 0 && <p className="muted">{view.items.length === 0 ? text.empty : text.emptyFiltered}</p>}
@@ -88,51 +122,34 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
         {items.length > 0 && (
           <div className="lanc-table">
             <div className="lanc-row lanc-row--head text-over muted" aria-hidden="true">
+              <span>{text.columns.date}</span>
               <span>{text.columns.description}</span>
               <span>{text.columns.category}</span>
-              <span>{text.columns.account}</span>
               <span className="lanc-amount">{text.columns.amount}</span>
             </div>
-            {groupByDay(items).map((group) => {
-              const [dayTotal] = totals(group.items.filter((i) => i.currency === 'BRL'));
-              return (
-                <section key={group.day} aria-label={dayLabel(group.day, today, text)}>
-                  <h3 className="lanc-day text-label">
-                    <span>{dayLabel(group.day, today, text)}</span>
-                    {dayTotal && (
-                      <span className="muted">
-                        {[dayTotal.inCents > 0 && `+ ${money(dayTotal.inCents, 'BRL')}`, dayTotal.outCents > 0 && money(dayTotal.outCents, 'BRL')]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </span>
-                    )}
-                  </h3>
-                  <ul className="lanc-list">
-                    {group.items.map((item) => (
-                      <li key={item.id}>
-                        <Link
-                          to={withQuery(`${listPath}/${encodeURIComponent(item.id)}`, search)}
-                          className="lanc-row"
-                          aria-current={item.id === selectedId ? 'true' : undefined}
-                          aria-label={`${text.open(item.description ?? text.noDescription)}, ${signed(item)}`}
-                        >
-                          <span className="lanc-description">
-                            <span className="text-strong">{item.description ?? text.noDescription}</span>
-                            {item.pending && <span className="chip lanc-badge">{text.pending}</span>}
-                            {item.installment && (
-                              <span className="text-caption muted">{text.installment(item.installment.number, item.installment.total)}</span>
-                            )}
-                          </span>
-                          <span className="muted">{item.category ?? text.noCategory}</span>
-                          <span className="muted">{account(item)}</span>
-                          <span className={`lanc-amount text-strong${item.direction === 'in' ? ' lanc-in' : ''}`}>{signed(item)}</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              );
-            })}
+            <ul className="lanc-list">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <Link
+                    to={withQuery(`${listPath}/${encodeURIComponent(item.id)}`, search)}
+                    className="lanc-row"
+                    aria-current={item.id === selectedId ? 'true' : undefined}
+                    aria-label={`${text.open(item.description ?? text.noDescription)}, ${dayLabel(item.day, today, text)}, ${signed(item)}`}
+                  >
+                    <span className="muted">{dayCell(item.day, today, text)}</span>
+                    <span className="lanc-description">
+                      <span className="text-strong">{item.description ?? text.noDescription}</span>
+                      {item.pending && <span className="chip lanc-badge">{text.pending}</span>}
+                      {item.installment && (
+                        <span className="text-caption muted">{text.installment(item.installment.number, item.installment.total)}</span>
+                      )}
+                    </span>
+                    <span className="muted">{item.category ?? text.noCategory}</span>
+                    <span className={`lanc-amount text-strong${item.direction === 'in' ? ' lanc-in' : ''}`}>{signed(item)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </section>

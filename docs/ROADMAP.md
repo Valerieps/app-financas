@@ -12,7 +12,7 @@ O que ainda não está pronto.
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
 | Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
-| Lançamentos: filtros por categoria, importância, conta, caixinha, valor e texto; seleção múltipla; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
+| Lançamentos: filtros por categoria, importância, caixinha, valor e texto; seleção múltipla; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
 | Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
 | Bot do Telegram | 3 | `spec/telegram.md` | |

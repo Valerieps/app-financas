@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayLabel, direction, groupByDay, matchesFilter, monthDays, parseDirectionFilter, totals } from './lancamentos';
+import { dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, parseDirectionFilter, sortByDay, toggleAccount, totals } from './lancamentos';
 
 describe('direction', () => {
   it("follows Pluggy's type", () => {
@@ -39,17 +39,27 @@ describe('totals', () => {
   });
 });
 
-describe('groupByDay', () => {
+describe('sortByDay', () => {
   it('puts the newest day first and keeps the order inside a day', () => {
-    const groups = groupByDay([
+    const sorted = sortByDay([
       { day: '2026-11-01', id: 'a' },
       { day: '2026-11-03', id: 'b' },
       { day: '2026-11-01', id: 'c' },
     ]);
-    expect(groups.map((g) => [g.day, g.items.map((i) => i.id)])).toEqual([
-      ['2026-11-03', ['b']],
-      ['2026-11-01', ['a', 'c']],
-    ]);
+    expect(sorted.map((i) => i.id)).toEqual(['b', 'a', 'c']);
+  });
+});
+
+describe('the account filter', () => {
+  it('keeps every account when none is chosen', () => {
+    expect(matchesAccounts([], 'Nubank cartão')).toBe(true);
+    expect(matchesAccounts(['Nubank conta'], 'Nubank cartão')).toBe(false);
+    expect(matchesAccounts(['Nubank conta', 'Nubank cartão'], 'Nubank cartão')).toBe(true);
+  });
+
+  it('adds an account on a tap and takes it out on the next', () => {
+    expect(toggleAccount(['a'], 'b')).toEqual(['a', 'b']);
+    expect(toggleAccount(['a', 'b'], 'a')).toEqual(['b']);
   });
 });
 
@@ -76,5 +86,14 @@ describe('dayLabel', () => {
     expect(dayLabel('2026-11-06', '2026-11-07', words)).toBe('Ontem · sex, 6 nov');
     expect(dayLabel('2026-11-05', '2026-11-07', words)).toBe('qui, 5 nov');
     expect(dayLabel('2026-10-31', '2026-11-01', words)).toBe('Ontem · sáb, 31 out');
+  });
+});
+
+describe('dayCell', () => {
+  const words = { today: 'Hoje', yesterday: 'Ontem' };
+  it('says only Hoje or Ontem for those days', () => {
+    expect(dayCell('2026-11-07', '2026-11-07', words)).toBe('Hoje');
+    expect(dayCell('2026-11-06', '2026-11-07', words)).toBe('Ontem');
+    expect(dayCell('2026-11-05', '2026-11-07', words)).toBe('qui, 5 nov');
   });
 });
