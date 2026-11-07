@@ -61,6 +61,11 @@ espelho noturno (desktop) ◄── wrangler d1 export + sync do R2
   registros novos.
 - **Decisões separadas:** `user_overrides`, `classification_rules` e `category_bucket_map` nunca são
   tocadas pela sincronização.
+- **Só a coleta grava o cofre:** as tabelas que guardam o que o Pluggy devolveu (do `raw_payloads`
+  ao `pluggy_categories` na tabela abaixo) só são escritas pelo código de
+  `server/application/collect/`. Ajustes manuais, categorias e caixinhas vão para tabelas próprias,
+  nunca editam o cofre. O `server/application/vault-writes.test.ts` confere isso em todo build e
+  obriga cada tabela nova a ser classificada como cofre ou não.
 - Valores em centavos (inteiro), sempre com a moeda; datas em UTC, convertidas para
   `America/Sao_Paulo` só na exibição e na virada do dia.
 - Toda tabela que espelha a API tem `raw_json`, `first_seen_at` e `last_seen_at`.
