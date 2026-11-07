@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LancamentoView, TagLayerView } from '../../application/api-contract';
 import { isBareDay } from '../../domain/calendar';
 import {
+  clickSelection,
   dayCell,
   dayLabel,
   matchesAccounts,
@@ -96,7 +97,13 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
   // Only what the list shows counts: a filter that hides a lançamento takes it out of the batch.
   const selected = items.filter((item) => selection.includes(item.id));
   const allSelected = items.length > 0 && selected.length === items.length;
-  const toggle = (id: string) => setSelection((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  // The last box clicked: a shift-click selects everything between it and the box clicked.
+  const anchor = useRef<string | null>(null);
+  const clickBox = (id: string, shift: boolean) => {
+    const order = items.map((i) => i.id);
+    setSelection((s) => clickSelection(s, order, anchor.current, id, shift));
+    anchor.current = id;
+  };
   const monthTotals = view?.totals ?? [];
   const today = saoPauloDate(new Date());
   const listPath = tabPath('lancamentos');
@@ -229,7 +236,11 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
                     className="lanc-check"
                     aria-label={text.select(item.description ?? text.noDescription)}
                     checked={selection.includes(item.id)}
-                    onChange={() => toggle(item.id)}
+                    // Without this, a shift-click also selects the page text between the two boxes.
+                    onMouseDown={(e) => {
+                      if (e.shiftKey) e.preventDefault();
+                    }}
+                    onChange={(e) => clickBox(item.id, (e.nativeEvent as MouseEvent).shiftKey === true)}
                   />
                   <Link
                     to={withQuery(`${listPath}/${encodeURIComponent(item.id)}`, search)}

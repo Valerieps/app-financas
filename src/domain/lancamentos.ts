@@ -69,7 +69,27 @@ export function toggleAccount(chosen: readonly string[], account: string): strin
   return chosen.includes(account) ? chosen.filter((a) => a !== account) : [...chosen, account];
 }
 
-const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+/**
+ * The selection after a click on one lançamento's box. A plain click toggles it. A shift-click, with
+ * an anchor (the last box clicked) still in the list, sets every lançamento between the anchor and
+ * the clicked one, in the order the list shows, to the state the clicked one is switching to.
+ */
+export function clickSelection(
+  selection: readonly string[],
+  order: readonly string[],
+  anchor: string | null,
+  id: string,
+  shift: boolean,
+): string[] {
+  const from = anchor === null ? -1 : order.indexOf(anchor);
+  const to = order.indexOf(id);
+  if (!shift || from < 0 || to < 0) return toggleAccount(selection, id);
+  const range = order.slice(Math.min(from, to), Math.max(from, to) + 1);
+  if (selection.includes(id)) return selection.filter((x) => !range.includes(x));
+  return [...selection, ...range.filter((x) => !selection.includes(x))];
+}
+
+const WEEKDAYS =['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
 function shortDay(day: string): string {

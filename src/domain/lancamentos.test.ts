@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SORT, dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, nextSort, parseDirectionFilter, parseSort, sortByDay, sortLancamentos, sortParams, toggleAccount, totals } from './lancamentos';
+import { DEFAULT_SORT, clickSelection, dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, nextSort, parseDirectionFilter, parseSort, sortByDay, sortLancamentos, sortParams, toggleAccount, totals } from './lancamentos';
 
 describe('direction', () => {
   it("follows Pluggy's type", () => {
@@ -140,5 +140,32 @@ describe('sorting', () => {
   it('breaks ties by the newest day', () => {
     const d = item('2026-11-04', 'Padaria', 'Mercado', 1500);
     expect(sortLancamentos([a, d], { column: 'valor', direction: 'desc' })).toEqual([d, a]);
+  });
+});
+
+describe('clickSelection', () => {
+  const order = ['a', 'b', 'c', 'd', 'e'];
+
+  it('toggles one box on a plain click', () => {
+    expect(clickSelection(['a'], order, 'a', 'c', false)).toEqual(['a', 'c']);
+    expect(clickSelection(['a', 'c'], order, 'a', 'c', false)).toEqual(['a']);
+  });
+
+  it('selects everything between the anchor and the shift-clicked box, either way', () => {
+    expect(clickSelection(['b'], order, 'b', 'd', true)).toEqual(['b', 'c', 'd']);
+    expect(clickSelection(['d'], order, 'd', 'b', true)).toEqual(['d', 'b', 'c']);
+  });
+
+  it('keeps what was already selected outside the range', () => {
+    expect(clickSelection(['a', 'c'], order, 'c', 'e', true)).toEqual(['a', 'c', 'd', 'e']);
+  });
+
+  it('clears the range when the shift-clicked box was selected', () => {
+    expect(clickSelection(['a', 'b', 'c', 'd'], order, 'a', 'c', true)).toEqual(['d']);
+  });
+
+  it('falls back to a toggle without an anchor in the list', () => {
+    expect(clickSelection([], order, null, 'c', true)).toEqual(['c']);
+    expect(clickSelection([], order, 'z', 'c', true)).toEqual(['c']);
   });
 });

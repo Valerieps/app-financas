@@ -49,6 +49,8 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 
 ## Seleção
 
+- Eu marco um lançamento, seguro Shift e marco outro: todos os que estão entre os dois, na ordem em
+  que a lista mostra, ficam marcados. Se o segundo já estava marcado, Shift desmarca o intervalo. *(2)*
 - Com lançamentos selecionados, eu ponho ou tiro tags de todos de uma vez (`categorias.md`). *(2)*
 - Enquanto há lançamentos selecionados, a barra de filtros dá lugar às ações com eles; limpar a
   seleção traz os filtros de volta. *(2)*
