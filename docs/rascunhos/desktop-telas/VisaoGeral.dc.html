@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Finanças: Visão geral</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+.sv{--bg:#f6f5f0;--surface:#ffffff;--sunken:#efeee8;--text:#2b2e2c;--muted:#5f6661;--border:#e2e3dc;--brand:#4f7a5e;--brand-strong:#3d624b;--brand-soft:#e7efe9;--ok-bg:#e4efe7;--ok:#2f6243;--warn-bg:#f7eed0;--warn:#765500;--risk-bg:#f6e3df;--risk:#9a3324;--obrig:#4a6178;--rotina:#5f7f52;--impulso:#b4561a;--projetos:#7457a3;font-family:Inter,system-ui,'Segoe UI',sans-serif;font-size:15px;line-height:22px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums}
+.t-display{font-size:56px;line-height:64px;font-weight:600;letter-spacing:-0.02em;margin:0}
+.t-number{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-0.01em;margin:0}
+.t-title{font-size:20px;line-height:28px;font-weight:600;margin:0}
+.t-body{font-size:15px;line-height:22px;margin:0}
+.t-strong{font-size:15px;line-height:22px;font-weight:600;margin:0}
+.t-label{font-size:13px;line-height:18px;font-weight:500}
+.t-caption{font-size:12px;line-height:16px}
+.t-over{font-size:12px;line-height:16px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.muted{color:var(--muted)}
+.cents{font-size:.55em;letter-spacing:0;font-weight:500;opacity:.75}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;box-sizing:border-box;min-width:0}
+.tab{display:inline-block;padding:12px 0;font-size:15px;line-height:22px;font-weight:500;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent}
+.tab:hover{color:var(--text)}
+.tab[aria-current="page"]{color:var(--text);border-bottom-color:var(--brand)}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font:500 15px/22px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.btn:hover{background:var(--bg);color:var(--text)}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-strong);color:#fff}
+.icon-btn{width:36px;height:36px;padding:0;justify-content:center;border-color:transparent;background:transparent}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--border);background:var(--surface);font-size:13px;line-height:18px;font-weight:500;color:var(--text);box-sizing:border-box;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
+.bar{position:relative;height:8px;border-radius:999px;background:var(--sunken)}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
+.pace{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--text);border-radius:1px}
+.li{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text)}
+.li:hover{color:var(--text);background:var(--bg)}
+a{color:var(--brand-strong)}a:hover{color:var(--text)}
+svg.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+kbd{font:500 12px/16px Inter,system-ui,sans-serif;border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--muted);background:var(--bg)}
+</style>
+</helmet>
+<div class="sv" style="display:flex;flex-wrap:wrap;min-height:100vh">
+<div style="flex:0 0 240px;display:flex"><dc-import name="Sidebar" active="financas" tone="verde" livre="R$ 82,40" hint-size="240px,100%"></dc-import></div>
+<main style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column">
+
+<header style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 32px;min-height:64px;box-sizing:border-box;background:var(--surface);border-bottom:1px solid var(--border)">
+<nav aria-label="Você está em" class="t-body" style="display:flex;gap:8px;align-items:center"><span class="muted">Finanças</span><span class="muted" aria-hidden="true">›</span><span style="font-weight:600">Visão geral</span></nav>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:8px;height:40px;box-sizing:border-box;padding:0 2px">
+<button class="btn icon-btn" aria-label="Mês anterior"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></button>
+<span class="t-body" style="font-weight:500;min-width:128px;text-align:center">novembro 2026</span>
+<button class="btn icon-btn" aria-label="Próximo mês"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+</div>
+<button class="btn" style="min-width:240px;justify-content:flex-start;color:var(--muted)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>Buscar ou fazer…<span style="flex:1"></span><kbd>Ctrl K</kbd></button>
+</header>
+<nav aria-label="Telas de Finanças" style="display:flex;gap:32px;padding:0 32px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap">
+<a class="tab" href="VisaoGeral.dc.html" aria-current="page">Visão geral</a>
+<a class="tab" href="Gastos.dc.html">Gastos</a>
+<a class="tab" href="Graficos.dc.html">Gráficos</a>
+<a class="tab" href="Metas.dc.html">Metas</a>
+<a class="tab" href="Caixinhas.dc.html">Caixinhas</a>
+</nav>
+
+<div style="padding:32px;display:flex;flex-direction:column;gap:24px;max-width:1200px;width:100%;box-sizing:border-box">
+
+<section aria-label="Livre do dia" style="background:var(--ok-bg);border-radius:16px;padding:32px;display:flex;gap:48px;flex-wrap:wrap;align-items:stretch">
+<div style="flex:1 1 360px;display:flex;flex-direction:column;gap:8px;color:var(--ok)">
+<span class="t-label" style="display:flex;align-items:center;gap:8px"><span class="dot" style="background:var(--ok);width:10px;height:10px"></span>Dentro do livre · sábado, 7 de novembro</span>
+<p class="t-display num" style="color:var(--text)">R$ 82<span class="cents">,40</span></p>
+<p class="t-body" style="color:var(--text)">livres hoje, de R$ 114,00. Gastei R$ 31,60 até agora.</p>
+<div class="bar" style="margin-top:16px;background:rgba(255,255,255,.7);max-width:480px" role="img" aria-label="28% do livre de hoje usado"><i style="width:28%;background:var(--ok)"></i></div>
+<div class="t-caption num" style="display:flex;justify-content:space-between;max-width:480px;color:var(--ok)"><span>R$ 0</span><span>R$ 114 · livre de hoje</span></div>
+</div>
+<div style="flex:1 1 320px;background:var(--surface);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:4px;box-sizing:border-box">
+<div style="display:flex;align-items:baseline;justify-content:space-between"><h2 class="t-strong">Gastos de hoje</h2><a href="Gastos.dc.html" class="t-label">Ver todos</a></div>
+<a class="li" href="Gastos.dc.html"><span class="dot" style="background:var(--rotina)"></span><span style="flex:1">Padaria Pão Nosso</span><span class="t-label muted">Rotina</span><span class="num" style="width:80px;text-align:right">R$ 12,40</span></a>
+<a class="li" href="Gastos.dc.html" style="border-bottom:0"><span class="dot" style="background:var(--rotina)"></span><span style="flex:1">Uber <span class="chip" style="height:22px;margin-left:6px">provisório</span></span><span class="t-label muted">Rotina</span><span class="num" style="width:80px;text-align:right">R$ 19,20</span></a>
+</div>
+</section>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<section class="card" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><h2 class="t-strong">O mês até aqui</h2><span class="chip" style="color:var(--ok);background:var(--ok-bg);border-color:transparent">● No ritmo</span></div>
+<p class="t-number num">R$ 715<span class="cents">,60</span> <span class="t-body muted" style="font-weight:400">de R$ 3.420,00</span></p>
+<div class="bar" role="img" aria-label="21% do orçamento flexível gasto; 23% do mês passou"><i style="width:21%;background:var(--brand)"></i><span class="pace" style="left:23%"></span></div>
+<p class="t-label muted" style="margin:0">Orçamento flexível · 21% gasto, 23% do mês passou (a linha preta)</p>
+</section>
+<section class="card" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><h2 class="t-strong">Termômetro de impulso</h2><a href="Metas.dc.html" class="t-label">Editar teto</a></div>
+<p class="t-number num">R$ 118<span class="cents">,00</span> <span class="t-body muted" style="font-weight:400">de R$ 300,00</span></p>
+<div class="bar" role="img" aria-label="39% do teto de impulso"><i style="width:39%;background:var(--impulso)"></i><span class="pace" style="left:23%"></span></div>
+<p class="t-label muted" style="margin:0">Faltam R$ 182,00 para o teto do mês</p>
+</section>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<section class="card" style="display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h2 class="t-strong">3 gastos para revisar</h2><a class="btn btn-primary" href="Gastos.dc.html">Revisar agora</a></div>
+<a class="li" href="Gastos.dc.html"><span class="chip">sem casamento</span><span style="flex:1">Notificação: compra R$ 54,00</span><span class="t-label muted">qui, 5 nov</span></a>
+<a class="li" href="Gastos.dc.html"><span class="chip">sem importância</span><span style="flex:1">PIX Maria Souza</span><span class="t-label muted">qua, 4 nov</span></a>
+<a class="li" href="Gastos.dc.html" style="border-bottom:0"><span class="chip">sem importância</span><span style="flex:1">Amazon Marketplace</span><span class="t-label muted">seg, 2 nov</span></a>
+</section>
+<section class="card" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><h2 class="t-strong">Metas em risco</h2><a href="Metas.dc.html" class="t-label">Todas as metas</a></div>
+<a href="Metas.dc.html" style="display:flex;flex-direction:column;gap:8px;text-decoration:none;color:var(--text);padding:16px;border-radius:8px;background:var(--warn-bg)">
+<div style="display:flex;justify-content:space-between"><span class="t-strong">Restaurante até R$ 250/mês</span><span class="t-label" style="color:var(--warn)">▲ Atenção</span></div>
+<div class="bar" style="background:rgba(255,255,255,.75)"><i style="width:75%;background:var(--warn)"></i><span class="pace" style="left:23%"></span></div>
+<span class="t-label" style="color:var(--warn)">R$ 186,40 usados · restam R$ 63,60 para 24 dias, R$ 2,65 por dia</span>
+</a>
+<p class="t-label muted" style="margin:0">As outras 4 metas estão no caminho.</p>
+</section>
+</div>
+
+<section class="card" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><h2 class="t-strong">Caixinhas com prazo perto</h2><a href="Caixinhas.dc.html" class="t-label">Todas as caixinhas</a></div>
+<a href="Caixinhas.dc.html" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr) auto;gap:24px;align-items:center;text-decoration:none;color:var(--text)">
+<div style="display:flex;flex-direction:column"><span class="t-strong">Presente da mãe</span><span class="t-label muted">até 20 nov · faltam 13 dias</span></div>
+<div class="bar"><i style="width:72%;background:var(--brand)"></i></div>
+<span class="num">R$ 180,00 <span class="muted">de R$ 250,00</span></span>
+</a>
+</section>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

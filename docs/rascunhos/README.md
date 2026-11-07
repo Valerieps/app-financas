@@ -10,3 +10,4 @@ Quando a tela de um rascunho fica pronta, o rascunho é apagado: o código passa
 | Rascunho | Status |
 | --- | --- |
 | [arquitetura-desktop.md](arquitetura-desktop.md) | Proposta de arquitetura de informação e navegação do desktop; aguarda as respostas do "Em aberto" |
+| [desktop-visual.md](desktop-visual.md) e [desktop-telas/](desktop-telas/) | Proposta visual do desktop (psicologia financeira, tipografia, espaçamento, cores) e o rascunho de cada tela; tokens já em `tokens.css`; aguarda o "Em aberto" |
