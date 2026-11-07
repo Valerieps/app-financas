@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SORT, clickSelection, dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, nextSort, parseDirectionFilter, parseSort, sortByDay, sortLancamentos, sortParams, toggleAccount, totals } from './lancamentos';
+import { DEFAULT_SORT, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, nextSort, parseDirectionFilter, parseSort, sortByDay, sortLancamentos, sortParams, toggleAccount, totals } from './lancamentos';
 
 describe('direction', () => {
   it("follows Pluggy's type", () => {
@@ -72,10 +72,60 @@ describe('the direction filter', () => {
   });
 
   it('keeps what matches', () => {
-    expect(matchesFilter('todos', 'in')).toBe(true);
-    expect(matchesFilter('entradas', 'in')).toBe(true);
-    expect(matchesFilter('entradas', 'out')).toBe(false);
-    expect(matchesFilter('saidas', 'out')).toBe(true);
+    const plain = (direction: 'in' | 'out') => ({ direction, cardPayment: false });
+    expect(matchesFilter('todos', plain('in'))).toBe(true);
+    expect(matchesFilter('entradas', plain('in'))).toBe(true);
+    expect(matchesFilter('entradas', plain('out'))).toBe(false);
+    expect(matchesFilter('saidas', plain('out'))).toBe(true);
+    expect(matchesFilter('cartao', plain('out'))).toBe(false);
+  });
+
+  it('isolates card bill payments under cartao', () => {
+    expect(parseDirectionFilter('cartao')).toBe('cartao');
+    const paid = { direction: 'out' as const, cardPayment: true };
+    const received = { direction: 'in' as const, cardPayment: true };
+    expect(matchesFilter('cartao', paid)).toBe(true);
+    expect(matchesFilter('cartao', received)).toBe(true);
+    expect(matchesFilter('saidas', paid)).toBe(false);
+    expect(matchesFilter('entradas', received)).toBe(false);
+    expect(matchesFilter('todos', paid)).toBe(true);
+  });
+});
+
+describe('totals and card bill payments', () => {
+  it('leaves card bill payments out', () => {
+    expect(
+      totals([
+        { currency: 'BRL', direction: 'out', amountCents: 1000 },
+        { currency: 'BRL', direction: 'out', amountCents: 90000, cardPayment: true },
+        { currency: 'BRL', direction: 'in', amountCents: 90000, cardPayment: true },
+      ]),
+    ).toEqual([{ currency: 'BRL', inCents: 0, outCents: 1000 }]);
+  });
+});
+
+describe('isCardPayment', () => {
+  const t = (over: Partial<Parameters<typeof isCardPayment>[0]>) =>
+    isCardPayment({ type: 'DEBIT', amountCents: -90000, accountType: 'BANK', pluggyCategoryId: null, description: null, ...over });
+
+  it("trusts Pluggy's credit card payment category on either side", () => {
+    expect(t({ pluggyCategoryId: '05100000' })).toBe(true);
+    expect(t({ accountType: 'CREDIT', type: 'CREDIT', pluggyCategoryId: '05100000' })).toBe(true);
+    expect(t({ pluggyCategoryId: '05070000', description: 'Transferência' })).toBe(false);
+  });
+
+  it('reads the description of the debit in the bank account', () => {
+    expect(t({ description: 'Pagamento de fatura' })).toBe(true);
+    expect(t({ description: 'PAGAMENTO DA FATURA' })).toBe(true);
+    expect(t({ description: 'Pagamento de fatura', type: 'CREDIT', amountCents: 90000 })).toBe(false);
+    expect(t({ description: 'Mercado' })).toBe(false);
+  });
+
+  it('reads the description of the credit on the card', () => {
+    const card = { accountType: 'CREDIT', type: 'CREDIT' };
+    expect(t({ ...card, description: 'Pagamento recebido' })).toBe(true);
+    expect(t({ ...card, description: 'Estorno de compra' })).toBe(false);
+    expect(t({ accountType: 'CREDIT', type: 'DEBIT', amountCents: 90000, description: 'Pagamento recebido' })).toBe(false);
   });
 });
 

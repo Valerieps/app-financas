@@ -7,7 +7,7 @@ import { statement } from './ports';
 
 const NOW = '2026-11-07T12:00:00Z';
 
-async function seed() {
+async function seed(withCardPayment = false) {
   const { ctx, sql } = testContext(NOW);
   const account = (id: string, type: string, name: string) =>
     statement(
@@ -75,6 +75,13 @@ async function seed() {
     ),
     statement('INSERT INTO transaction_payment_data (transaction_id, payer_name, receiver_name) VALUES (?, ?, ?)', 'salario', 'Empresa', 'Eu'),
   ]);
+  if (withCardPayment) {
+    await sql.batch([
+      transaction('fatura', 'bank', '2026-11-04T12:00:00.000Z', -90000, { type: 'DEBIT', description: 'Pagamento de fatura' }),
+      transaction('recebido', 'card', '2026-11-04T12:00:00.000Z', -90000, { type: 'CREDIT', description: 'Pagamento recebido' }),
+      statement("UPDATE transactions SET card_payment = 1 WHERE id IN ('fatura', 'recebido')"),
+    ]);
+  }
   return new AppService(ctx);
 }
 
@@ -94,7 +101,18 @@ describe('lancamentos', () => {
     const loja = view.items.find((i) => i.id === 'loja');
     expect(loja).toMatchObject({ direction: 'out', amountCents: 4590, pending: true, category: 'Shopping', accountName: 'Cartão', installment: { number: 1, total: 3 } });
     expect(view.items.find((i) => i.id === 'mercado')).toMatchObject({ category: 'Supermercado', direction: 'out', amountCents: 8000 });
-    expect(view.items.find((i) => i.id === 'salario')).toMatchObject({ direction: 'in', pending: false, installment: null });
+    expect(view.items.find((i) => i.id === 'salario')).toMatchObject({ direction: 'in', pending: false, installment: null, cardPayment: false });
+  });
+
+  it('lists card bill payments but leaves them out of the totals', async () => {
+    const service = await seed(true);
+    const result = await service.query('lancamentos', { month: '2026-11' }, NO_CALLER);
+    const view = (result as { value: LancamentosView }).value;
+    expect(view.items.filter((i) => i.cardPayment).map((i) => [i.id, i.direction])).toEqual([
+      ['fatura', 'out'],
+      ['recebido', 'in'],
+    ]);
+    expect(view.totals).toEqual([{ currency: 'BRL', inCents: 500000, outCents: 8000 + 4590 + 100 }]);
   });
 
   it('refuses a malformed month', async () => {

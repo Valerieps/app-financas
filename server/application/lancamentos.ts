@@ -22,10 +22,11 @@ interface Row {
   account_type: string | null;
   installment_number: number | null;
   total_installments: number | null;
+  card_payment: number;
 }
 
 const SELECT = `
-  SELECT t.id, t.date, t.description, t.amount_cents, t.currency_code, t.type, t.status,
+  SELECT t.id, t.date, t.description, t.amount_cents, t.currency_code, t.type, t.status, t.card_payment,
          COALESCE(c.description_translated, c.description, json_extract(t.raw_json, '$.category')) AS category,
          a.name AS account_name, a.type AS account_type,
          cd.installment_number, cd.total_installments`;
@@ -48,6 +49,7 @@ function toView(row: Row, tags: TagAssignment = {}): LancamentoView {
     accountName: row.account_name,
     accountType: row.account_type,
     pending: row.status === 'PENDING',
+    cardPayment: row.card_payment === 1,
     installment:
       row.installment_number !== null && row.total_installments !== null && row.total_installments > 1
         ? { number: row.installment_number, total: row.total_installments }

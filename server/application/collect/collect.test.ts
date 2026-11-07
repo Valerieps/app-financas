@@ -138,6 +138,19 @@ describe('one transaction, one record', () => {
     expect(await rows(ctx, 'SELECT COUNT(*) AS n FROM transaction_versions WHERE transaction_id = ?', id)).toEqual([{ n: 1 }]);
   });
 
+  it('marks the card bill payment on both sides as it arrives', async () => {
+    const { ctx, pluggy } = await registered();
+    pluggy.routes[`/v2/transactions?accountId=${CHECKING_ID}&${WINDOW}`] = page([
+      transaction('t1'),
+      transaction('pay', { description: 'Pagamento de fatura', amount: -900, type: 'DEBIT', categoryId: null }),
+    ]);
+    pluggy.routes[`/v2/transactions?accountId=${CARD_ID}&${WINDOW}`] = page([
+      transaction('got', { accountId: CARD_ID, description: 'Pagamento recebido', amount: -900, type: 'CREDIT', categoryId: '05100000' }),
+    ]);
+    await syncItem(ctx, ITEM_ID, 'daily');
+    expect(await rows(ctx, 'SELECT pluggy_id FROM transactions WHERE card_payment = 1 ORDER BY pluggy_id')).toEqual([{ pluggy_id: 'got' }, { pluggy_id: 'pay' }]);
+  });
+
   it('recognizes it by date, amount and description when there is no providerId', async () => {
     const { ctx, pluggy } = await registered();
     pluggy.routes[`/v2/transactions?accountId=${CHECKING_ID}&${WINDOW}`] = page([

@@ -10,8 +10,8 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 
 - [ ] Os gastos provisórios ainda sem casamento aparecem na lista, marcados como provisórios, ou só
   no Cofre até casarem?
-- [ ] O pagamento da fatura do cartão e as transferências entre as minhas próprias contas contam nas
-  entradas e saídas do mês, ou ficam fora do total?
+- [ ] As transferências entre as minhas próprias contas contam nas entradas e saídas do mês, ou
+  ficam fora do total, como o pagamento do cartão?
 
 ## Lista
 
@@ -26,6 +26,14 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 - No topo, eu vejo o total de saídas, de entradas e o saldo do mês, separados por moeda. *(1)*
 - Com algum filtro ligado, o topo diz quantos lançamentos a lista mostra de quantos há no mês
   ("12 de 106"); os totais continuam sendo os do mês inteiro. *(1)*
+- O **pagamento de cartão** fica fora das saídas, das entradas e do saldo do topo, que diz à parte
+  quanto saiu das contas para pagar o cartão no mês. *(1)*
+  Por quê: as compras no cartão já são saídas; contar o pagamento da fatura somaria o mesmo gasto
+  duas vezes, e o crédito no cartão inflaria as entradas.
+- Pagamento de cartão é o débito na conta que paga a fatura e o crédito que entra no cartão. O app
+  reconhece cada um quando o dado chega, sempre: pela categoria do Pluggy de pagamento de cartão
+  ou, sem ela, pela descrição que começa com "Pagamento de fatura", "Pagamento da fatura" ou
+  "Pagamento fatura" (saindo da conta) ou com essas ou "Pagamento recebido" (entrando no cartão). *(1)*
 - Eu posso ordenar a tabela clicando no título da data, da descrição, da categoria ou do valor; um
   segundo clique inverte. A data e o valor começam do maior, os textos de A a Z. A ordem fica na URL
   (`?ordem=valor`) e continua quando eu troco de mês. *(1)*
@@ -34,11 +42,12 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 
 ## Filtros
 
-- Os filtros ficam numa linha só: Todos, Saídas e Entradas lado a lado, e um botão para as contas e
-  um para cada camada de tags, que abre a lista para eu escolher. "Limpar filtros" desliga todos de
-  uma vez. *(1)*
-- Eu posso mostrar todos, só as saídas ou só as entradas. O filtro fica na URL (`?tipo=entradas`) e
-  continua quando eu troco de mês. *(1)*
+- Os filtros ficam numa linha só: Todos, Saídas, Entradas e Cartão de crédito lado a lado, e um
+  botão para as contas e um para cada camada de tags, que abre a lista para eu escolher. "Limpar
+  filtros" desliga todos de uma vez. *(1)*
+- Eu posso mostrar todos, só as saídas, só as entradas ou só os pagamentos de cartão. Saídas e
+  Entradas não mostram pagamento de cartão; Todos mostra tudo. O filtro fica na URL
+  (`?tipo=cartao`) e continua quando eu troco de mês. *(1)*
 - Eu posso escolher uma ou mais contas e cartões para ver só os lançamentos deles; sem nenhum
   escolhido, vejo todos. A escolha fica na URL (`?conta=...`) e continua quando eu troco de mês. *(1)*
 - Eu posso escolher uma ou mais tags, numa linha por camada. Tags da mesma camada somam (Mercado ou
