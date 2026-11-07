@@ -60,3 +60,55 @@ export function clearLayer(assignment: TagAssignment, layerId: string): TagAssig
   const { [layerId]: _removed, ...rest } = assignment;
   return rest;
 }
+
+/** A change to many lançamentos at once: the layer gets `tagId`, or loses its tag when null. */
+export interface TagChange {
+  readonly layerId: string;
+  readonly tagId: string | null;
+}
+
+/** At most this many lançamentos change in one save. */
+export const MAX_BULK_TAGGING = 500;
+
+/**
+ * The tags every one of `assignments` shares, layer by layer: what the "Adicionar tags" form
+ * starts with. A layer where they differ, or where one has no tag, is absent.
+ */
+export function commonTags(assignments: readonly TagAssignment[]): TagAssignment {
+  const [first, ...rest] = assignments;
+  if (!first) return {};
+  const common: Record<string, string> = {};
+  for (const [layerId, tagId] of Object.entries(first)) {
+    if (rest.every((a) => a[layerId] === tagId)) common[layerId] = tagId;
+  }
+  return common;
+}
+
+/** The form's choice after a tap on a tag: marks it (replacing its layer's), or unmarks it. */
+export function toggleTag(chosen: TagAssignment, tag: { readonly id: string; readonly layerId: string }): TagAssignment {
+  return chosen[tag.layerId] === tag.id ? clearLayer(chosen, tag.layerId) : assignTag(chosen, tag);
+}
+
+/**
+ * What saving the form changes: each layer whose choice differs from what the lançamentos shared
+ * at the start. A layer I did not touch keeps each lançamento's own tag.
+ */
+export function tagChanges(initial: TagAssignment, chosen: TagAssignment): TagChange[] {
+  const layers = new Set([...Object.keys(initial), ...Object.keys(chosen)]);
+  return [...layers]
+    .filter((layerId) => initial[layerId] !== chosen[layerId])
+    .map((layerId) => ({ layerId, tagId: chosen[layerId] ?? null }));
+}
+
+/**
+ * The tag filter (`?tag=a&tag=b`): with tags chosen in several layers, the lançamento needs one of
+ * the chosen tags in each of those layers. None chosen keeps every lançamento.
+ */
+export function matchesTags(chosen: readonly string[], layerOf: ReadonlyMap<string, string>, assignment: TagAssignment): boolean {
+  const byLayer = new Map<string, string[]>();
+  for (const tagId of chosen) {
+    const layerId = layerOf.get(tagId);
+    if (layerId) byLayer.set(layerId, [...(byLayer.get(layerId) ?? []), tagId]);
+  }
+  return [...byLayer].every(([layerId, tags]) => tags.includes(assignment[layerId] ?? ''));
+}

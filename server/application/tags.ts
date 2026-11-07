@@ -1,5 +1,5 @@
 // Category layers and their tags (docs/spec/categorias.md): reading them and editing them.
-// Putting tags on lançamentos comes later; deleting a tag already takes it off them.
+// Deleting a tag takes it off every lançamento; putting tags on them is in lancamentos.ts.
 import type { TagLayerView } from '../../src/application/api-contract';
 import { canAddLayer, cleanName, moveInOrder, nameKey, nameProblem } from '../../src/domain/tags';
 import { failure, nowIso, type CommandResult, type Context } from './context';

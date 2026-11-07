@@ -12,8 +12,8 @@ O que ainda não está pronto.
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
 | Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
-| Lançamentos: filtros por categoria, importância, caixinha, valor e texto; seleção múltipla; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
-| Marcar tags nos lançamentos (painel de detalhe, filtros e gráficos por tag) | 2 | `spec/categorias.md` | A tela Categorias e as tabelas já existem; responder o "Em aberto" de `spec/categorias.md` |
+| Lançamentos: filtros por categoria, importância, caixinha, valor e texto; outras ações em lote; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
+| Tags no painel de detalhe e gráficos por tag | 2 | `spec/categorias.md` | Marcar em lote, filtrar e a coluna Tags já existem; responder o "Em aberto" de `spec/categorias.md` |
 | Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | |
 | Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
@@ -50,4 +50,7 @@ O que ainda não está pronto.
 - [ ] O nome de uma camada ou tag tem até 40 caracteres, e maiúsculas e acentos não distinguem nomes (`spec/categorias.md`).
 - [ ] As tags aparecem em ordem alfabética, e as camadas sobem e descem uma posição por vez (`spec/categorias.md`).
 - [ ] Excluir uma tag ou camada tira as tags dos lançamentos, depois de uma confirmação (`spec/categorias.md`).
+- [ ] O formulário de tags em lote começa com as tags em comum e muda só as camadas em que eu mexi (`spec/categorias.md`).
+- [ ] Um lançamento escondido por um filtro sai da seleção; trocar de mês ou salvar limpa a seleção; até 500 de uma vez (`spec/categorias.md`).
+- [ ] No filtro por tags, tags da mesma camada somam e camadas diferentes se cruzam (`spec/lancamentos.md`).
 - [ ] Uma conexão substituída fica de fora dos gráficos, e os gastos provisórios ainda não entram (`spec/graficos.md`).

@@ -2,8 +2,8 @@
 
 Eu organizo os meus lançamentos com tags em camadas, cada camada com um sentido próprio.
 
-- **Entra aqui:** as camadas, as tags, quantas cabem, como um lançamento recebe tags e a tela
-  Categorias.
+- **Entra aqui:** as camadas, as tags, quantas cabem, como um lançamento recebe tags (um ou vários
+  de uma vez) e a tela Categorias.
 - **Não entra aqui:** a importância e as regras automáticas (`classificacao.md`), a lista de
   lançamentos (`lancamentos.md`) e os gráficos (`graficos.md`).
 
@@ -35,6 +35,20 @@ Eu organizo os meus lançamentos com tags em camadas, cada camada com um sentido
 - Marcar uma tag numa camada em que o lançamento já tem outra troca a anterior pela nova. *(2)*
 - Quando eu excluo uma tag, ela sai de todos os lançamentos que a tinham; quando excluo uma camada,
   as tags dela saem junto. O app pede confirmação antes. *(2)*
+
+## Marcar tags em vários lançamentos
+
+- Na tela Lançamentos, eu marco a caixinha no começo de cada linha (ou a do cabeçalho, que marca
+  todos os da lista) e clico em **Adicionar tags**. *(2)*
+- O formulário mostra todas as camadas, cada uma com as suas tags. Eu toco numa tag para marcar,
+  tocar em outra da mesma camada troca, e tocar de novo tira; depois clico em **Salvar**. *(2)*
+- O formulário começa com as tags que todos os lançamentos escolhidos já têm em comum. Ao salvar,
+  só mudam as camadas em que eu mexi: marcar uma tag a coloca em todos, desmarcar uma que estava
+  marcada tira de todos, e uma camada em que eu não mexi fica como estava em cada lançamento. *(2)*
+  Por quê: assim eu ponho "Mercado" em vinte lançamentos sem apagar o "Impulso" que alguns já tinham.
+- Só contam os lançamentos que a lista mostra: se um filtro esconde um lançamento marcado, ele sai da
+  seleção. Trocar de mês limpa a seleção, e salvar também. *(2)*
+- Dá para mudar até 500 lançamentos de uma vez. *(2)*
 
 ## Tela Categorias
 

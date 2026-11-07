@@ -1,14 +1,19 @@
 // Finanças › Lançamentos (docs/spec/lancamentos.md): every transaction of the month, money out and
 // money in, newest day first; each row opens in the detail panel. Categoria and importância arrive with
-// phase 2; the category shown is Pluggy's.
-import type { LancamentoView } from '../../application/api-contract';
+// phase 2; the category shown is Pluggy's. My tags (docs/spec/categorias.md) show in their own
+// column, filter the list, and go on many lançamentos at once from the checkboxes.
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { LancamentoView, TagLayerView } from '../../application/api-contract';
 import { isBareDay } from '../../domain/calendar';
 import { dayCell, dayLabel, matchesAccounts, matchesFilter, parseDirectionFilter, sortByDay, toggleAccount, type DirectionFilter } from '../../domain/lancamentos';
 import { monthKey, type Month } from '../../domain/month';
 import { strings } from '../../domain/strings';
+import { commonTags, matchesTags, MAX_BULK_TAGGING, tagChanges, toggleTag, type TagAssignment } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
+import { useServices } from '../backend-context';
 import { Link } from '../router';
-import { tabPath, withQuery } from '../shell/routes';
+import { Icon } from '../shell/Icon';
+import { modulePath, tabPath, withQuery } from '../shell/routes';
 import { useQuery } from '../use-query';
 
 const text = strings.lancamentos;
@@ -23,11 +28,11 @@ function account(item: LancamentoView): string {
   return [item.accountName, type].filter(Boolean).join(' ') || '—';
 }
 
-/** The list path with the account filter set to `chosen` (`?conta=a&conta=b`). */
-function withAccounts(path: string, search: URLSearchParams, chosen: readonly string[]): string {
+/** The list path with the filter `key` set to `chosen` (`?conta=a&conta=b`, `?tag=x&tag=y`). */
+function withList(path: string, search: URLSearchParams, key: 'conta' | 'tag', chosen: readonly string[]): string {
   const params = new URLSearchParams(search);
-  params.delete('conta');
-  for (const a of chosen) params.append('conta', a);
+  params.delete(key);
+  for (const a of chosen) params.append(key, a);
   const query = params.toString();
   return query ? `${path}?${query}` : path;
 }
@@ -45,14 +50,28 @@ function LoadError({ error, reload }: { error: string | undefined; reload: () =>
 }
 
 export function Lancamentos({ month, search, selectedId }: { month: Month; search: URLSearchParams; selectedId: string | null }) {
-  const query = useQuery('lancamentos', { month: monthKey(month) }, ['vault']);
+  const query = useQuery('lancamentos', { month: monthKey(month) }, ['vault', 'tags']);
+  const layersQuery = useQuery('tagLayers', {}, ['tags']);
+  const layers = useMemo(() => layersQuery.data ?? [], [layersQuery.data]);
   const filter = parseDirectionFilter(search.get('tipo'));
   const view = query.data?.month === monthKey(month) ? query.data : undefined;
   const chosenAccounts = search.getAll('conta');
+  const chosenTags = search.getAll('tag');
+  const layerOf = useMemo(() => new Map(layers.flatMap((l) => l.tags.map((t) => [t.id, l.id] as const))), [layers]);
   const accounts = [...new Set([...(view?.items ?? []).map(account), ...chosenAccounts])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
   const items = sortByDay(
-    (view?.items ?? []).filter((item) => matchesFilter(filter, item.direction) && matchesAccounts(chosenAccounts, account(item))),
+    (view?.items ?? []).filter(
+      (item) => matchesFilter(filter, item.direction) && matchesAccounts(chosenAccounts, account(item)) && matchesTags(chosenTags, layerOf, item.tags),
+    ),
   );
+  const [selection, setSelection] = useState<readonly string[]>([]);
+  const [tagging, setTagging] = useState(false);
+  const monthId = monthKey(month);
+  useEffect(() => setSelection([]), [monthId]);
+  // Only what the list shows counts: a filter that hides a lançamento takes it out of the batch.
+  const selected = items.filter((item) => selection.includes(item.id));
+  const allSelected = items.length > 0 && selected.length === items.length;
+  const toggle = (id: string) => setSelection((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   const monthTotals = view?.totals ?? [];
   const today = saoPauloDate(new Date());
   const listPath = tabPath('lancamentos');
@@ -97,7 +116,7 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
         {accounts.length > 1 && (
           <div className="lanc-toolbar" role="group" aria-label={text.accounts}>
             <Link
-              to={withAccounts(listPath, search, [])}
+              to={withList(listPath, search, 'conta', [])}
               className="chip lanc-filter"
               aria-current={chosenAccounts.length === 0 ? 'true' : undefined}
             >
@@ -106,7 +125,7 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
             {accounts.map((a) => (
               <Link
                 key={a}
-                to={withAccounts(listPath, search, toggleAccount(chosenAccounts, a))}
+                to={withList(listPath, search, 'conta', toggleAccount(chosenAccounts, a))}
                 className="chip lanc-filter"
                 aria-current={chosenAccounts.includes(a) ? 'true' : undefined}
               >
@@ -116,20 +135,72 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
           </div>
         )}
 
+        {layers.map((layer) =>
+          layer.tags.length === 0 ? null : (
+            <div key={layer.id} className="lanc-toolbar" role="group" aria-label={text.tagFilter(layer.name)}>
+              <span className="text-label muted lanc-toolbar-label">{layer.name}</span>
+              {layer.tags.map((tag) => (
+                <Link
+                  key={tag.id}
+                  to={withList(listPath, search, 'tag', toggleAccount(chosenTags, tag.id))}
+                  className="chip lanc-filter"
+                  aria-current={chosenTags.includes(tag.id) ? 'true' : undefined}
+                >
+                  {tag.name}
+                </Link>
+              ))}
+            </div>
+          ),
+        )}
+
+        <div className="lanc-actions">
+          <button type="button" disabled={selected.length === 0} onClick={() => setTagging(true)}>
+            {text.addTags}
+          </button>
+          {selected.length > 0 && (
+            <>
+              <span className="text-label muted">{text.selected(selected.length)}</span>
+              <button type="button" className="secondary" onClick={() => setSelection([])}>
+                {text.clearSelection}
+              </button>
+            </>
+          )}
+        </div>
+
         <LoadError error={query.error} reload={query.reload} />
         {view && items.length === 0 && <p className="muted">{view.items.length === 0 ? text.empty : text.emptyFiltered}</p>}
 
         {items.length > 0 && (
           <div className="lanc-table">
-            <div className="lanc-row lanc-row--head text-over muted" aria-hidden="true">
-              <span>{text.columns.date}</span>
-              <span>{text.columns.description}</span>
-              <span>{text.columns.category}</span>
-              <span className="lanc-amount">{text.columns.amount}</span>
+            <div className="lanc-line lanc-line--head">
+              <input
+                type="checkbox"
+                className="lanc-check"
+                aria-label={text.selectAll}
+                checked={allSelected}
+                ref={(box) => {
+                  if (box) box.indeterminate = selected.length > 0 && !allSelected;
+                }}
+                onChange={() => setSelection(allSelected ? [] : items.map((i) => i.id))}
+              />
+              <div className="lanc-row lanc-row--head text-over muted" aria-hidden="true">
+                <span>{text.columns.date}</span>
+                <span>{text.columns.description}</span>
+                <span>{text.columns.category}</span>
+                <span>{text.columns.tags}</span>
+                <span className="lanc-amount">{text.columns.amount}</span>
+              </div>
             </div>
             <ul className="lanc-list">
               {items.map((item) => (
-                <li key={item.id}>
+                <li key={item.id} className="lanc-line">
+                  <input
+                    type="checkbox"
+                    className="lanc-check"
+                    aria-label={text.select(item.description ?? text.noDescription)}
+                    checked={selection.includes(item.id)}
+                    onChange={() => toggle(item.id)}
+                  />
                   <Link
                     to={withQuery(`${listPath}/${encodeURIComponent(item.id)}`, search)}
                     className="lanc-row"
@@ -145,6 +216,7 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
                       )}
                     </span>
                     <span className="muted">{item.category ?? text.noCategory}</span>
+                    <TagCell layers={layers} tags={item.tags} />
                     <span className={`lanc-amount text-strong${item.direction === 'in' ? ' lanc-in' : ''}`}>{signed(item)}</span>
                   </Link>
                 </li>
@@ -153,6 +225,143 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
           </div>
         )}
       </section>
+
+      {tagging && selected.length > 0 && (
+        <TagDialog
+          layers={layers}
+          items={selected}
+          onClose={() => setTagging(false)}
+          onSaved={() => {
+            setTagging(false);
+            setSelection([]);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/** The lançamento's tag names, in the layers' order. */
+function tagNames(layers: readonly TagLayerView[], tags: TagAssignment): string[] {
+  return layers.flatMap((layer) => layer.tags.filter((t) => t.id === tags[layer.id]).map((t) => t.name));
+}
+
+function TagCell({ layers, tags }: { layers: readonly TagLayerView[]; tags: TagAssignment }) {
+  const names = tagNames(layers, tags);
+  if (names.length === 0) return <span className="muted">{text.noTags}</span>;
+  return (
+    <span className="lanc-tags" title={names.join(', ')}>
+      {names.map((name, index) => (
+        <span key={index} className="chip lanc-tag">
+          {name}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * "Adicionar tags": every layer with its tags; I tap the tags and save. It starts with the tags
+ * the chosen lançamentos share, and saving changes only the layers I touched.
+ */
+function TagDialog({
+  layers,
+  items,
+  onClose,
+  onSaved,
+}: {
+  layers: readonly TagLayerView[];
+  items: readonly LancamentoView[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const t = text.tagging;
+  const { backend } = useServices();
+  // Fixed when the form opens, so a refetch behind it does not reset what I marked.
+  const [initial] = useState(() => commonTags(items.map((i) => i.tags)));
+  const [ids] = useState(() => items.map((i) => i.id));
+  const [chosen, setChosen] = useState<TagAssignment>(initial);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const first = useRef<HTMLButtonElement>(null);
+  const changes = tagChanges(initial, chosen);
+  const tooMany = ids.length > MAX_BULK_TAGGING;
+
+  useEffect(() => first.current?.focus(), []);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  async function save() {
+    setBusy(true);
+    setError(null);
+    const result = await backend.command('lancamentos.tag', { ids, changes });
+    setBusy(false);
+    if (result.ok) onSaved();
+    else setError(strings.genericError);
+  }
+
+  return (
+    <div className="scrim" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={t.title(ids.length)} className="search-dialog lanc-tagging" onClick={(e) => e.stopPropagation()}>
+        <div className="tile-head">
+          <h2 className="text-title">{t.title(ids.length)}</h2>
+          <button ref={first} type="button" className="icon-button" aria-label={t.close} onClick={onClose}>
+            <Icon name="close" />
+          </button>
+        </div>
+        {layers.length === 0 ? (
+          <p className="muted">
+            {t.noLayers} <Link to={modulePath('categorias')}>{t.createLayers}</Link>
+          </p>
+        ) : (
+          <>
+            <p className="text-label muted">{t.hint}</p>
+            <div className="lanc-tagging-layers">
+              {layers.map((layer) => (
+                <fieldset key={layer.id} className="lanc-tagging-layer">
+                  <legend className="text-strong">{layer.name}</legend>
+                  {layer.tags.length === 0 ? (
+                    <p className="text-label muted">{t.emptyLayer}</p>
+                  ) : (
+                    <div className="tags-chips">
+                      {layer.tags.map((tag) => (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          className="chip tags-chip"
+                          aria-pressed={chosen[layer.id] === tag.id}
+                          onClick={() => setChosen((c) => toggleTag(c, { id: tag.id, layerId: layer.id }))}
+                        >
+                          {tag.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </fieldset>
+              ))}
+            </div>
+          </>
+        )}
+        {tooMany && <p className="notice">{t.tooMany(MAX_BULK_TAGGING)}</p>}
+        {error && (
+          <p className="notice" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="lanc-tagging-actions">
+          <button type="button" className="secondary" onClick={onClose}>
+            {t.cancel}
+          </button>
+          <button type="button" disabled={busy || tooMany || changes.length === 0} onClick={() => void save()}>
+            {busy ? t.saving : t.save}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

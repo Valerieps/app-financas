@@ -1,6 +1,7 @@
 // The contract between the app and the server: query and command names, inputs and outputs.
 // Types only. The server imports it with `import type`, so nothing here runs on either side.
 import type { CategoryChart, Comparison, MonthlyChart } from '../domain/spending';
+import type { TagAssignment, TagChange } from '../domain/tags';
 
 /** One connection on the Cofre screen (docs/spec/cofre-de-dados.md, "Tela Cofre"). */
 export interface ConnectionView {
@@ -102,6 +103,8 @@ export interface LancamentoView {
   /** Pluggy has not posted it yet (PENDING). */
   readonly pending: boolean;
   readonly installment: { readonly number: number; readonly total: number } | null;
+  /** My tags on it: for each layer that has one, the tag id (docs/spec/categorias.md). */
+  readonly tags: TagAssignment;
 }
 
 export interface LancamentosView {
@@ -216,6 +219,11 @@ export interface Commands {
   'tag.rename': { input: { id: string; name: string }; output: null };
   /** Deletes the tag and takes it off every lançamento. */
   'tag.delete': { input: { id: string }; output: null };
+  /**
+   * Puts tags on many lançamentos at once, or takes them off (`tagId: null`); layers left out keep
+   * each lançamento's own tag. An unknown lançamento, layer or tag is `not_found`.
+   */
+  'lancamentos.tag': { input: { ids: readonly string[]; changes: readonly TagChange[] }; output: null };
 }
 
 export type QueryName = keyof Queries;
