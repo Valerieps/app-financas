@@ -8,6 +8,7 @@ import { runSweeps } from './collect/sync';
 import { vault } from './collect/vault';
 import { processPendingEvents } from './collect/webhooks';
 import { cleanUpLock, type Caller } from './lock';
+import { provisionalExpenses } from './notifications';
 import { statement } from './ports';
 
 type Input = Record<string, unknown>;
@@ -45,6 +46,7 @@ function asInput(raw: unknown): Input {
 const QUERIES: { [N in QueryName]: Handler<Queries[N]['output'] | QueryError> } = {
   vault: async (ctx) => vault(ctx),
   calendar: async (ctx, input) => calendar(ctx, input.itemId),
+  provisionalExpenses: async (ctx) => provisionalExpenses(ctx),
   passkeys: async (ctx, _input, caller) => {
     const rows = await ctx.sql.all<Omit<PasskeyView, 'thisDevice'> & { device: string }>(
       'SELECT id, label, created_at AS createdAt, last_used_at AS lastUsedAt, device_token_hash AS device FROM passkeys ORDER BY created_at',

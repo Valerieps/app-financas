@@ -47,6 +47,8 @@ espelho noturno (desktop) ◄── wrangler d1 export + sync do R2
   linha em `raw_payloads`.
 - **Webhook responde em menos de 1 segundo:** grava o bruto e o evento, devolve 2xx e processa em
   `waitUntil`. Evento sem `processed_at` é reprocessado pelo cron.
+  A notificação do MacroDroid é a exceção: ler o texto não chama ninguém de fora, então o gasto
+  provisório entra no mesmo `batch` da linha de `raw_payloads`, antes da resposta.
 - **Idempotência:** `webhook_events.event_id` é único; um evento repetido não tem efeito.
 - **Re-buscar, não deduzir:** um evento de transação dispara uma releitura da conta pela API (os
   últimos 40 dias, mais as criadas desde `transactionsCreatedAtFrom`); `item/updated` relê a conexão
@@ -110,7 +112,7 @@ Classificação, orçamento e decisões (fases 2 a 4):
 | --- | --- | --- |
 | `settings` | (única) | renda líquida, meta de reserva, teto de impulso, chat do Telegram, janela de casamento |
 | `fixed_expenses` | custo fixo | nome, valor, dia de vencimento, ativo |
-| `provisional_expenses` | notificação capturada | fonte, texto bruto, valor, estabelecimento, `received_at`, transação casada, status |
+| `provisional_expenses` | notificação de gasto (compra ou Pix enviado) | fonte, app, título e texto, tipo, valor, moeda, estabelecimento, `posted_at`, `received_at`, bruto, status (`provisional`, `unreadable`), transação casada |
 | `categories` | categoria | nome, pai, id do Pluggy de origem |
 | `value_buckets` | caixinha | nome, conta no orçamento, ordem |
 | `category_bucket_map` | ligação categoria → caixinha | categoria, caixinha, vigente de/até |

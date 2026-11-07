@@ -4,7 +4,7 @@ import { sha256 } from '../../infrastructure/crypto';
 import { nowIso, type Context } from '../context';
 import { statement, type Statement } from '../ports';
 
-export type RawSource = 'pluggy-api' | 'pluggy-webhook';
+export type RawSource = 'pluggy-api' | 'pluggy-webhook' | 'notification-webhook';
 
 /** Stores the body in R2 and returns the raw_payloads row to insert (callers may batch it). */
 export async function archive(

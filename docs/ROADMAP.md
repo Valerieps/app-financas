@@ -11,7 +11,6 @@ O que ainda não está pronto.
 
 | Feature | Fase | Spec | Observação |
 | --- | --- | --- | --- |
-| Notificações do MacroDroid e gastos provisórios | 2 | `spec/gastos-provisorios.md` | |
 | Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
 | Categoria, caixinha, regras e Gemini | 2 | `spec/classificacao.md` | |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
@@ -36,3 +35,4 @@ O que ainda não está pronto.
 - [ ] O app pede a digital quando é aberto e a última vez foi há mais de 1 hora (`spec/acesso.md`).
 - [ ] Num aparelho sem digital cadastrada, o login Google basta (`spec/acesso.md`).
 - [ ] O `/gastei` vale a partir da fase 3, junto com o bot (`spec/gastos-provisorios.md`).
+- [ ] A mesma notificação repetida em até 2 minutos conta uma vez (`spec/gastos-provisorios.md`).

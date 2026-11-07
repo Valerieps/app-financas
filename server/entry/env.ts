@@ -11,6 +11,8 @@ export interface Env {
   readonly PLUGGY_CLIENT_ID?: string;
   readonly PLUGGY_CLIENT_SECRET?: string;
   readonly PLUGGY_WEBHOOK_SECRET?: string;
+  /** Secret: MacroDroid sends it as `Authorization: Bearer` on /webhooks/notification (ADR-007). */
+  readonly NOTIFICATION_WEBHOOK_SECRET?: string;
   /** Local development only: stands in for Cloudflare Access (ADR-007). */
   readonly DEV_ACCESS_EMAIL?: string;
 }

@@ -21,7 +21,16 @@ Cada gasto nasce provisório pela notificação do celular e vira definitivo qua
 ## Provisório
 
 - Uma notificação vira um gasto provisório, que já conta no Livre do dia e no alerta do Telegram. *(2)*
-- Gastos provisórios aparecem marcados como provisórios. *(2)*
+- Viram gasto provisório as compras no cartão aprovadas (crédito e débito) e os Pix e transferências
+  que eu envio. Pix recebido, compra recusada, estorno, boleto, pagamento da fatura e as outras
+  notificações do banco ficam só guardadas no bruto. *(2)*
+- Uma notificação de compra ou de Pix que o app não consegue ler (sem valor) aparece como
+  "notificação não lida", com o texto, e não conta no Livre do dia. *(2)*
+  Por quê: assim eu vejo logo que o Android, o app do banco ou o MacroDroid mudou.
+- A mesma notificação repetida em até 2 minutos conta uma vez. *(2)*
+  Por quê: o Android às vezes mostra a mesma notificação de novo.
+- Gastos provisórios aparecem marcados como provisórios. Até a tela do celular (fase 3), eles ficam
+  numa lista na tela Cofre: estabelecimento, valor, fonte, tipo e hora. *(2)*
 
 ## Casamento
 
