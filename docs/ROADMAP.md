@@ -19,6 +19,7 @@ O que ainda não está pronto.
 | Faturas e parcelas futuras | 4 | `spec/cartao-de-credito.md` | |
 | Reembolsos | 4 | `spec/classificacao.md` | |
 | Avisos de renovação e de erro nas conexões | 4 | `spec/cofre-de-dados.md` | |
+| Holerite e conferência do líquido | 4 | `spec/holerite.md` | Responder o "Em aberto" antes de construir |
 | Exportação e API de dados | 4 | `spec/exportacao-e-api.md` | |
 | Wise e várias moedas | 5 | `spec/cofre-de-dados.md` | |
 
@@ -30,6 +31,9 @@ O que ainda não está pronto.
 
 - Uma tela própria para os investimentos, com mais detalhes de cada um; por enquanto o Cofre mostra
   só o nome, o CNPJ e o saldo de hoje (`spec/cofre-de-dados.md`).
+
+- Os lançamentos de ações do holerite ligados à emissão do Carnê-leão; por enquanto o app só guarda
+  esses lançamentos com o tipo Ações (`spec/holerite.md`).
 
 ## Revisar as lacunas que o agente decidiu
 
