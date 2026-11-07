@@ -239,6 +239,7 @@ export const strings = {
     columns: { date: 'Data', description: 'Descrição', category: 'Categoria', tags: 'Tags', amount: 'Valor' },
     accounts: 'Contas',
     noTags: '—',
+    emptyTag: 'Vazio',
     select: (description: string) => `Selecionar ${description}`,
     selectAll: 'Selecionar todos os lançamentos da lista',
     selected: (n: number) => (n === 1 ? '1 selecionado' : `${n} selecionados`),

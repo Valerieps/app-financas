@@ -44,6 +44,8 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 - Eu posso escolher uma ou mais tags, numa linha por camada. Tags da mesma camada somam (Mercado ou
   Restaurante); camadas diferentes se cruzam (Mercado e Impulso). Sem nenhuma escolhida, vejo todos.
   A escolha fica na URL (`?tag=...`) e continua quando eu troco de mês. *(2)*
+- Cada camada também tem a opção "Vazio", que mostra os lançamentos sem tag nessa camada; ela soma
+  com as tags da mesma camada como qualquer outra. *(2)*
 
 ## Seleção
 
