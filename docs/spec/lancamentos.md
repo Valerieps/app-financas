@@ -16,10 +16,10 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 ## Lista
 
 - A aba se chama **Lançamentos**, não Gastos, porque mostra também o que entra (créditos). *(1)*
-- Eu vejo todos os lançamentos do mês escolhido no cabeçalho, de todas as contas e cartões, agrupados
-  por dia, do mais novo para o mais antigo. *(1)*
-- Cada dia mostra "Hoje" ou "Ontem" quando for o caso, o dia da semana e quanto entrou e saiu nele. *(1)*
-- Cada linha mostra a descrição, a categoria do Pluggy, a conta e o valor; as entradas aparecem em
+- Eu vejo todos os lançamentos do mês escolhido no cabeçalho, de todas as contas e cartões, numa
+  tabela só, do dia mais novo para o mais antigo, sem total por dia. *(1)*
+- Cada linha mostra a data, a descrição, a categoria do Pluggy e o valor; a data diz "Hoje" ou
+  "Ontem" quando for o caso, senão o dia da semana e o dia ("qui, 5 nov"). As entradas aparecem em
   verde, com "+". Um lançamento que o banco ainda não fechou aparece como **pendente**, e uma compra
   parcelada mostra a parcela. *(1)*
 - No topo, eu vejo o total de saídas, de entradas e o saldo do mês, separados por moeda. *(1)*
@@ -30,6 +30,8 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 
 - Eu posso mostrar todos, só as saídas ou só as entradas. O filtro fica na URL (`?tipo=entradas`) e
   continua quando eu troco de mês. *(1)*
+- Eu posso escolher uma ou mais contas e cartões para ver só os lançamentos deles; sem nenhum
+  escolhido, vejo todos. A escolha fica na URL (`?conta=...`) e continua quando eu troco de mês. *(1)*
 
 ## Painel de detalhe
 
