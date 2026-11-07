@@ -113,6 +113,9 @@ Classificação, orçamento e decisões (fases 2 a 4):
 | `settings` | (única) | renda líquida, meta de reserva, teto de impulso, chat do Telegram, janela de casamento |
 | `fixed_expenses` | custo fixo | nome, valor, dia de vencimento, ativo |
 | `provisional_expenses` | notificação de gasto (compra ou Pix enviado) | fonte, app, título e texto, tipo, valor, moeda, estabelecimento, `posted_at`, `received_at`, bruto, status (`provisional`, `unreadable`), transação casada |
+| `tag_layers` | camada de tags | nome, posição (até 5 camadas, conferido pelo app) |
+| `tags` | tag | camada, nome |
+| `transaction_tags` | tag num lançamento | transação, camada, tag; a chave (transação, camada) garante uma tag por camada |
 | `categories` | categoria | nome, pai, id do Pluggy de origem |
 | `importance_levels` | importância | nome, conta no orçamento, ordem |
 | `category_importance_map` | ligação categoria → importância | categoria, importância, vigente de/até |

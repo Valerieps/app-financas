@@ -4,6 +4,7 @@ import { monthKey, monthOf, parseMonth, type Month } from '../domain/month';
 import { strings } from '../domain/strings';
 import { useServices } from './backend-context';
 import { Link, useLocation } from './router';
+import { Categorias } from './screens/Categorias';
 import { Cofre } from './screens/Cofre';
 import { Graficos } from './screens/Graficos';
 import { LancamentoDetail, Lancamentos } from './screens/Lancamentos';
@@ -92,6 +93,8 @@ function Screen({
       if (route.tab === 'graficos')
         return <Graficos chart={graficosChart(path)} month={monthKey(month)} monthParam={monthParam} compareParam={search.get('comparar')} />;
       return <EmConstrucao title={strings.shell.tabs[route.tab]} hint={strings.screens[route.tab]} tall />;
+    case 'categorias':
+      return <Categorias />;
     case 'cofre':
       return <Cofre onPasskeysChanged={onPasskeysChanged} />;
     case 'ajustes':
