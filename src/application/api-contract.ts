@@ -1,5 +1,6 @@
 // The contract between the app and the server: query and command names, inputs and outputs.
 // Types only. The server imports it with `import type`, so nothing here runs on either side.
+import type { CategoryChart, Comparison, MonthlyChart } from '../domain/spending';
 
 /** One connection on the Cofre screen (docs/spec/cofre-de-dados.md, "Tela Cofre"). */
 export interface ConnectionView {
@@ -173,6 +174,10 @@ export interface Queries {
   passkeys: { input: Record<string, never>; output: PasskeyView[] };
   calendar: { input: { itemId: string }; output: CalendarView };
   provisionalExpenses: { input: Record<string, never>; output: ProvisionalExpenseView[] };
+  /** Finanças › Gráficos › Por categoria: `month` is yyyy-mm (docs/spec/graficos.md). */
+  spendingByCategory: { input: { month: string; compare: Comparison }; output: CategoryChart };
+  /** Finanças › Gráficos › Ao longo do tempo: the 12 months ending at `month`. */
+  spendingByMonth: { input: { month: string }; output: MonthlyChart };
   /** The month's transactions (yyyy-mm), newest first. */
   lancamentos: { input: { month: string }; output: LancamentosView };
   lancamento: { input: { id: string }; output: LancamentoDetailView };

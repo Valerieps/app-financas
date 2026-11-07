@@ -121,12 +121,7 @@ A casa dos lançamentos: gastos e créditos. As regras da lista já construída 
 
 ### Gráficos
 
-Leitura, não edição.
-
-- Seletor: **Por categoria**, **Por importância**, **Ao longo do tempo**.
-- Cada gráfico tem ao lado a tabela dos mesmos números.
-- Clicar numa fatia ou barra abre **Lançamentos** filtrado por ela.
-- Comparar com o mês anterior ou com a média dos últimos 3 meses.
+Leitura, não edição. Já construída; as regras estão em [../spec/graficos.md](../spec/graficos.md).
 
 ### Metas
 

@@ -11,6 +11,7 @@ import { lancamento, lancamentos } from './lancamentos';
 import { cleanUpLock, type Caller } from './lock';
 import { provisionalExpenses } from './notifications';
 import { statement } from './ports';
+import { spendingByCategory, spendingByMonth } from './spending';
 
 type Input = Record<string, unknown>;
 type Handler<T> = (ctx: Context, input: Input, caller: Caller) => Promise<T>;
@@ -48,6 +49,8 @@ const QUERIES: { [N in QueryName]: Handler<Queries[N]['output'] | QueryError> } 
   vault: async (ctx) => vault(ctx),
   calendar: async (ctx, input) => calendar(ctx, input.itemId),
   provisionalExpenses: async (ctx) => provisionalExpenses(ctx),
+  spendingByCategory: async (ctx, input) => spendingByCategory(ctx, input),
+  spendingByMonth: async (ctx, input) => spendingByMonth(ctx, input),
   lancamentos: async (ctx, input) => lancamentos(ctx, input.month),
   lancamento: async (ctx, input) => lancamento(ctx, input.id),
   passkeys: async (ctx, _input, caller) => {
