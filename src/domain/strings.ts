@@ -112,6 +112,7 @@ export const strings = {
   shell: {
     mainNav: 'Navegação principal',
     systemNav: 'Sistema',
+    sidebar: { collapse: 'Recolher o menu', expand: 'Expandir o menu', resize: 'Redimensionar o menu' },
     youAreHere: 'Você está em',
     modules: {
       inicio: 'Início',
