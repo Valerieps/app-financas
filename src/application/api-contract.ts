@@ -126,6 +126,19 @@ export interface LancamentoDetailView extends LancamentoView {
   readonly firstSeenAt: string;
 }
 
+/** One tag of a layer (docs/spec/categorias.md). */
+export interface TagView {
+  readonly id: string;
+  readonly name: string;
+}
+
+/** One layer of tags, in screen order, with its tags in alphabetical order. */
+export interface TagLayerView {
+  readonly id: string;
+  readonly name: string;
+  readonly tags: readonly TagView[];
+}
+
 /** A device with a passkey asks for it after an hour without use (docs/spec/acesso.md). */
 export interface LockStatusView {
   readonly deviceHasPasskey: boolean;
@@ -181,6 +194,8 @@ export interface Queries {
   /** The month's transactions (yyyy-mm), newest first. */
   lancamentos: { input: { month: string }; output: LancamentosView };
   lancamento: { input: { id: string }; output: LancamentoDetailView };
+  /** The category layers and their tags (docs/spec/categorias.md). */
+  tagLayers: { input: Record<string, never>; output: TagLayerView[] };
 }
 
 /** Writes: `POST /api/command/<name>`. Each sends its writes in one atomic batch. */
@@ -190,13 +205,24 @@ export interface Commands {
   'connection.add': { input: { itemId: string }; output: { itemId: string } };
   /** Confirms (or, with `confirmed: false`, undoes) that an account had no transaction that day. */
   'day.confirmEmpty': { input: { accountId: string; day: string; confirmed: boolean }; output: null };
+  // Category layers and tags (docs/spec/categorias.md). A name that is empty or too long is
+  // `invalid`; a name already used among its siblings, or a sixth layer, is `conflict`.
+  'tagLayer.create': { input: { name: string }; output: { id: string } };
+  'tagLayer.rename': { input: { id: string; name: string }; output: null };
+  /** Deletes the layer, its tags and those tags on every lançamento. */
+  'tagLayer.delete': { input: { id: string }; output: null };
+  'tagLayer.move': { input: { id: string; direction: 'up' | 'down' }; output: null };
+  'tag.create': { input: { layerId: string; name: string }; output: { id: string } };
+  'tag.rename': { input: { id: string; name: string }; output: null };
+  /** Deletes the tag and takes it off every lançamento. */
+  'tag.delete': { input: { id: string }; output: null };
 }
 
 export type QueryName = keyof Queries;
 export type CommandName = keyof Commands;
 
 /** What a command says changed; screens that read these topics refetch. */
-export type Topic = 'vault' | 'passkeys';
+export type Topic = 'vault' | 'passkeys' | 'tags';
 
 /** `locked`: this device has a passkey and must be unlocked first. */
 export type ApiError = 'unauthenticated' | 'locked' | 'forbidden' | 'not_found' | 'invalid' | 'conflict' | 'unavailable';

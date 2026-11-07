@@ -877,3 +877,44 @@ a.lanc-row[aria-current='true'] {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Categorias: the layers of tags (docs/spec/categorias.md). */
+.tags-form {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.tags-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tags-actions .button-outline {
+  padding: 0 var(--space-3);
+}
+
+.tags-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tags-chip {
+  height: var(--size-control);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.tags-chip:hover {
+  background: var(--color-bg);
+}
+
+.tags-editing {
+  flex-basis: 100%;
+}
+
+.tags-danger {
+  color: var(--color-danger);
+}

@@ -108,6 +108,48 @@ export const strings = {
     sources: { nubank: 'Nubank', wise: 'Wise', flash: 'Flash', swile: 'Swile', caju: 'Caju', outra: 'Outro app' },
   },
 
+  // Categories as tags in layers (docs/spec/categorias.md).
+  categorias: {
+    title: 'Categorias',
+    subtitle: 'Cada camada tem um sentido próprio, e cada lançamento pode ter no máximo uma tag de cada camada.',
+    empty: 'Nenhuma camada ainda. Comece por uma, como "Tipo" ou "Impulso ou planejado".',
+    save: 'Salvar',
+    cancel: 'Cancelar',
+    rename: 'Renomear',
+    delete: 'Excluir',
+    names: {
+      empty: 'Escreva um nome.',
+      too_long: 'O nome pode ter até 40 caracteres.',
+      duplicate: 'Já existe uma com esse nome.',
+    },
+    newLayer: {
+      title: 'Nova camada',
+      field: 'Nome da camada',
+      placeholder: 'Ex.: Impulso ou planejado',
+      submit: 'Criar camada',
+      limit: 'Já tenho 5 camadas, o máximo. Para criar outra, exclua uma.',
+    },
+    layer: {
+      count: (n: number) => (n === 1 ? '1 tag' : `${n} tags`),
+      up: 'Subir a camada',
+      down: 'Descer a camada',
+      field: 'Nome da camada',
+      empty: 'Nenhuma tag nesta camada ainda.',
+      confirmDelete: (name: string, tags: number) =>
+        tags === 0
+          ? `Excluir a camada "${name}"?`
+          : `Excluir a camada "${name}" e as ${tags === 1 ? 'sua tag' : `suas ${tags} tags`}? Elas saem também dos lançamentos.`,
+    },
+    tag: {
+      field: 'Nova tag',
+      placeholder: 'Ex.: Mercado',
+      add: 'Adicionar',
+      edit: (name: string) => `Editar a tag ${name}`,
+      editField: 'Nome da tag',
+      confirmDelete: (name: string) => `Excluir a tag "${name}"? Ela sai também dos lançamentos.`,
+    },
+  },
+
   // The desktop shell (docs/rascunhos/arquitetura-desktop.md): sidebar, header, tabs, detail panel.
   shell: {
     mainNav: 'Navegação principal',
@@ -119,6 +161,7 @@ export const strings = {
       financas: 'Finanças',
       investimentos: 'Investimentos',
       patrimonio: 'Patrimônio',
+      categorias: 'Categorias',
       cofre: 'Cofre',
       ajustes: 'Ajustes',
     },
@@ -162,7 +205,7 @@ export const strings = {
     inicio: 'Aqui vai aparecer o resumo de tudo: Finanças, Investimentos e Patrimônio.',
     investimentos: 'Aqui vão aparecer os meus investimentos e como eles andam.',
     patrimonio: 'Aqui vai aparecer tudo o que eu tenho, menos o que eu devo.',
-    ajustes: 'Aqui vão ficar as regras, as categorias e as preferências do app.',
+    ajustes: 'Aqui vão ficar as regras e as preferências do app.',
     graficos: 'Aqui vão aparecer os gráficos do mês, por categoria e por importância.',
     metas: 'Aqui vão aparecer as minhas metas e como cada uma está.',
     caixinhas: 'Aqui vão aparecer as minhas caixinhas e quanto falta para cada uma.',

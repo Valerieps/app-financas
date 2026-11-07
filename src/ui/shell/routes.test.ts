@@ -13,13 +13,14 @@ describe('parseRoute', () => {
     expect(parseRoute('/financas/graficos/categoria')).toEqual({ module: 'financas', tab: 'graficos' });
     expect(parseRoute('/investimentos')).toEqual({ module: 'investimentos' });
     expect(parseRoute('/patrimonio')).toEqual({ module: 'patrimonio' });
+    expect(parseRoute('/categorias')).toEqual({ module: 'categorias' });
     expect(parseRoute('/cofre')).toEqual({ module: 'cofre' });
     expect(parseRoute('/ajustes')).toEqual({ module: 'ajustes' });
     expect(parseRoute('/ajustes/regras')).toEqual({ module: 'ajustes' });
   });
 
   it('rejects anything else', () => {
-    for (const path of ['/inicio', '/financas/visao-geral', '/financas/nada', '/financas/lancamentos/a/b', '/cofre/x', '/membros', '/financas/lancamentos/%E0']) {
+    for (const path of ['/inicio', '/financas/visao-geral', '/financas/nada', '/financas/lancamentos/a/b', '/cofre/x', '/categorias/x', '/membros', '/financas/lancamentos/%E0']) {
       expect(parseRoute(path), path).toEqual({ module: 'not_found' });
     }
   });

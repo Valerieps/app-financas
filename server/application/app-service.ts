@@ -12,6 +12,7 @@ import { cleanUpLock, type Caller } from './lock';
 import { provisionalExpenses } from './notifications';
 import { statement } from './ports';
 import { spendingByCategory, spendingByMonth } from './spending';
+import { createLayer, createTag, deleteLayer, deleteTag, moveLayer, renameLayer, renameTag, tagLayers } from './tags';
 
 type Input = Record<string, unknown>;
 type Handler<T> = (ctx: Context, input: Input, caller: Caller) => Promise<T>;
@@ -53,6 +54,7 @@ const QUERIES: { [N in QueryName]: Handler<Queries[N]['output'] | QueryError> } 
   spendingByMonth: async (ctx, input) => spendingByMonth(ctx, input),
   lancamentos: async (ctx, input) => lancamentos(ctx, input.month),
   lancamento: async (ctx, input) => lancamento(ctx, input.id),
+  tagLayers: async (ctx) => tagLayers(ctx),
   passkeys: async (ctx, _input, caller) => {
     const rows = await ctx.sql.all<Omit<PasskeyView, 'thisDevice'> & { device: string }>(
       'SELECT id, label, created_at AS createdAt, last_used_at AS lastUsedAt, device_token_hash AS device FROM passkeys ORDER BY created_at',
@@ -71,4 +73,11 @@ const COMMANDS: { [N in CommandName]: Handler<CommandResult<Commands[N]['output'
   },
   'connection.add': async (ctx, input) => addConnection(ctx, input.itemId),
   'day.confirmEmpty': async (ctx, input) => confirmEmptyDay(ctx, input),
+  'tagLayer.create': async (ctx, input) => createLayer(ctx, input),
+  'tagLayer.rename': async (ctx, input) => renameLayer(ctx, input),
+  'tagLayer.delete': async (ctx, input) => deleteLayer(ctx, input),
+  'tagLayer.move': async (ctx, input) => moveLayer(ctx, input),
+  'tag.create': async (ctx, input) => createTag(ctx, input),
+  'tag.rename': async (ctx, input) => renameTag(ctx, input),
+  'tag.delete': async (ctx, input) => deleteTag(ctx, input),
 };
