@@ -145,12 +145,6 @@ button:disabled {
   align-items: center;
 }
 
-.app-header {
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
 .unlock-screen {
   max-width: 420px;
   margin: var(--space-8) auto;

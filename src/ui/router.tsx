@@ -10,9 +10,15 @@ export function navigate(path: string, options: { replace?: boolean } = {}): voi
 }
 
 export function usePath(): string {
-  const [path, setPath] = useState(window.location.pathname);
+  return useLocation().path;
+}
+
+/** The current path and query string (`?mes=2026-11`), re-rendering on every navigation. */
+export function useLocation(): { path: string; search: URLSearchParams } {
+  const read = () => window.location.pathname + window.location.search;
+  const [location, setLocation] = useState(read);
   useEffect(() => {
-    const update = () => setPath(window.location.pathname);
+    const update = () => setLocation(read());
     listeners.add(update);
     window.addEventListener('popstate', update);
     return () => {
@@ -20,7 +26,8 @@ export function usePath(): string {
       window.removeEventListener('popstate', update);
     };
   }, []);
-  return path;
+  const url = new URL(location, window.location.origin);
+  return { path: url.pathname, search: url.searchParams };
 }
 
 export function Link({ to, ...rest }: { to: string } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'onClick'>) {
