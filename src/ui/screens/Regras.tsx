@@ -7,6 +7,7 @@ import { cleanName, type TagAssignment } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
 import { useServices } from '../backend-context';
 import { useQuery } from '../use-query';
+import { PageHeader } from '../shell/PageHeader';
 
 const text = strings.regras;
 
@@ -87,11 +88,8 @@ export function Regras() {
   const loaded = rulesQuery.data && layersQuery.data;
 
   return (
-    <section className="stack tags">
-      <header>
-        <h1>{text.title}</h1>
-        <p className="muted">{text.subtitle}</p>
-      </header>
+    <section className="page tags">
+      <PageHeader title={text.title} subtitle={text.subtitle} />
       {error && error !== 'unauthenticated' && error !== 'locked' && (
         <p className="notice" role="alert">
           {strings.genericError}{' '}
@@ -107,6 +105,7 @@ export function Regras() {
           </button>
         </p>
       )}
+      {loaded && rules.length > 0 && <ApplyRules />}
       {loaded &&
         (rules.length >= MAX_RULES ? (
           <p className="muted">{text.limit}</p>
@@ -120,7 +119,6 @@ export function Regras() {
       {rules.map((rule, index) => (
         <Rule key={rule.id} rule={rule} layers={layers} first={index === 0} last={index === rules.length - 1} />
       ))}
-      {loaded && rules.length > 0 && <ApplyRules />}
     </section>
   );
 }
@@ -433,7 +431,7 @@ function ApplyRules() {
     setMessage(null);
     const result = await backend.command('rules.apply', {});
     setRunning(false);
-    setMessage(result.ok ? text.apply.done(result.value.tagged) : strings.genericError);
+    setMessage(result.ok ? text.apply.done(result.value.tagged, result.value.described) : strings.genericError);
   }
 
   return (

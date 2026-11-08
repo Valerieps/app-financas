@@ -4,6 +4,7 @@ import { strings } from '../../domain/strings';
 import { canAddLayer, cleanName, nameProblem } from '../../domain/tags';
 import { useServices } from '../backend-context';
 import { useQuery } from '../use-query';
+import { PageHeader } from '../shell/PageHeader';
 
 const text = strings.categorias;
 
@@ -14,11 +15,8 @@ export function Categorias() {
   const layers = query.data ?? [];
 
   return (
-    <section className="stack tags">
-      <header>
-        <h1>{text.title}</h1>
-        <p className="muted">{text.subtitle}</p>
-      </header>
+    <section className="page tags">
+      <PageHeader title={text.title} subtitle={text.subtitle} />
       {query.error && query.error !== 'unauthenticated' && query.error !== 'locked' && (
         <p className="notice" role="alert">
           {strings.genericError}{' '}

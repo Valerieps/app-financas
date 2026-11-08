@@ -209,7 +209,11 @@ export const strings = {
       hint: 'As trocas na descrição já valem para todos os lançamentos, e as tags entram sozinhas nos novos. Para pôr tags nos que já estão guardados, rode aqui; só as camadas vazias recebem tag.',
       button: 'Aplicar as regras aos lançamentos guardados',
       running: 'Aplicando…',
-      done: (n: number) => (n === 0 ? 'Nenhum lançamento novo recebeu tag.' : n === 1 ? '1 lançamento recebeu tags.' : `${n} lançamentos receberam tags.`),
+      done: (tagged: number, described: number) => {
+        const tags = tagged === 0 ? 'Nenhum lançamento recebeu tag' : tagged === 1 ? '1 lançamento recebeu tags' : `${tagged} lançamentos receberam tags`;
+        const texts = described === 0 ? 'nenhuma descrição é trocada pelas regras' : described === 1 ? '1 descrição é trocada pelas regras' : `${described} descrições são trocadas pelas regras`;
+        return `${tags}; ${texts}.`;
+      },
     },
   },
 

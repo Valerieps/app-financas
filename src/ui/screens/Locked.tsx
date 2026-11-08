@@ -18,8 +18,8 @@ export function Locked({ onUnlocked }: { onUnlocked: () => void }) {
 
   return (
     <main className="app unlock-screen">
-      <div className="card stack">
-        <h1>{strings.lock.title}</h1>
+      <div className="tile">
+        <h1 className="text-title">{strings.lock.title}</h1>
         <p className="muted">{strings.lock.subtitle}</p>
         <button type="button" onClick={() => void unlock()} disabled={busy} autoFocus>
           {strings.lock.unlock}

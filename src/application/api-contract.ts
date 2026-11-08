@@ -309,7 +309,7 @@ export interface Commands {
   'rule.delete': { input: { id: string }; output: null };
   'rule.move': { input: { id: string; direction: 'up' | 'down' }; output: null };
   /** Runs every rule, in order, over the stored lançamentos; returns how many got a tag. */
-  'rules.apply': { input: Record<string, never>; output: { tagged: number } };
+  'rules.apply': { input: Record<string, never>; output: { tagged: number; described: number } };
 }
 
 export type QueryName = keyof Queries;

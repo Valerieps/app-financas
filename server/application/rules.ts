@@ -2,7 +2,7 @@
 // and running them over the stored lançamentos. The collection runs them on each new lançamento
 // (collect/transactions.ts) through `rules` and `ruleTagStatements`.
 import type { RulePreviewView, RuleView } from '../../src/application/api-contract';
-import { applyReplacements, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition } from '../../src/domain/rules';
+import { applyReplacements, describeWithRules, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition } from '../../src/domain/rules';
 import { MAX_BULK_TAGGING, moveInOrder, type TagAssignment } from '../../src/domain/tags';
 import { failure, nowIso, QueryError, type CommandResult, type Context } from './context';
 import { rewriteDescriptions, ruleSubjects } from './descriptions';
@@ -164,8 +164,12 @@ export async function moveRule(ctx: Context, input: Record<string, unknown>): Pr
   return { ok: true, value: null, changed: CHANGED };
 }
 
-/** Runs every rule over the stored lançamentos, filling only their empty layers (and rewriting the descriptions, in case). */
-export async function applyRules(ctx: Context): Promise<CommandResult<{ tagged: number }>> {
+/**
+ * Runs every rule over the stored lançamentos: tags fill only the empty layers; the stored
+ * descriptions are rewritten, in case (the bank's text stays), and `described` counts the
+ * lançamentos whose description the rules change, to show those rules at work too.
+ */
+export async function applyRules(ctx: Context): Promise<CommandResult<{ tagged: number; described: number }>> {
   const [ruleList, transactions, links] = await Promise.all([
     rules(ctx),
     ruleSubjects(ctx),
@@ -181,5 +185,6 @@ export async function applyRules(ctx: Context): Promise<CommandResult<{ tagged: 
   const now = nowIso(ctx);
   const writes = [...ruleTagStatements(added, now), ...(await rewriteDescriptions(ctx, ruleList, now))];
   if (writes.length > 0) await ctx.sql.batch(writes);
-  return { ok: true, value: { tagged: added.size }, changed: ['tags'] };
+  const described = transactions.filter((t) => describeWithRules(ruleList, t) !== t.description).length;
+  return { ok: true, value: { tagged: added.size, described }, changed: ['tags', 'rules'] };
 }

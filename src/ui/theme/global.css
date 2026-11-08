@@ -9,24 +9,28 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
-  font-size: var(--font-size-base);
-  line-height: 1.5;
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
 }
 
 .app {
-  max-width: 720px;
+  max-width: var(--size-dialog);
   margin: 0 auto;
   padding: var(--space-6) var(--space-4);
 }
 
-h1 {
-  margin: 0 0 var(--space-4);
-  color: var(--color-brand);
-  font-size: 1.5rem;
+/* Headings follow the type scale: a screen or section title is Title, never bigger or bolder */
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-size: var(--font-size-title);
+  line-height: var(--line-height-title);
+  font-weight: var(--font-weight-strong);
 }
 
 a {
-  color: var(--color-brand);
+  color: var(--color-brand-strong);
 }
 
 .row {
@@ -52,8 +56,8 @@ a {
 }
 
 .notice {
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
 }
@@ -64,8 +68,8 @@ a {
 }
 
 .tabs a[aria-current='page'] {
-  font-weight: 600;
-  border-bottom: 2px solid var(--color-brand);
+  font-weight: var(--font-weight-strong);
+  border-bottom: var(--border-width-strong) solid var(--color-brand);
 }
 
 .list {
@@ -74,19 +78,6 @@ a {
   list-style: none;
 }
 
-.card {
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  margin-bottom: var(--space-2);
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
 
 label {
   display: flex;
@@ -96,8 +87,9 @@ label {
 
 input {
   font: inherit;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
+  min-height: var(--size-control);
+  padding: 0 var(--space-3);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text);
@@ -106,20 +98,38 @@ input {
 button,
 .button {
   font: inherit;
-  display: inline-block;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--size-control);
+  padding: 0 var(--space-4);
+  border: var(--border-width) solid var(--color-brand);
   border-radius: var(--radius);
   background: var(--color-brand);
   color: var(--color-on-brand);
+  font-weight: var(--font-weight-medium);
   text-align: center;
   text-decoration: none;
   cursor: pointer;
 }
 
+/* Only the plain button: a classed button (icon, tab, segment) styles its own hover */
+button:not([class]):hover:not(:disabled),
+.button:hover {
+  background: var(--color-brand-strong);
+  border-color: var(--color-brand-strong);
+}
+
 button.secondary {
-  background: transparent;
-  color: var(--color-brand);
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+button.secondary:hover:not(:disabled) {
+  border-color: var(--color-border);
+  background: var(--color-bg);
 }
 
 button[aria-pressed='true'] {
@@ -137,6 +147,16 @@ button:disabled {
   cursor: default;
 }
 
+/* A disabled action is flat grey, never a faded brand color */
+button:not([class]):disabled,
+button.secondary:disabled,
+button.danger:disabled {
+  opacity: 1;
+  border-color: var(--color-disabled);
+  background: var(--color-disabled);
+  color: var(--color-on-disabled);
+}
+
 .space-between {
   justify-content: space-between;
 }
@@ -146,17 +166,18 @@ button:disabled {
 }
 
 .unlock-screen {
-  max-width: 420px;
+  max-width: var(--size-dialog);
   margin: var(--space-8) auto;
 }
 
 .badge {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  font-size: 0.85rem;
+  border: var(--border-width) solid var(--color-border);
+  font-size: var(--font-size-label);
+  line-height: var(--line-height-label);
 }
 
 /* The Cofre calendar: a dot per day with the day's transactions. */
@@ -172,7 +193,7 @@ button:disabled {
 }
 
 .calendar-month {
-  font-weight: 600;
+  font-weight: var(--font-weight-strong);
   text-transform: capitalize;
 }
 
@@ -201,10 +222,10 @@ button:disabled {
   width: var(--size-dot);
   height: var(--size-dot);
   padding: 0;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  border: var(--border-width) solid var(--color-border);
   font-size: var(--font-size-small);
-  font-weight: 600;
+  font-weight: var(--font-weight-strong);
 }
 
 .calendar-dot.calendar-dot--some {
@@ -230,8 +251,8 @@ button:disabled {
 }
 
 .calendar-dot[aria-pressed='true'] {
-  outline: 2px solid var(--color-text);
-  outline-offset: 2px;
+  outline: var(--border-width-strong) solid var(--color-text);
+  outline-offset: var(--border-width-strong);
 }
 
 .calendar-confirm {

@@ -190,7 +190,11 @@ function Sidebar({
   return (
     <aside className="sidebar" aria-label={strings.shell.mainNav}>
       <div className="sidebar-brand">
-        <span className="brand-dot" aria-hidden="true" />
+        <span className="brand-lights" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
         <span className="sidebar-label">{strings.appName}</span>
         {canToggle && (
           <button
