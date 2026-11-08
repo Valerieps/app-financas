@@ -175,9 +175,13 @@ describe('"quem pagou" condition', () => {
     expect(ruleMatches({ conditions: [payer('acme')] }, entrada('Globex'))).toBe(false);
   });
 
-  it('never matches a saída, a transferência or an entrada without payer', () => {
+  it('matches a transferência recebida, whose category is Transfers', () => {
+    expect(ruleMatches({ conditions: [payer('acme')] }, subject('x', { direction: 'in', payer: 'ACME', categoryId: '04000000' }))).toBe(true);
+  });
+
+  it('never matches a saída or an entrada without payer', () => {
     expect(ruleMatches({ conditions: [payer('acme')] }, subject('x', { direction: 'out', payer: 'ACME' }))).toBe(false);
-    expect(ruleMatches({ conditions: [payer('acme')] }, subject('x', { direction: 'in', payer: 'ACME', categoryId: '04000000' }))).toBe(false);
+    expect(ruleMatches({ conditions: [payer('acme')] }, subject('x', { direction: 'out', payer: 'ACME', categoryId: '04000000' }))).toBe(false);
     expect(ruleMatches({ conditions: [payer('acme')] }, entrada(null))).toBe(false);
   });
 

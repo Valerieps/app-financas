@@ -27,7 +27,8 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
   categoria** (para uma da árvore do Pluggy). *(2)*
   Por quê: começo pelo que mais uso.
 - **Quem pagou** só vale para entradas: olha o nome de quem pagou, como o banco manda, e nunca casa
-  com uma saída, uma transferência ou uma entrada sem esse nome. O texto funciona como o da
+  com uma saída ou uma entrada sem esse nome. Uma transferência recebida (categoria Transferências
+  do Pluggy) conta como entrada aqui. O texto funciona como o da
   descrição, com `|` e `&`. *(2)*
   Por quê: numa entrada, quem pagou diz o que ela é (salário, aluguel, reembolso) melhor que a
   descrição.

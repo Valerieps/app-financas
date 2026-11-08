@@ -88,7 +88,8 @@ export function conditionHolds(condition: RuleCondition, subject: RuleSubject): 
     case 'type':
       return lancamentoType(subject) === condition.type;
     case 'payerContains':
-      return lancamentoType(subject) === 'in' && subject.payer !== null && descriptionContains(subject.payer, condition.text);
+      // Money coming in, even a "transferência recebida" (Pluggy files those under Transfers).
+      return subject.direction === 'in' && !subject.cardPayment && subject.payer !== null && descriptionContains(subject.payer, condition.text);
   }
 }
 
