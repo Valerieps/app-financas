@@ -32,7 +32,7 @@ export function isCategoryId(value: unknown): value is CategoryId {
 }
 
 /** Pluggy category id prefixes that are not a gasto: investments, my own accounts, the card bill. */
-const NOT_SPENDING = ['03', '04', '0510'];
+export const NOT_SPENDING: readonly string[] = ['03', '04', '0510'];
 
 /** Pluggy category id prefix → categoria. The longest prefix wins. */
 const BY_PREFIX: readonly (readonly [string, CategoryId])[] = [

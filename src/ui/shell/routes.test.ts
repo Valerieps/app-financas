@@ -59,6 +59,7 @@ describe('links', () => {
 describe('Gráficos', () => {
   it('knows its three charts and nothing else', () => {
     expect(parseRoute('/financas/graficos/tempo')).toEqual({ module: 'financas', tab: 'graficos' });
+    expect(parseRoute('/financas/graficos/tag')).toEqual({ module: 'financas', tab: 'graficos' });
     expect(parseRoute('/financas/graficos/pizza')).toEqual({ module: 'not_found' });
     expect(graficosChart('/financas/graficos')).toBe('categoria');
     expect(graficosChart('/financas/graficos/importancia')).toBe('importancia');

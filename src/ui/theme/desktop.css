@@ -946,6 +946,79 @@ a.lanc-row[aria-current='true'] {
   background: var(--color-text);
 }
 
+/* Gráficos › Por tag: the donut, its slices in the series colors, the total in the middle */
+.donut {
+  position: relative;
+  width: var(--size-donut);
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.donut svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: rotate(-90deg);
+}
+
+.donut-slice {
+  cursor: pointer;
+  transition: opacity 120ms;
+}
+
+.donut--focus .donut-slice:not(.donut-slice--on) {
+  opacity: 0.35;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.series-1 { --series: var(--color-series-1); }
+.series-2 { --series: var(--color-series-2); }
+.series-3 { --series: var(--color-series-3); }
+.series-4 { --series: var(--color-series-4); }
+.series-5 { --series: var(--color-series-5); }
+.series-6 { --series: var(--color-series-6); }
+.series-7 { --series: var(--color-series-7); }
+.series-8 { --series: var(--color-series-8); }
+.series-none { --series: var(--color-series-none); }
+
+.donut-slice {
+  stroke: var(--series);
+}
+
+.charts-swatch--series {
+  background: var(--series);
+}
+
+.chart-table a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.chart-table a:hover {
+  text-decoration: underline;
+}
+
+.chart-table tr[aria-current='true'] td {
+  font-weight: var(--font-weight-strong);
+}
+
+.tag-slice-list {
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+}
+
 .chart-table {
   width: 100%;
   border-collapse: collapse;
