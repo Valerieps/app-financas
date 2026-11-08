@@ -564,6 +564,29 @@ kbd {
   text-decoration: none;
 }
 
+button.lanc-menu-item {
+  width: 100%;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.lanc-menu-item:disabled {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.lanc-menu--end {
+  margin-left: auto;
+}
+
+.lanc-menu--end .lanc-menu-list {
+  left: auto;
+  right: 0;
+}
+
 .lanc-menu-item:hover {
   background: var(--color-sunken);
 }

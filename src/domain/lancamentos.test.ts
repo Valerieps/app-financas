@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SORT, cardPaymentWithChoice, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, nextSort, parseDirectionFilter, parseSort, sortByDay, sortLancamentos, sortParams, toggleAccount, totals } from './lancamentos';
+import { DEFAULT_COLUMNS, DEFAULT_SORT, cardPaymentWithChoice, columnTemplate, lancamentoKind, parseColumns, toggleColumn, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, nextSort, parseDirectionFilter, parseSort, sortByDay, sortLancamentos, sortParams, toggleAccount, totals } from './lancamentos';
 
 describe('direction', () => {
   it("follows Pluggy's type", () => {
@@ -226,5 +226,37 @@ describe('cardPaymentWithChoice', () => {
     expect(cardPaymentWithChoice(false, null)).toBe(false);
     expect(cardPaymentWithChoice(true, '10000000')).toBe(false);
     expect(cardPaymentWithChoice(false, '05100000')).toBe(true);
+  });
+});
+
+describe('lancamentoKind', () => {
+  it('says pagamento de cartão first, else entrada or saída', () => {
+    expect(lancamentoKind({ direction: 'in', cardPayment: false })).toBe('entrada');
+    expect(lancamentoKind({ direction: 'out', cardPayment: false })).toBe('saida');
+    expect(lancamentoKind({ direction: 'out', cardPayment: true })).toBe('cartao');
+    expect(lancamentoKind({ direction: 'in', cardPayment: true })).toBe('cartao');
+  });
+});
+
+describe('the list columns', () => {
+  it('starts with the default columns when nothing readable is remembered', () => {
+    expect(parseColumns(null)).toEqual(DEFAULT_COLUMNS);
+    expect(parseColumns('not json')).toEqual(DEFAULT_COLUMNS);
+    expect(parseColumns('{"a":1}')).toEqual(DEFAULT_COLUMNS);
+  });
+
+  it('keeps the table order, drops unknown columns and always keeps descrição and valor', () => {
+    expect(parseColumns('["pagador","outra","data"]')).toEqual(['data', 'descricao', 'pagador', 'valor']);
+    expect(parseColumns('[]')).toEqual(['descricao', 'valor']);
+  });
+
+  it('shows or hides a column, in the table order, but never a fixed one', () => {
+    expect(toggleColumn(['descricao', 'valor'], 'tipo')).toEqual(['descricao', 'tipo', 'valor']);
+    expect(toggleColumn(['data', 'descricao', 'tipo', 'valor'], 'tipo')).toEqual(['data', 'descricao', 'valor']);
+    expect(toggleColumn(['descricao', 'valor'], 'valor')).toEqual(['descricao', 'valor']);
+  });
+
+  it('gives each shown column its share of the row', () => {
+    expect(columnTemplate(['data', 'descricao', 'valor'])).toBe('minmax(0, 1fr) minmax(0, 3fr) minmax(0, 1fr)');
   });
 });

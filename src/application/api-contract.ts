@@ -115,6 +115,10 @@ export interface LancamentoView {
   readonly installment: { readonly number: number; readonly total: number } | null;
   /** My tags on it: for each layer that has one, the tag id (docs/spec/categorias.md). */
   readonly tags: TagAssignment;
+  /** Pluggy's operation type and payment method, as `operationLabel` joins them. */
+  readonly operation: string | null;
+  /** Who paid, as the bank told it (on money out, usually me). */
+  readonly payer: string | null;
 }
 
 export interface LancamentosView {
@@ -132,9 +136,6 @@ export interface LancamentoDetailView extends LancamentoView {
   readonly descriptionOriginal: string | null;
   /** The bank's own text, when it differs from the bank's description. */
   readonly descriptionRaw: string | null;
-  /** Pluggy's operation type (PIX, CARTAO, TED...). */
-  /** Pluggy's operation type and payment method, as `operationLabel` joins them. */
-  readonly operation: string | null;
   /** Who paid, on money in; who received, on money out. */
   readonly counterpart: string | null;
   readonly cardDigits: string | null;

@@ -2,22 +2,30 @@
 // money in, newest day first; each row opens in the detail panel. The category shown is the one I
 // chose from Pluggy's tree, or else Pluggy's (docs/spec/classificacao.md); I change it in the panel or
 // on many lançamentos at once. My tags (docs/spec/categorias.md) show in their own column, filter the
-// list, and go on many lançamentos at once from the checkboxes.
+// list, and go on many lançamentos at once from the checkboxes. The Colunas menu shows or hides the
+// table's columns, remembered on this device.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isBareDay } from '../../domain/calendar';
 import {
+  columnTemplate,
   dayCell,
   dayLabel,
+  FIXED_COLUMNS,
+  lancamentoKind,
+  LIST_COLUMNS,
   matchesAccounts,
   matchesFilter,
   nextSort,
+  parseColumns,
   parseDirectionFilter,
   parseSort,
   sortLancamentos,
   sortParams,
   toggleAccount,
+  toggleColumn,
   totals,
   type DirectionFilter,
+  type ListColumn,
   type Sort,
   type SortColumn,
 } from '../../domain/lancamentos';
@@ -29,10 +37,43 @@ import { useServices } from '../backend-context';
 import { Link } from '../router';
 import { tabPath, withQuery } from '../shell/routes';
 import { useQuery } from '../use-query';
+import type { LancamentoView, TagLayerView } from '../../application/api-contract';
 import { account, money, optionLabel, PLUGGY, SelectionActions, signed, TagCell, useSelection } from './LancamentoBatch';
 
 const text = strings.lancamentos;
 const FILTERS: readonly DirectionFilter[] = ['todos', 'saidas', 'entradas', 'cartao'];
+
+// The shown columns, remembered on this device only (a layout preference, not financial data).
+const COLUMNS_KEY = 'sinal-verde:lancamentos-colunas';
+
+function loadColumns(): ListColumn[] {
+  try {
+    return parseColumns(localStorage.getItem(COLUMNS_KEY));
+  } catch {
+    return parseColumns(null);
+  }
+}
+
+function saveColumns(columns: readonly ListColumn[]): void {
+  try {
+    localStorage.setItem(COLUMNS_KEY, JSON.stringify(columns));
+  } catch {
+    // Storage blocked: the choice lasts until the page closes.
+  }
+}
+
+const COLUMN_LABEL: Record<ListColumn, string> = {
+  data: text.columns.date,
+  descricao: text.columns.description,
+  tipo: text.columns.kind,
+  categoria: text.columns.category,
+  tags: text.columns.tags,
+  operacao: text.columns.operation,
+  pagador: text.columns.payer,
+  valor: text.columns.amount,
+};
+
+const SORTABLE: readonly ListColumn[] = ['data', 'descricao', 'categoria', 'valor'];
 
 /** The list path with the filter `key` set to `chosen` (`?conta=a&conta=b`, `?tag=x&tag=y`). */
 function withList(path: string, search: URLSearchParams, key: 'conta' | 'tag', chosen: readonly string[]): string {
@@ -91,6 +132,13 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
   }
   const today = saoPauloDate(new Date());
   const listPath = tabPath('lancamentos');
+  const [columns, setColumns] = useState(loadColumns);
+  const grid = { gridTemplateColumns: columnTemplate(columns) };
+  const flipColumn = (column: ListColumn) => {
+    const next = toggleColumn(columns, column);
+    setColumns(next);
+    saveColumns(next);
+  };
 
   return (
     <div className="lanc">
@@ -183,6 +231,19 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
                 {text.clearFilters}
               </Link>
             )}
+            <FilterMenu
+              className="lanc-menu--end"
+              label={text.columnsMenu}
+              listLabel={text.columnsMenuLabel}
+              chosen={[]}
+              options={LIST_COLUMNS.map((c) => ({
+                key: c,
+                label: COLUMN_LABEL[c],
+                checked: columns.includes(c),
+                disabled: FIXED_COLUMNS.includes(c),
+                onSelect: () => flipColumn(c),
+              }))}
+            />
           </div>
         )}
 
@@ -198,12 +259,14 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
               }}
               onChange={toggleAll}
             />
-            <div className="lanc-row lanc-row--head text-over muted">
-              <SortHeader column="data" sort={sort} path={listPath} search={search} />
-              <SortHeader column="descricao" sort={sort} path={listPath} search={search} />
-              <SortHeader column="categoria" sort={sort} path={listPath} search={search} />
-              <span>{text.columns.tags}</span>
-              <SortHeader column="valor" sort={sort} path={listPath} search={search} />
+            <div className="lanc-row lanc-row--head text-over muted" style={grid}>
+              {columns.map((c) =>
+                SORTABLE.includes(c) ? (
+                  <SortHeader key={c} column={c as SortColumn} sort={sort} path={listPath} search={search} />
+                ) : (
+                  <span key={c}>{COLUMN_LABEL[c]}</span>
+                ),
+              )}
             </div>
           </div>
         )}
@@ -231,20 +294,13 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
                   <Link
                     to={withQuery(`${listPath}/${encodeURIComponent(item.id)}`, search)}
                     className="lanc-row"
+                    style={grid}
                     aria-current={item.id === selectedId ? 'true' : undefined}
                     aria-label={`${text.open(item.description ?? text.noDescription)}, ${dayLabel(item.day, today, text)}, ${signed(item)}`}
                   >
-                    <span className="muted">{dayCell(item.day, today, text)}</span>
-                    <span className="lanc-description">
-                      <span className="text-strong">{item.description ?? text.noDescription}</span>
-                      {item.pending && <span className="chip lanc-badge">{text.pending}</span>}
-                      {item.installment && (
-                        <span className="text-caption muted">{text.installment(item.installment.number, item.installment.total)}</span>
-                      )}
-                    </span>
-                    <span className="muted">{item.category ?? text.noCategory}</span>
-                    <TagCell layers={layers} tags={item.tags} />
-                    <span className={`lanc-amount text-strong${item.direction === 'in' ? ' lanc-in' : ''}`}>{signed(item)}</span>
+                    {columns.map((c) => (
+                      <Cell key={c} column={c} item={item} layers={layers} today={today} />
+                    ))}
                   </Link>
                 </li>
               ))}
@@ -257,17 +313,46 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
   );
 }
 
-const SORT_LABEL: Record<SortColumn, string> = {
-  data: text.columns.date,
-  descricao: text.columns.description,
-  categoria: text.columns.category,
-  valor: text.columns.amount,
-};
+/** One cell of a row, by column. */
+function Cell({ column, item, layers, today }: { column: ListColumn; item: LancamentoView; layers: readonly TagLayerView[]; today: string }) {
+  switch (column) {
+    case 'data':
+      return <span className="muted">{dayCell(item.day, today, text)}</span>;
+    case 'descricao':
+      return (
+        <span className="lanc-description">
+          <span className="text-strong">{item.description ?? text.noDescription}</span>
+          {item.pending && <span className="chip lanc-badge">{text.pending}</span>}
+          {item.installment && <span className="text-caption muted">{text.installment(item.installment.number, item.installment.total)}</span>}
+        </span>
+      );
+    case 'tipo':
+      return <span className="muted">{text.kind[lancamentoKind(item)]}</span>;
+    case 'categoria':
+      return <span className="muted">{item.category ?? text.noCategory}</span>;
+    case 'tags':
+      return <TagCell layers={layers} tags={item.tags} />;
+    case 'operacao':
+      return (
+        <span className="muted" title={item.operation ?? undefined}>
+          {item.operation ?? text.noValue}
+        </span>
+      );
+    case 'pagador':
+      return (
+        <span className="muted" title={item.payer ?? undefined}>
+          {item.payer ?? text.noValue}
+        </span>
+      );
+    case 'valor':
+      return <span className={`lanc-amount text-strong${item.direction === 'in' ? ' lanc-in' : ''}`}>{signed(item)}</span>;
+  }
+}
 
 /** A column title that sorts the list by it; a second click flips the direction. The sort lives in the URL. */
 function SortHeader({ column, sort, path, search }: { column: SortColumn; sort: Sort; path: string; search: URLSearchParams }) {
   const active = sort.column === column;
-  const label = SORT_LABEL[column];
+  const label = COLUMN_LABEL[column];
   return (
     <Link
       to={withQuery(path, search, sortParams(nextSort(sort, column)))}
@@ -287,14 +372,32 @@ interface FilterOption {
   readonly key: string;
   readonly label: string;
   readonly checked: boolean;
-  readonly to: string;
+  /** A filter choice is a link (the filter lives in the URL)... */
+  readonly to?: string;
+  /** ...a column choice, a button. */
+  readonly onSelect?: () => void;
+  readonly disabled?: boolean;
 }
 
 /**
- * One filter as a compact button that opens a list of choices. Each choice is a link (the filter lives
- * in the URL), and the list stays open so I can pick several.
+ * A compact button that opens a list of choices: a filter's, or the columns'. The list stays open so
+ * I can pick several.
  */
-function FilterMenu({ label, chosen, options, clearTo }: { label: string; chosen: readonly string[]; options: readonly FilterOption[]; clearTo: string }) {
+function FilterMenu({
+  label,
+  listLabel,
+  chosen,
+  options,
+  clearTo,
+  className,
+}: {
+  label: string;
+  listLabel?: string;
+  chosen: readonly string[];
+  options: readonly FilterOption[];
+  clearTo?: string;
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
@@ -316,7 +419,7 @@ function FilterMenu({ label, chosen, options, clearTo }: { label: string; chosen
 
   const summary = chosen.length === 0 ? null : chosen.length === 1 ? chosen[0] : String(chosen.length);
   return (
-    <div className="lanc-menu" ref={root}>
+    <div className={className ? `lanc-menu ${className}` : 'lanc-menu'} ref={root}>
       <button
         type="button"
         className="chip lanc-menu-button"
@@ -330,16 +433,35 @@ function FilterMenu({ label, chosen, options, clearTo }: { label: string; chosen
         <span aria-hidden="true">▾</span>
       </button>
       {open && (
-        <div className="lanc-menu-list" role="group" aria-label={text.filterBy(label)}>
-          {options.map((o) => (
-            <Link key={o.key} to={o.to} className="lanc-menu-item" aria-current={o.checked ? 'true' : undefined} title={o.label}>
-              <span aria-hidden="true" className="lanc-menu-check">
-                {o.checked ? '✓' : ''}
-              </span>
-              <span className="lanc-menu-label">{o.label}</span>
-            </Link>
-          ))}
-          {chosen.length > 0 && (
+        <div className="lanc-menu-list" role="group" aria-label={listLabel ?? text.filterBy(label)}>
+          {options.map((o) => {
+            const content = (
+              <>
+                <span aria-hidden="true" className="lanc-menu-check">
+                  {o.checked ? '✓' : ''}
+                </span>
+                <span className="lanc-menu-label">{o.label}</span>
+              </>
+            );
+            return o.onSelect ? (
+              <button
+                key={o.key}
+                type="button"
+                className="lanc-menu-item"
+                aria-pressed={o.checked}
+                disabled={o.disabled}
+                title={o.label}
+                onClick={o.onSelect}
+              >
+                {content}
+              </button>
+            ) : (
+              <Link key={o.key} to={o.to ?? ''} className="lanc-menu-item" aria-current={o.checked ? 'true' : undefined} title={o.label}>
+                {content}
+              </Link>
+            );
+          })}
+          {clearTo && chosen.length > 0 && (
             <Link to={clearTo} className="lanc-menu-item lanc-menu-clear">
               <span aria-hidden="true" className="lanc-menu-check" />
               {text.clearChoice}

@@ -43,6 +43,9 @@ O que ainda não está pronto.
 - [ ] Uma fatura só recebe pagamentos da primeira compra dela até o vencimento da seguinte; a fatura
   aberta são as compras sem fatura depois da última fechada; o período é da primeira à última
   compra (`spec/cartao-de-credito.md`).
+- [ ] Em Lançamentos, a descrição e o valor não se ocultam; as colunas Tipo, Operação e Quem pagou
+  começam ocultas e não ordenam a tabela; Quem pagou mostra o nome do banco também nas saídas; a
+  escolha de colunas fica no aparelho (`spec/lancamentos.md`).
 - [ ] O app pede a digital quando é aberto e a última vez foi há mais de 1 hora (`spec/acesso.md`).
 - [ ] Num aparelho sem digital cadastrada, o login Google basta (`spec/acesso.md`).
 - [ ] O `/gastei` vale a partir da fase 3, junto com o bot (`spec/gastos-provisorios.md`).
