@@ -3,8 +3,10 @@
 Para onde foi o meu dinheiro no mês, comparado comigo mesma, sem eu ter que montar nada.
 
 - **Entra aqui:** o que conta como gasto nos gráficos, de onde vem a categoria enquanto a
-  classificação não existe, a comparação com os meses anteriores e o que cada gráfico mostra.
-- **Não entra aqui:** como a categoria e a importância são decididas (`classificacao.md`), o lugar
+  classificação não existe, a comparação com os meses anteriores e o que cada gráfico mostra,
+  inclusive o gráfico por tag.
+- **Não entra aqui:** como a categoria e a importância são decididas (`classificacao.md`), as
+  camadas e as tags (`categorias.md`), o lugar
   da tela na janela do desktop (`../rascunhos/arquitetura-desktop.md`) e o visual
   (`../rascunhos/desktop-visual.md`).
 
@@ -51,6 +53,24 @@ Para onde foi o meu dinheiro no mês, comparado comigo mesma, sem eu ter que mon
   total. *(2)*
 - Clicar numa barra abre Lançamentos filtrado por aquela categoria no mês. *(2)*
 - O botão "Criar meta para <categoria>" abre uma meta nova de teto para a categoria da frase. *(2)*
+
+## Por tag
+
+- Eu escolho uma camada, e uma rosca mostra como o gasto do mês se divide entre as tags dela: uma
+  fatia por tag, com o valor e a % do mês. *(2)*
+- Os gastos sem tag na camada formam a fatia "Sem tag", sempre por último; as outras vêm da maior
+  para a menor. Uma tag sem gasto no mês não aparece. *(2)*
+- Conta como gasto o mesmo que nos outros gráficos, em reais e só no mês escolhido, com a categoria
+  que vale para cada lançamento. Não há comparação com os meses anteriores. *(2)*
+- A camada começa na primeira da ordem da tela Categorias, e a escolhida fica no endereço. Sem
+  camada nenhuma, a tela me leva para Categorias criar uma. *(2)*
+- Clicar numa fatia (na rosca ou na tabela ao lado) abre, na mesma tela, a lista dos lançamentos
+  dela, com as mesmas colunas e caixinhas da tela Lançamentos: eu marco vários e clico em
+  **Adicionar tags** ou **Mudar categoria**, como lá. Clicar de novo na fatia fecha a lista. *(2)*
+  Por quê: é olhando a fatia "Sem tag" que eu descubro o que falta marcar, e marco ali mesmo.
+- Depois de salvar, a rosca e a lista se refazem: um lançamento que ganhou outra tag na camada sai da
+  fatia. *(2)*
+- Clicar num lançamento da lista abre o detalhe dele em Lançamentos. *(2)*
 
 ## Por importância
 

@@ -49,8 +49,8 @@ export function parseRoute(pathname: string): Route {
 }
 
 /** The charts of Finanças › Gráficos, each at /financas/graficos/<chart>. */
-export type GraficosChart = 'categoria' | 'importancia' | 'tempo';
-export const GRAFICOS_CHARTS: readonly GraficosChart[] = ['categoria', 'importancia', 'tempo'];
+export type GraficosChart = 'categoria' | 'tag' | 'importancia' | 'tempo';
+export const GRAFICOS_CHARTS: readonly GraficosChart[] = ['categoria', 'tag', 'importancia', 'tempo'];
 
 /** Which chart a Gráficos path shows; /financas/graficos alone shows Por categoria. */
 export function graficosChart(pathname: string): GraficosChart {

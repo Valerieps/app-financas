@@ -94,7 +94,7 @@ function Screen({
       if (route.tab === 'lancamentos') return <Lancamentos month={month} search={search} selectedId={route.detailId ?? null} />;
       if (route.tab === 'cartao') return <Cartao />;
       if (route.tab === 'graficos')
-        return <Graficos chart={graficosChart(path)} month={monthKey(month)} monthParam={monthParam} compareParam={search.get('comparar')} />;
+        return <Graficos chart={graficosChart(path)} month={monthKey(month)} monthParam={monthParam} search={search} />;
       return <EmConstrucao title={strings.shell.tabs[route.tab]} hint={strings.screens[route.tab]} tall />;
     case 'regras':
       return <Regras />;

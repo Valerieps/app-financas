@@ -13,10 +13,9 @@ O que ainda não está pronto.
 | --- | --- | --- | --- |
 | Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
 | Lançamentos: filtros por categoria, importância, caixinha, valor e texto; outras ações em lote; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
-| Tags no painel de detalhe e gráficos por tag | 2 | `spec/categorias.md` | Marcar em lote, filtrar e a coluna Tags já existem; responder o "Em aberto" de `spec/categorias.md` |
+| Tags no painel de detalhe | 2 | `spec/categorias.md` | Marcar em lote, filtrar, a coluna Tags e o gráfico por tag já existem; responder o "Em aberto" de `spec/categorias.md` |
 | Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | Mudar a categoria de um lançamento (da árvore do Pluggy), à mão ou por regra, já existe; falta a lista própria de categorias, a importância, regras que mudam a importância, a oferta de criar regra e o Gemini |
-| Regras automáticas: outras condições e ações | 2 | `spec/regras-automaticas.md` | "Descrição contém", "o tipo é" e "quem pagou contém" → "aplique as tags", "substitua na descrição" e "mude a categoria" já existem; responder o "Em aberto". O botão Testar ainda não mostra a categoria que a regra poria |
-| Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
+| Regras automáticas: outras condições e ações | 2 | `spec/regras-automaticas.md` | "Descrição contém", "o tipo é" e "quem pagou contém" → "aplique as tags", "substitua na descrição" e "mude a categoria" já existem; responder o "Em aberto". O botão Testar ainda não mostra a categoria que a regra poria || Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
 | Bot do Telegram | 3 | `spec/telegram.md` | |
 | Tela do semáforo | 3 | `spec/tela-do-celular.md` | |
@@ -68,3 +67,4 @@ O que ainda não está pronto.
 - [ ] No filtro por tags, tags da mesma camada somam e camadas diferentes se cruzam (`spec/lancamentos.md`).
 - [ ] Uma conexão substituída fica de fora dos gráficos, e os gastos provisórios ainda não entram (`spec/graficos.md`).
 - [ ] Pagamento de cartão: as descrições que o reconhecem sem a categoria do Pluggy, Todos ainda o mostra, e o topo diz à parte quanto foi pago (`spec/lancamentos.md`).
+- [ ] No gráfico por tag: só o mês escolhido, sem comparação; "Sem tag" por último; a camada começa na primeira; a lista da fatia abre na mesma tela e um lançamento abre o detalhe em Lançamentos; por enquanto ele lê a lista de Lançamentos, que ainda mostra as conexões substituídas (`spec/graficos.md`).
