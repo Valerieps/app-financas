@@ -1,6 +1,7 @@
 // The contract between the app and the server: query and command names, inputs and outputs.
 // Types only. The server imports it with `import type`, so nothing here runs on either side.
 import type { BillStatus } from '../domain/faturas';
+import type { CategoryOption } from '../domain/pluggy-categories';
 import type { CategoryChart, Comparison, MonthlyChart } from '../domain/spending';
 import type { TagAssignment, TagChange } from '../domain/tags';
 
@@ -92,8 +93,12 @@ export interface LancamentoView {
   /** The Brasília day (yyyy-mm-dd). */
   readonly day: string;
   readonly description: string | null;
-  /** Pluggy's category, translated; null when it has none. */
+  /** The category that counts, translated: the one I chose, or else Pluggy's; null when it has none. */
   readonly category: string | null;
+  /** That category's id in Pluggy's tree; null when it has none. */
+  readonly categoryId: string | null;
+  /** I chose the category, over Pluggy's (docs/spec/classificacao.md). */
+  readonly categoryChosen: boolean;
   /** Always positive; `direction` says whether it came in or went out. */
   readonly amountCents: number;
   readonly currency: string;
@@ -131,6 +136,8 @@ export interface LancamentoDetailView extends LancamentoView {
   readonly cardDigits: string | null;
   /** When the app first saw it. */
   readonly firstSeenAt: string;
+  /** Pluggy's own category, translated, even when I chose another. */
+  readonly pluggyCategory: string | null;
 }
 
 /** A payment from the bank account linked to a card bill. */
@@ -241,6 +248,8 @@ export interface Queries {
   cartao: { input: Record<string, never>; output: CartaoView };
   /** The category layers and their tags (docs/spec/categorias.md). */
   tagLayers: { input: Record<string, never>; output: TagLayerView[] };
+  /** Pluggy's category tree, in reading order: the choices for a lançamento's category. */
+  pluggyCategories: { input: Record<string, never>; output: CategoryOption[] };
 }
 
 /** Writes: `POST /api/command/<name>`. Each sends its writes in one atomic batch. */
@@ -266,13 +275,18 @@ export interface Commands {
    * each lançamento's own tag. An unknown lançamento, layer or tag is `not_found`.
    */
   'lancamentos.tag': { input: { ids: readonly string[]; changes: readonly TagChange[] }; output: null };
+  /**
+   * Gives many lançamentos a category from Pluggy's tree, over Pluggy's own, or takes it off
+   * (`categoryId: null`). An unknown lançamento or category is `not_found`.
+   */
+  'lancamentos.categorize': { input: { ids: readonly string[]; categoryId: string | null }; output: null };
 }
 
 export type QueryName = keyof Queries;
 export type CommandName = keyof Commands;
 
 /** What a command says changed; screens that read these topics refetch. */
-export type Topic = 'vault' | 'passkeys' | 'tags';
+export type Topic = 'vault' | 'passkeys' | 'tags' | 'categories';
 
 /** `locked`: this device has a passkey and must be unlocked first. */
 export type ApiError = 'unauthenticated' | 'locked' | 'forbidden' | 'not_found' | 'invalid' | 'conflict' | 'unavailable';

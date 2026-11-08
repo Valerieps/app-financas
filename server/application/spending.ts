@@ -5,6 +5,7 @@ import { addMonths, daysInMonth, transactionDay } from '../../src/domain/calenda
 import { parseMonth } from '../../src/domain/month';
 import { categoryChart, categoryOf, comparisonMonths, monthlyChart, spendingCents, TIMELINE_MONTHS } from '../../src/domain/spending';
 import { addDays, saoPauloDate } from '../../src/domain/vault';
+import { CATEGORY_ID, CHOICE_JOIN } from './category-choice';
 import { QueryError, type Context } from './context';
 
 interface Row {
@@ -23,8 +24,8 @@ async function spendingItems(ctx: Context, from: string, to: string): Promise<Sp
   // A day early on each side: Pluggy's date may be an instant that falls on a neighbouring Brasília day.
   // A connection replaced by a new one is left out: the new one brings the same transactions again.
   const rows = await ctx.sql.all<Row>(
-    `SELECT t.date, t.type, t.amount_cents, t.amount_in_account_currency_cents, t.pluggy_category_id, a.type AS account_type
-     FROM transactions t JOIN accounts a ON a.id = t.account_id JOIN items i ON i.item_id = a.item_id
+    `SELECT t.date, t.type, t.amount_cents, t.amount_in_account_currency_cents, ${CATEGORY_ID} AS pluggy_category_id, a.type AS account_type
+     FROM transactions t JOIN accounts a ON a.id = t.account_id JOIN items i ON i.item_id = a.item_id ${CHOICE_JOIN}
      WHERE t.deleted_at IS NULL AND i.replaced_by IS NULL AND a.currency_code = 'BRL' AND t.date >= ? AND t.date < ?`,
     addDays(first, -1),
     addDays(last, 2),

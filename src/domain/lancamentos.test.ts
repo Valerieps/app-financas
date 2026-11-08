@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SORT, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, nextSort, parseDirectionFilter, parseSort, sortByDay, sortLancamentos, sortParams, toggleAccount, totals } from './lancamentos';
+import { DEFAULT_SORT, cardPaymentWithChoice, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, nextSort, parseDirectionFilter, parseSort, sortByDay, sortLancamentos, sortParams, toggleAccount, totals } from './lancamentos';
 
 describe('direction', () => {
   it("follows Pluggy's type", () => {
@@ -217,5 +217,14 @@ describe('clickSelection', () => {
   it('falls back to a toggle without an anchor in the list', () => {
     expect(clickSelection([], order, null, 'c', true)).toEqual(['c']);
     expect(clickSelection([], order, 'z', 'c', true)).toEqual(['c']);
+  });
+});
+
+describe('cardPaymentWithChoice', () => {
+  it('follows my category when I chose one, else the stored flag', () => {
+    expect(cardPaymentWithChoice(true, null)).toBe(true);
+    expect(cardPaymentWithChoice(false, null)).toBe(false);
+    expect(cardPaymentWithChoice(true, '10000000')).toBe(false);
+    expect(cardPaymentWithChoice(false, '05100000')).toBe(true);
   });
 });

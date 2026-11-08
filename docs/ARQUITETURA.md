@@ -116,11 +116,12 @@ Classificação, orçamento e decisões (fases 2 a 4):
 | `tag_layers` | camada de tags | nome, posição (até 5 camadas, conferido pelo app) |
 | `tags` | tag | camada, nome |
 | `transaction_tags` | tag num lançamento | transação, camada, tag; a chave (transação, camada) garante uma tag por camada |
+| `transaction_categories` | categoria que eu escolhi num lançamento | transação, categoria do Pluggy; vale por cima de `transactions.pluggy_category_id` e de `card_payment` nas leituras (`server/application/category-choice.ts`) |
 | `categories` | categoria | nome, pai, id do Pluggy de origem |
 | `importance_levels` | importância | nome, conta no orçamento, ordem |
 | `category_importance_map` | ligação categoria → importância | categoria, importância, vigente de/até |
 | `classification_rules` | regra | condição (estabelecimento, pagador, `operation_type`), categoria e/ou importância |
-| `user_overrides` | decisão sobre uma transação | categoria, importância, reembolsável (%), nota |
+| `user_overrides` | decisão sobre uma transação | importância, reembolsável (%), nota (a categoria fica em `transaction_categories`) |
 | `reimbursements` | reembolso ↔ gasto | gasto, reembolso, valor coberto |
 
 O mapa categoria → importância tem vigência para que mudar o mapa hoje não reescreva meses fechados.

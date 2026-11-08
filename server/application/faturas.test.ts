@@ -7,7 +7,7 @@ import { statement } from './ports';
 
 const NOW = '2026-11-07T12:00:00Z';
 
-async function seed() {
+async function seed(extra: ReturnType<typeof statement>[] = []) {
   const { ctx, sql } = testContext(NOW);
   const account = (id: string, type: string, name: string) =>
     statement(
@@ -90,6 +90,7 @@ async function seed() {
     payment('apagado', '2026-10-25', 80000, true),
     transaction('mercado-conta', 'bank', '2026-10-21', -3000, { type: 'DEBIT' }),
   ]);
+  if (extra.length > 0) await sql.batch(extra);
   return new AppService(ctx);
 }
 
@@ -135,5 +136,19 @@ describe('cartao', () => {
   it('takes the purchases after the last closed bill as the open bill, without card payments', async () => {
     const open = (await view()).bills[0]!;
     expect(open).toMatchObject({ dueDay: null, totalCents: 4590, firstDay: '2026-11-03', accountName: 'Nubank', payments: [] });
+  });
+
+  it('follows the category I chose: a payment I recategorize leaves the bill, a debit I mark as card payment joins it', async () => {
+    const choose = (transactionId: string, categoryId: string) =>
+      statement('INSERT INTO transaction_categories (transaction_id, pluggy_category_id, chosen_at) VALUES (?, ?, ?)', transactionId, categoryId, NOW);
+    const result = await (
+      await seed([
+        statement("INSERT INTO pluggy_categories (id, raw_json, first_seen_at, last_seen_at) VALUES ('05100000', '{}', ?, ?), ('10000000', '{}', ?, ?)", NOW, NOW, NOW, NOW),
+        choose('adiantamento', '10000000'),
+        choose('mercado-conta', '05100000'),
+      ])
+    ).query('cartao', {}, NO_CALLER);
+    const nov = (result as { value: CartaoView }).value.bills.find((b) => b.id === 'nov')!;
+    expect(nov.payments.map((p) => p.id)).toEqual(['mercado-conta']);
   });
 });

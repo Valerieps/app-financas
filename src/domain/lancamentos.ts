@@ -24,7 +24,7 @@ export function monthDays(month: string): { first: string; last: string } {
 }
 
 /** Pluggy's category for a card bill payment ("Credit card payment"), on either side. */
-const CARD_PAYMENT_CATEGORY = '0510';
+export const CARD_PAYMENT_CATEGORY = '0510';
 
 /**
  * Descriptions that name a card bill payment, as lowercase prefixes: the debit in the bank account,
@@ -54,6 +54,15 @@ export function isCardPayment(t: CardPaymentSource): boolean {
   const card = t.accountType === 'CREDIT';
   if (direction(t.type, t.amountCents, t.accountType) !== (card ? 'in' : 'out')) return false;
   return (card ? CARD_PAYMENT_CARD_PREFIXES : CARD_PAYMENT_BANK_PREFIXES).some((prefix) => text.startsWith(prefix));
+}
+
+/**
+ * Whether a lançamento counts as a card bill payment once I may have chosen its category
+ * (docs/spec/classificacao.md): my category alone decides it; without one, the flag the collection
+ * stored (isCardPayment). server/application/category-choice.ts says the same in SQL.
+ */
+export function cardPaymentWithChoice(stored: boolean, chosenCategoryId: string | null): boolean {
+  return chosenCategoryId === null ? stored : chosenCategoryId.startsWith(CARD_PAYMENT_CATEGORY);
 }
 
 export interface Totals {

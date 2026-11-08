@@ -5,6 +5,7 @@ import { calendarStart, transactionDay } from '../../src/domain/calendar';
 import { billStatus, matchPayments, paymentDifference, type BillForMatching } from '../../src/domain/faturas';
 import { direction } from '../../src/domain/lancamentos';
 import { addDays, saoPauloDate } from '../../src/domain/vault';
+import { CARD_PAYMENT, CHOICE_JOIN } from './category-choice';
 import type { Context } from './context';
 
 /** Without a closed bill to start from, the open bill takes the purchases of this many days. */
@@ -77,12 +78,13 @@ export async function cartao(ctx: Context): Promise<CartaoView> {
        FROM transactions t
        JOIN accounts a ON a.id = t.account_id
        LEFT JOIN transaction_card_data cd ON cd.transaction_id = t.id
-       WHERE a.type = 'CREDIT' AND t.deleted_at IS NULL AND t.card_payment = 0`,
+       ${CHOICE_JOIN}
+       WHERE a.type = 'CREDIT' AND t.deleted_at IS NULL AND (${CARD_PAYMENT}) = 0`,
     ),
     ctx.sql.all<PaymentRow>(
       `SELECT t.id, t.date, t.amount_cents, t.type, a.name AS account_name, a.type AS account_type
-       FROM transactions t JOIN accounts a ON a.id = t.account_id
-       WHERE COALESCE(a.type, '') <> 'CREDIT' AND t.deleted_at IS NULL AND t.card_payment = 1`,
+       FROM transactions t JOIN accounts a ON a.id = t.account_id ${CHOICE_JOIN}
+       WHERE COALESCE(a.type, '') <> 'CREDIT' AND t.deleted_at IS NULL AND (${CARD_PAYMENT}) = 1`,
     ),
   ]);
 

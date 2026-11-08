@@ -639,6 +639,18 @@ kbd {
   gap: var(--space-2);
 }
 
+.lanc-category-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.lanc-category-field select,
+.lanc-facts select {
+  width: 100%;
+  height: var(--size-control);
+}
+
 .lanc-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) minmax(0, 2fr) minmax(0, 2fr) minmax(0, 1fr);
