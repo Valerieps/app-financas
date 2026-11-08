@@ -50,6 +50,11 @@ const PATHS: Record<string, ReactNode> = {
     </>
   ),
   close: <path d="M6 6l12 12M18 6 6 18" />,
+  // The funnel of a column's filter.
+  filter: <path d="M3 4h18l-7 8.5V19l-4 2v-8.5z" />,
+  // A column's sort, A to Z (or Z to A) along a down arrow.
+  sortAsc: <path d="M3 11 6 3l3 8M4.1 8.5h3.8M3 13h6l-6 8h6M18 3v18m-4-4 4 4 4-4" />,
+  sortDesc: <path d="M3 3h6l-6 8h6M3 21l3-8 3 8M4.1 18.5h3.8M18 3v18m-4-4 4 4 4-4" />,
   search: (
     <>
       <circle cx="11" cy="11" r="7" />

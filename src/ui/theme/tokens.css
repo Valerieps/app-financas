@@ -129,7 +129,6 @@
   /* Running text: about 72 characters a line */
   --size-reading: 640px;
   /* Lançamentos: a filter button's widest, and its list of choices */
-  --size-filter-button: 280px;
   --size-filter-menu-min: 220px;
   --size-filter-menu-max: 360px;
   --size-filter-menu-height: 320px;
