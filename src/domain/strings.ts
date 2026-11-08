@@ -180,9 +180,10 @@ export const strings = {
     needTag: 'Escolha ao menos uma tag.',
     limit: 'Já tenho 200 regras, o máximo.',
     confirmDelete: 'Excluir esta regra? As tags que ela já pôs continuam nos lançamentos.',
-    summary: (text: string, type: string | null) => `Sempre que a descrição contiver "${text}"${type ? ` e o lançamento for ${type}` : ''}`,
-    tagsSummary: (tags: string) => `aplique ${tags}`,
-    deletedTags: 'as tags desta regra foram excluídas',
+    summary: (text: string) => `Sempre que a descrição contiver "${text}"`,
+    typeLine: (type: string) => `e o lançamento for ${type}`,
+    tagsSummary: (tags: string) => `Aplique ${tags}`,
+    deletedTags: 'Aplique: as tags desta regra foram excluídas',
     preview: {
       none: 'Nenhum lançamento guardado casa com esta regra.',
       count: (total: number, shown: number) =>
