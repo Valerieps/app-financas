@@ -17,6 +17,7 @@ import {
   sortLancamentos,
   sortParams,
   toggleAccount,
+  totals,
   type DirectionFilter,
   type Sort,
   type SortColumn,
@@ -106,10 +107,11 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
     setSelection((s) => clickSelection(s, order, from, id, shift));
     anchor.current = id;
   };
-  const monthTotals = view?.totals ?? [];
+  // The totals follow the filters: they add up only what the list shows.
+  const monthTotals = filtering ? totals(items) : (view?.totals ?? []);
   // What left the accounts to pay the card, per currency: out of the totals, but said so.
   const cardPaid = new Map<string, number>();
-  for (const item of view?.items ?? []) {
+  for (const item of items) {
     if (item.cardPayment && item.direction === 'out') cardPaid.set(item.currency, (cardPaid.get(item.currency) ?? 0) + item.amountCents);
   }
   const today = saoPauloDate(new Date());

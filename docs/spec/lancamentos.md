@@ -25,7 +25,8 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
   parcelada mostra a parcela. *(1)*
 - No topo, eu vejo o total de saídas, de entradas e o saldo do mês, separados por moeda. *(1)*
 - Com algum filtro ligado, o topo diz quantos lançamentos a lista mostra de quantos há no mês
-  ("12 de 106"); os totais continuam sendo os do mês inteiro. *(1)*
+  ("12 de 106"), e os totais (e o pagamento de cartão à parte) passam a somar só o que a lista
+  mostra. *(1)*
 - O **pagamento de cartão** fica fora das saídas, das entradas e do saldo do topo, que diz à parte
   quanto saiu das contas para pagar o cartão no mês. *(1)*
   Por quê: as compras no cartão já são saídas; contar o pagamento da fatura somaria o mesmo gasto
