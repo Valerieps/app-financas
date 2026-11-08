@@ -3,7 +3,7 @@
 // (collect/transactions.ts) through `rules` and `ruleTagStatements`.
 import type { RulePreviewView, RuleView } from '../../src/application/api-contract';
 import { direction } from '../../src/domain/lancamentos';
-import { applyReplacements, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition, type RuleSubject } from '../../src/domain/rules';
+import { applyReplacements, describeWithRules, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition, type RuleSubject } from '../../src/domain/rules';
 import { MAX_BULK_TAGGING, moveInOrder, type TagAssignment } from '../../src/domain/tags';
 import { CARD_PAYMENT, CATEGORY_ID, CHOICE_JOIN } from './category-choice';
 import { failure, nowIso, QueryError, type CommandResult, type Context } from './context';
@@ -172,8 +172,12 @@ export async function moveRule(ctx: Context, input: Record<string, unknown>): Pr
   return { ok: true, value: null, changed: CHANGED };
 }
 
-/** Runs every rule over the stored lançamentos, filling only their empty layers. */
-export async function applyRules(ctx: Context): Promise<CommandResult<{ tagged: number }>> {
+/**
+ * Runs every rule over the stored lançamentos: tags fill only the empty layers; description
+ * replacements are not stored (the bank's text stays), so `described` counts the lançamentos whose
+ * description the rules now change, to show those rules at work too.
+ */
+export async function applyRules(ctx: Context): Promise<CommandResult<{ tagged: number; described: number }>> {
   const [ruleList, transactions, links] = await Promise.all([
     rules(ctx),
     stored(ctx),
@@ -187,5 +191,6 @@ export async function applyRules(ctx: Context): Promise<CommandResult<{ tagged: 
     if (Object.keys(tags).length > 0) added.set(t.id, tags);
   }
   if (added.size > 0) await ctx.sql.batch(ruleTagStatements(added, nowIso(ctx)));
-  return { ok: true, value: { tagged: added.size }, changed: ['tags'] };
+  const described = transactions.filter((t) => describeWithRules(ruleList, t) !== t.description).length;
+  return { ok: true, value: { tagged: added.size, described }, changed: ['tags', 'rules'] };
 }

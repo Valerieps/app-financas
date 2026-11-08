@@ -150,7 +150,7 @@ describe('automatic rules', () => {
     await command('lancamentos.tag', { ids: ['b'], changes: [{ layerId: tipo, tagId: mercado }] });
     await create('rule.create', rule('ifood', { [tipo]: restaurante, [origem]: impulso }));
     await create('rule.create', rule('loja', { [tipo]: mercado }));
-    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 2 }, changed: ['tags'] });
+    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 2, described: 0 }, changed: ['tags', 'rules'] });
     expect(await sql.all('SELECT transaction_id, layer_id, tag_id FROM transaction_tags ORDER BY transaction_id, layer_id')).toEqual(
       [
         { transaction_id: 'a', layer_id: tipo, tag_id: restaurante },
@@ -159,7 +159,17 @@ describe('automatic rules', () => {
         { transaction_id: 'b', layer_id: origem, tag_id: impulso },
       ].sort((x, y) => x.transaction_id.localeCompare(y.transaction_id) || x.layer_id.localeCompare(y.layer_id)),
     );
-    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 0 }, changed: ['tags'] });
+    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 0, described: 0 }, changed: ['tags', 'rules'] });
+  });
+
+  it('count the lançamentos whose description the replace rules change when applied', async () => {
+    const { sql, command, create } = await setup();
+    await seedTransactions(sql, [
+      ['if', '2026-10-10T12:00:00.000Z', 'IFOOD *Loja'],
+      ['uber', '2026-10-11T12:00:00.000Z', 'Uber Trip'],
+    ]);
+    await create('rule.create', { conditions: [{ kind: 'descriptionContains', text: 'ifood' }], actions: [{ kind: 'replaceInDescription', find: 'ifood *', replace: 'iFood ' }] });
+    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 0, described: 1 }, changed: ['tags', 'rules'] });
   });
 
   it('tag each new lançamento the collection stores', async () => {
