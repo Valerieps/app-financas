@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { RulePreviewView, RuleView, TagLayerView } from '../../application/api-contract';
 import { dayLabel } from '../../domain/lancamentos';
-import { LANCAMENTO_TYPES, MAX_RULE_TEXT_LENGTH, MAX_RULES, type LancamentoType, type RuleCondition, type RuleDefinition } from '../../domain/rules';
+import { containsExpression, LANCAMENTO_TYPES, MAX_RULE_TEXT_LENGTH, MAX_RULES, type LancamentoType, type RuleCondition, type RuleDefinition } from '../../domain/rules';
 import { strings } from '../../domain/strings';
 import { cleanName, type TagAssignment } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
@@ -159,6 +159,7 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
     const cleaned = cleanName(contains);
     if (!cleaned) return text.needText;
     if ([...cleaned].length > MAX_RULE_TEXT_LENGTH) return text.textTooLong;
+    if (!containsExpression(cleaned)) return text.loneOperator;
     return null;
   }
 
@@ -207,6 +208,7 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
             autoComplete="off"
             autoFocus={Boolean(initial)}
           />
+          <span className="text-caption muted">{text.whenHint}</span>
         </label>
         <button type="button" className="secondary" disabled={testing || !cleanName(contains)} onClick={() => void test()}>
           {testing ? text.testing : text.test}

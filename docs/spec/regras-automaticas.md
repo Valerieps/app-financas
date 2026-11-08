@@ -21,6 +21,11 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
   Por quê: começo pelo que mais uso; outras condições e ações entram depois sem refazer as regras.
 - O texto é comparado sem diferença entre maiúsculas e minúsculas nem acentos: "ifood" casa com
   "IFOOD *Restaurante" e "padaria" com "Padaría". *(2)*
+- No texto, `|` quer dizer "ou" e `&` quer dizer "e": "ifood | rappi" casa com qualquer um dos dois,
+  e "uber & eats" só com descrições que tenham os dois, em qualquer ordem. O `&` vale antes do `|`:
+  "ifood | uber & eats" é ifood, ou uber e eats juntos. Cada `|` ou `&` precisa de texto dos dois
+  lados. *(2)*
+  Por quê: uma regra só cobre os vários nomes com que a mesma loja aparece no extrato.
 - Um lançamento é uma **transferência** quando a categoria que vale (a minha, ou a do Pluggy) é do
   grupo Transferências do Pluggy (inclui as transferências entre as minhas contas) ou quando é um
   pagamento de fatura; senão, é uma **entrada** ou uma **saída**, pelo sentido do dinheiro. *(2)*
