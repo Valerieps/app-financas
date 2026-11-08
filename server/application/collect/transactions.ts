@@ -2,10 +2,11 @@
 // id may (the card deletes and recreates a transaction when its date, amount or description
 // change), so a fetched transaction is recognized by its Pluggy id or else by its match key.
 // Nothing is deleted: a transaction that disappears gets deleted_at, and may come back.
-import { direction, isCardPayment } from '../../../src/domain/lancamentos';
+import { cardPaymentWithChoice, direction, isCardPayment } from '../../../src/domain/lancamentos';
 import { tagsFromRules } from '../../../src/domain/rules';
 import { matchKeys, toCents } from '../../../src/domain/vault';
 import { nowIso, type Context } from '../context';
+import { descriptionStatements, storedDescriptions } from '../descriptions';
 import { statement, type SqlValue, type Statement } from '../ports';
 import { rules as loadRules, ruleTagStatements } from '../rules';
 import { pluggyCursor } from './raw';
@@ -119,8 +120,19 @@ export async function syncTransactions(ctx: Context, account: AccountRef, option
   /** Stored rows this read matched, whatever Pluggy id they had before. */
   const matched = new Set<SqlValue>();
 
-  // My automatic rules tag each new lançamento as it arrives (docs/spec/regras-automaticas.md).
-  const rules = await loadRules(ctx);
+  // My automatic rules tag each new lançamento as it arrives and rewrite the description of each one
+  // written (docs/spec/regras-automaticas.md), which may look at the category I chose.
+  const storedIds = JSON.stringify(stored.map((row) => row.id));
+  const [rules, choices, descriptions] = await Promise.all([
+    loadRules(ctx),
+    ctx.sql
+      .all<{ transaction_id: string; pluggy_category_id: string }>(
+        'SELECT transaction_id, pluggy_category_id FROM transaction_categories WHERE transaction_id IN (SELECT value FROM json_each(?))',
+        storedIds,
+      )
+      .then((rows) => new Map(rows.map((row) => [row.transaction_id, row.pluggy_category_id]))),
+    storedDescriptions(ctx, stored.map((row) => String(row.id))),
+  ]);
   const now = nowIso(ctx);
   const counts: TransactionCounts = { fetched: fetched.length, inserted: 0, updated: 0, deleted: 0, restored: 0, skipped: 0 };
   const groups: Statement[][] = [];
@@ -132,6 +144,13 @@ export async function syncTransactions(ctx: Context, account: AccountRef, option
       JSON.stringify(row),
       now,
     );
+
+  const subject = (transaction: PluggyTransaction, columns: Row, chosen: string | null) => ({
+    description: (columns.description as string | null) ?? null,
+    direction: direction(transaction.type ?? null, columns.amount_cents as number, account.type),
+    categoryId: chosen ?? transaction.categoryId ?? null,
+    cardPayment: cardPaymentWithChoice(columns.card_payment === 1, chosen),
+  });
 
   for (const transaction of fetched) {
     const matchKey = keys.get(transaction)!;
@@ -153,12 +172,7 @@ export async function syncTransactions(ctx: Context, account: AccountRef, option
       const row: Row = { id, ...columns, deleted_at: null, raw_json: JSON.stringify(transaction), first_seen_at: now, last_seen_at: now };
       const names = Object.keys(row);
       group.push(statement(`INSERT INTO transactions (${names.join(', ')}) VALUES (${names.map(() => '?').join(', ')})`, ...names.map((n) => row[n])));
-      const tags = tagsFromRules(rules, {
-        description: (columns.description as string | null) ?? null,
-        direction: direction(transaction.type ?? null, columns.amount_cents as number, account.type),
-        categoryId: transaction.categoryId ?? null,
-        cardPayment: columns.card_payment === 1,
-      });
+      const tags = tagsFromRules(rules, subject(transaction, columns, null));
       group.push(...ruleTagStatements(new Map([[id, tags]]), now));
       counts.inserted++;
     } else {
@@ -177,6 +191,7 @@ export async function syncTransactions(ctx: Context, account: AccountRef, option
       byKey.delete(String(current.match_key));
     }
     group.push(...detailStatements(id, transaction));
+    group.push(...descriptionStatements(rules, [{ id, ...subject(transaction, columns, choices.get(id) ?? null) }], descriptions, now));
     groups.push(group);
   }
 

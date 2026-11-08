@@ -1,5 +1,5 @@
-// The stored automatic rules (ADR-009), read by the Regras use cases (rules.ts) and by the
-// Lançamentos list, which shows each description as the rules leave it (lancamentos.ts).
+// The stored automatic rules (ADR-009), read by the Regras use cases (rules.ts) and by the writes
+// that rewrite the descriptions the rules leave (descriptions.ts).
 import { parseRule, type RuleDefinition } from '../../src/domain/rules';
 import type { Context } from './context';
 

@@ -76,7 +76,7 @@ function LoadError({ error, reload }: { error: string | undefined; reload: () =>
 }
 
 export function Lancamentos({ month, search, selectedId }: { month: Month; search: URLSearchParams; selectedId: string | null }) {
-  const query = useQuery('lancamentos', { month: monthKey(month) }, ['vault', 'tags', 'categories']);
+  const query = useQuery('lancamentos', { month: monthKey(month) }, ['vault', 'tags', 'categories', 'rules']);
   const layersQuery = useQuery('tagLayers', {}, ['tags']);
   const layers = useMemo(() => layersQuery.data ?? [], [layersQuery.data]);
   const filter = parseDirectionFilter(search.get('tipo'));
@@ -659,7 +659,7 @@ const dateTime = (iso: string) =>
 
 /** The detail panel of one lançamento: what the bank told about it, and the category, which I can change. */
 export function LancamentoDetail({ id }: { id: string }) {
-  const query = useQuery('lancamento', { id }, ['vault', 'categories']);
+  const query = useQuery('lancamento', { id }, ['vault', 'categories', 'rules']);
   const item = query.data?.id === id ? query.data : undefined;
   const d = text.detail;
 

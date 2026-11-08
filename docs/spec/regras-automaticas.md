@@ -36,10 +36,13 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
   "ifood", substitua "IFOOD *" por "iFood "" deixa "IFOOD *Restaurante" como "iFood Restaurante".
   O pedaço é achado sem diferença entre maiúsculas e minúsculas nem acentos, e trocado todas as
   vezes que aparece. O novo texto pode ser vazio, para apagar o pedaço. *(2)*
-- A substituição não mexe na descrição que o banco mandou, que fica guardada: ela vale na hora em
-  que o app mostra o lançamento, em todos os lançamentos, novos e já guardados, e some se eu excluo
-  a regra. No detalhe do lançamento, eu vejo também a descrição do banco. *(2)*
-  Por quê: o cofre guarda o que o banco mandou para sempre; a regra só muda o que eu leio.
+- A substituição não mexe na descrição que o banco mandou, que fica guardada: o app guarda, ao lado
+  dela, a descrição trocada, como guarda a categoria que eu escolho. Ela vale em todos os
+  lançamentos, novos e já guardados, é refeita quando eu crio, edito, movo ou excluo uma regra ou
+  mudo a categoria de um lançamento, e some se eu excluo a regra. No detalhe do lançamento, eu vejo
+  também a descrição do banco. *(2)*
+  Por quê: o cofre guarda o que o banco mandou para sempre; a regra só muda o que eu leio. Guardar
+  a descrição trocada evita refazer todas as regras a cada vez que o app mostra um lançamento.
 - As condições de todas as regras olham sempre a descrição do banco, não a que outra regra trocou.
   Quando várias regras substituem, cada uma, em ordem, troca no que as de cima deixaram. *(2)*
 - Um lançamento é uma **transferência** quando a categoria que vale (a minha, ou a do Pluggy) é do

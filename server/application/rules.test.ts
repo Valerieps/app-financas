@@ -3,6 +3,7 @@ import type { LancamentoDetailView, LancamentosView, RulePreviewView, RuleView }
 import { fakePluggy, testContext } from '../testing/node-sql';
 import { ITEM_ID, routes } from '../testing/pluggy-fixtures';
 import { AppService } from './app-service';
+import { rewriteDescriptionsJob } from './descriptions';
 import { NO_CALLER } from './lock';
 import { statement } from './ports';
 
@@ -172,5 +173,75 @@ describe('automatic rules', () => {
         'SELECT t.pluggy_id, tt.tag_id FROM transaction_tags tt JOIN transactions t ON t.id = tt.transaction_id ORDER BY t.pluggy_id',
       ),
     ).toEqual([{ pluggy_id: 't1', tag_id: test.mercado }]);
+  });
+});
+
+describe('the descriptions my rules leave', () => {
+  const replace = (text: string, find: string, by: string, extra: Record<string, unknown>[] = []) => ({
+    conditions: [{ kind: 'descriptionContains', text }, ...extra],
+    actions: [{ kind: 'replaceInDescription', find, replace: by }],
+  });
+  const storedRows = (sql: { all: <T>(q: string) => Promise<T[]> }) =>
+    sql.all<{ transaction_id: string; description: string | null }>('SELECT transaction_id, description FROM transaction_descriptions ORDER BY transaction_id');
+
+  it('are stored beside the bank description and follow each rule write', async () => {
+    const { sql, command, create } = await setup();
+    await seedTransactions(sql, [
+      ['if', '2026-10-10T12:00:00.000Z', 'IFOOD *Loja'],
+      ['uber', '2026-10-11T12:00:00.000Z', 'Uber Trip'],
+    ]);
+    const a = await create('rule.create', replace('ifood', 'ifood *', 'iFood '));
+    expect(await storedRows(sql)).toEqual([{ transaction_id: 'if', description: 'iFood Loja' }]);
+    const b = await create('rule.create', replace('ifood', 'loja', 'Restaurante'));
+    expect(await storedRows(sql)).toEqual([{ transaction_id: 'if', description: 'iFood Restaurante' }]);
+    // Moved up, the second rule finds "Loja" in the bank's text first: same result, other order.
+    expect((await command('rule.move', { id: b, direction: 'up' })).ok).toBe(true);
+    expect(await storedRows(sql)).toEqual([{ transaction_id: 'if', description: 'iFood Restaurante' }]);
+    expect((await command('rule.update', { id: a, ...replace('uber', 'trip', '') })).ok).toBe(true);
+    expect(await storedRows(sql)).toEqual([
+      { transaction_id: 'if', description: 'IFOOD *Restaurante' },
+      { transaction_id: 'uber', description: 'Uber' },
+    ]);
+    expect((await command('rule.delete', { id: a })).ok).toBe(true);
+    expect((await command('rule.delete', { id: b })).ok).toBe(true);
+    expect(await storedRows(sql)).toEqual([]);
+    expect(await sql.all("SELECT description FROM transactions WHERE id = 'if'")).toEqual([{ description: 'IFOOD *Loja' }]);
+  });
+
+  it('follow the category I choose, which decides the lançamento type', async () => {
+    const { sql, command, create } = await setup();
+    await seedTransactions(sql, [['pix', '2026-10-10T12:00:00.000Z', 'PIX Ana']]);
+    await sql.batch([statement("INSERT INTO pluggy_categories (id, raw_json, first_seen_at, last_seen_at) VALUES ('05100000', '{}', ?, ?)", NOW, NOW)]);
+    await create('rule.create', replace('pix', 'pix', 'Transferência', [{ kind: 'type', type: 'transfer' }]));
+    expect(await storedRows(sql)).toEqual([]);
+    expect((await command('lancamentos.categorize', { ids: ['pix'], categoryId: '05100000' })).ok).toBe(true);
+    expect(await storedRows(sql)).toEqual([{ transaction_id: 'pix', description: 'Transferência Ana' }]);
+    expect((await command('lancamentos.categorize', { ids: ['pix'], categoryId: null })).ok).toBe(true);
+    expect(await storedRows(sql)).toEqual([]);
+  });
+
+  it('are written for the lançamentos the collection stores', async () => {
+    const test = await setup(fakePluggy(routes()));
+    await test.create('rule.create', replace('padaria', 'padaria', 'Padaria da esquina'));
+    expect((await test.command('connection.add', { itemId: ITEM_ID })).ok).toBe(true);
+    await Promise.all(test.tasks);
+    expect(
+      await test.sql.all('SELECT t.pluggy_id, t.description AS bank, d.description FROM transaction_descriptions d JOIN transactions t ON t.id = d.transaction_id'),
+    ).toEqual([{ pluggy_id: 't1', bank: 'PADARIA EXEMPLO', description: 'Padaria da esquina EXEMPLO' }]);
+  });
+
+  it('are rewritten by the daily cron job, which fills a table left empty', async () => {
+    const { sql, ctx, clock, create } = await setup();
+    await seedTransactions(sql, [['if', '2026-10-10T12:00:00.000Z', 'IFOOD *Loja']]);
+    await create('rule.create', replace('ifood', 'ifood *', 'iFood '));
+    await sql.batch([statement('DELETE FROM transaction_descriptions')]);
+    await rewriteDescriptionsJob(ctx);
+    expect(await storedRows(sql)).toEqual([{ transaction_id: 'if', description: 'iFood Loja' }]);
+    await sql.batch([statement('DELETE FROM transaction_descriptions')]);
+    await rewriteDescriptionsJob(ctx);
+    expect(await storedRows(sql)).toEqual([]);
+    clock.set('2026-11-03T12:00:00Z');
+    await rewriteDescriptionsJob(ctx);
+    expect(await storedRows(sql)).toEqual([{ transaction_id: 'if', description: 'iFood Loja' }]);
   });
 });
