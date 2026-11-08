@@ -293,13 +293,13 @@ function SliceList({
               >
                 <span className="muted">{dayCell(item.day, today, list)}</span>
                 <span className="lanc-description">
-                  <span className="text-strong">{item.description ?? list.noDescription}</span>
+                  <span className="lanc-description-text">{item.description ?? list.noDescription}</span>
                   {item.pending && <span className="chip lanc-badge">{list.pending}</span>}
                   {item.installment && <span className="text-caption muted">{list.installment(item.installment.number, item.installment.total)}</span>}
                 </span>
                 <span className="muted">{item.category ?? list.noCategory}</span>
                 <TagCell layers={layers} tags={item.tags} />
-                <span className={`lanc-amount text-strong${item.direction === 'in' ? ' lanc-in' : ''}`}>{signed(item)}</span>
+                <span className={`lanc-amount${item.direction === 'in' ? ' lanc-in' : ''}`}>{signed(item)}</span>
               </Link>
             </li>
           ))}

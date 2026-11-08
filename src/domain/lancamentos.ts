@@ -89,6 +89,17 @@ export function totals(items: readonly { currency: string; direction: Direction;
     .sort((a, b) => (a.currency === 'BRL' ? -1 : b.currency === 'BRL' ? 1 : a.currency.localeCompare(b.currency)));
 }
 
+/** The currencies whose saldo the list's summary always shows, even at zero. */
+export const SUMMARY_CURRENCIES: readonly string[] = ['BRL', 'USD'];
+
+/** The saldo (entradas minus saídas) of the reais and the dollars, in that order. */
+export function balances(sums: readonly Totals[]): { currency: string; cents: number }[] {
+  return SUMMARY_CURRENCIES.map((currency) => {
+    const sum = sums.find((t) => t.currency === currency);
+    return { currency, cents: sum ? sum.inCents - sum.outCents : 0 };
+  });
+}
+
 /** Items sorted newest day first, keeping each day's order. */
 export function sortByDay<T extends { day: string }>(items: readonly T[]): T[] {
   return [...items].sort((a, b) => b.day.localeCompare(a.day));

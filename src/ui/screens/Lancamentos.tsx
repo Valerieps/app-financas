@@ -27,6 +27,7 @@ import {
   toggleChoice,
   toggleColumn,
   totals,
+  balances,
   type ListColumn,
   type Sort,
   type SortColumn,
@@ -240,47 +241,38 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
     <div className="lanc">
       <section className="tile lanc-panel" aria-label={text.title}>
         <div className="lanc-sticky">
-        <div className="lanc-summary">
-          {(monthTotals.length > 0 ? monthTotals : [{ currency: 'BRL', inCents: 0, outCents: 0 }]).map((t) => (
-            <dl key={t.currency} className="lanc-figures">
-              <div>
-                <dt className="text-label muted">{text.out}</dt>
-                <dd className="text-title lanc-figure">{money(t.outCents, t.currency)}</dd>
-              </div>
-              <div>
-                <dt className="text-label muted">{text.in}</dt>
-                <dd className="text-title lanc-figure lanc-in">{money(t.inCents, t.currency)}</dd>
-              </div>
-              <div>
-                <dt className="text-label muted">{text.balance}</dt>
-                <dd className="text-title lanc-figure">{money(t.inCents - t.outCents, t.currency)}</dd>
-              </div>
-            </dl>
-          ))}
-          {view && (
-            <p className="text-label muted lanc-count">
-              {filtering ? text.summaryFiltered(items.length, view.items.length) : text.summary(view.items.length)}
-            </p>
+        <div className="lanc-bar">
+          <p className="text-label lanc-summary">
+            {view && (
+              <span className="muted">
+                {filtering ? text.summaryFiltered(items.length, view.items.length) : text.summary(view.items.length)}
+              </span>
+            )}
+            <span className="muted">{text.balance}</span>
+            {balances(monthTotals).map((b) => (
+              <span key={b.currency} className="lanc-figure">
+                {money(b.cents, b.currency)}
+              </span>
+            ))}
+            {[...cardPaid].map(([currency, cents]) => (
+              <span key={currency} className="muted">
+                {text.cardPaymentsOut(money(cents, currency))}
+              </span>
+            ))}
+          </p>
+          {selected.length === 0 && (
+            <div className="lanc-toolbar" role="group" aria-label={text.filters}>
+              {filtering && (
+                <Link to={withoutFilters(listPath, search)} className="lanc-clear text-label">
+                  {text.clearFilters}
+                </Link>
+              )}
+              <ColumnsMenu columns={columns} onFlip={flipColumn} />
+            </div>
           )}
-          {[...cardPaid].map(([currency, cents]) => (
-            <p key={currency} className="text-label muted lanc-count">
-              {text.cardPaymentsOut(money(cents, currency))}
-            </p>
-          ))}
         </div>
 
-        {selected.length > 0 ? (
-          <SelectionActions selected={selected} layers={layers} onClear={() => setSelection([])} />
-        ) : (
-          <div className="lanc-toolbar" role="group" aria-label={text.filters}>
-            {filtering && (
-              <Link to={withoutFilters(listPath, search)} className="lanc-clear text-label">
-                {text.clearFilters}
-              </Link>
-            )}
-            <ColumnsMenu columns={columns} onFlip={flipColumn} />
-          </div>
-        )}
+        {selected.length > 0 && <SelectionActions selected={selected} layers={layers} onClear={() => setSelection([])} />}
 
         {view && view.items.length > 0 && (
           <div className="lanc-line lanc-line--head">
@@ -295,7 +287,7 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
               }}
               onChange={toggleAll}
             />
-            <div className="lanc-row lanc-row--head text-over muted" style={grid}>
+            <div className="lanc-row lanc-row--head text-label muted" style={grid}>
               {columns.map((c) => (
                 <HeadCell
                   key={c}
@@ -359,7 +351,7 @@ function Cell({ column, item, layers, today }: { column: ListColumn; item: Lanca
     case 'descricao':
       return (
         <span className="lanc-description">
-          <span className="text-strong">{item.description ?? text.noDescription}</span>
+          <span className="lanc-description-text">{item.description ?? text.noDescription}</span>
           {item.pending && <span className="chip lanc-badge">{text.pending}</span>}
           {item.installment && <span className="text-caption muted">{text.installment(item.installment.number, item.installment.total)}</span>}
         </span>
@@ -383,7 +375,7 @@ function Cell({ column, item, layers, today }: { column: ListColumn; item: Lanca
         </span>
       );
     case 'valor':
-      return <span className={`lanc-amount text-strong${item.direction === 'in' ? ' lanc-in' : ''}`}>{signed(item)}</span>;
+      return <span className={`lanc-amount${item.direction === 'in' ? ' lanc-in' : ''}`}>{signed(item)}</span>;
   }
 }
 
@@ -503,19 +495,28 @@ function ColumnsMenu({ columns, onFlip }: { columns: readonly ListColumn[]; onFl
       </button>
       {open && (
         <div className="lanc-menu-list lanc-menu-list--end" role="group" aria-label={text.columnsMenuLabel}>
-          {LIST_COLUMNS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              className="lanc-menu-item"
-              aria-pressed={columns.includes(c)}
-              disabled={FIXED_COLUMNS.includes(c)}
-              title={COLUMN_LABEL[c]}
-              onClick={() => onFlip(c)}
-            >
-              <MenuCheck checked={columns.includes(c)} label={COLUMN_LABEL[c]} />
-            </button>
+          {LIST_COLUMNS.filter((c) => FIXED_COLUMNS.includes(c)).map((c) => (
+            <p key={c} className="lanc-menu-item lanc-menu-item--fixed" title={text.columnFixed}>
+              <span aria-hidden="true" className="lanc-menu-check">
+                <Icon name="lock" />
+              </span>
+              <span className="lanc-menu-label">{COLUMN_LABEL[c]}</span>
+            </p>
           ))}
+          <div className="lanc-menu-group" role="group">
+            {LIST_COLUMNS.filter((c) => !FIXED_COLUMNS.includes(c)).map((c) => (
+              <button
+                key={c}
+                type="button"
+                className="lanc-menu-item"
+                aria-pressed={columns.includes(c)}
+                title={COLUMN_LABEL[c]}
+                onClick={() => onFlip(c)}
+              >
+                <MenuCheck checked={columns.includes(c)} label={COLUMN_LABEL[c]} />
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
