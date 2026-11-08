@@ -7,6 +7,7 @@ import { useQuery } from '../use-query';
 import { Aparelhos } from './Aparelhos';
 import { CofreCalendar } from './CofreCalendar';
 import { Provisorios } from './Provisorios';
+import { PageHeader } from '../shell/PageHeader';
 
 const text = strings.cofre;
 const dateTime = (iso: string) =>
@@ -21,11 +22,8 @@ export function Cofre({ onPasskeysChanged }: { onPasskeysChanged: () => void }) 
   const pending = vault.data?.pending ?? [];
 
   return (
-    <section className="stack">
-      <header>
-        <h1>{text.title}</h1>
-        <p className="muted">{text.subtitle}</p>
-      </header>
+    <section className="page">
+      <PageHeader title={text.title} subtitle={text.subtitle} />
       {vault.error === 'unauthenticated' && (
         <p className="notice" role="alert">
           {strings.forbidden}
@@ -55,9 +53,9 @@ function Connection({ connection }: { connection: ConnectionView }) {
   const { counts } = connection;
   const days = connection.consentExpiresAt ? daysUntil(new Date(), connection.consentExpiresAt) : null;
   return (
-    <article className="card stack">
+    <article className="tile">
       <header className="row space-between align-center">
-        <h2>{connection.institution ?? connection.itemId}</h2>
+        <h2 className="text-title">{connection.institution ?? connection.itemId}</h2>
         {connection.status && <span className="badge">{text.status[connection.status] ?? connection.status}</span>}
       </header>
       {connection.replacedBy && <p className="muted">{text.replaced}</p>}
@@ -136,8 +134,8 @@ function PendingConnections({ pending }: { pending: readonly PendingConnectionVi
   }
 
   return (
-    <article className="card stack">
-      <h2>{text.pending.title}</h2>
+    <article className="tile">
+      <h2 className="text-title">{text.pending.title}</h2>
       <p className="muted">{text.pending.hint}</p>
       {pending.map((connection) => (
         <div key={connection.itemId} className="row space-between align-center">
@@ -180,8 +178,8 @@ function AddConnection() {
   }
 
   return (
-    <form className="card stack" onSubmit={(event) => void submit(event)}>
-      <h2>{text.add.title}</h2>
+    <form className="tile" onSubmit={(event) => void submit(event)}>
+      <h2 className="text-title">{text.add.title}</h2>
       <p className="muted">{text.add.hint}</p>
       <label>
         <span className="muted">{text.add.field}</span>

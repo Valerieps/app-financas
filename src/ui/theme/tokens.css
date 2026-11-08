@@ -5,28 +5,55 @@
 :root {
   color-scheme: light;
 
-  --color-bg: #f6f5f0;
+  /*
+   * Direção "Sinal" (docs/rascunhos/desktop-visual.md, Cores): the app is a quiet cool graphite so
+   * the semáforo is the one thing in color. Neutrals lean slightly green, never warm beige.
+   */
+  --color-bg: #f2f3f2;
   --color-surface: #ffffff;
-  --color-text: #2b2e2c;
-  /* 5:1 on --color-bg, above WCAG AA's 4.5:1 for small text */
-  --color-text-muted: #5f6661;
-  --color-border: #e2e3dc;
-  --color-brand: #4f7a5e;
+  --color-text: #1b201d;
+  /* 5.8:1 on --color-bg, above WCAG AA's 4.5:1 for small text */
+  --color-text-muted: #59605c;
+  --color-border: #dfe2e0;
+  --color-brand: #2b7a4b;
   --color-on-brand: #ffffff;
   --color-danger: #b3261e;
   --color-on-danger: #ffffff;
   /* Bar tracks and inset areas, a step darker than --color-bg */
-  --color-sunken: #efeee8;
-  --color-brand-strong: #3d624b;
-  --color-brand-soft: #e7efe9;
+  --color-sunken: #e8eae8;
+  --color-brand-strong: #1f5c38;
+  --color-brand-soft: #e1eee5;
+  /* A disabled control: flat and grey, never a faded brand color */
+  --color-disabled: #e3e6e4;
+  --color-on-disabled: #7c847f;
+
+  /* The sidebar is the dark frame of the window */
+  --color-frame: #1b201e;
+  --color-frame-raised: #272e2a;
+  --color-frame-active: #313a35;
+  --color-frame-border: #2f3632;
+  --color-on-frame: #e3e8e5;
+  --color-on-frame-muted: #9aa49e;
+
+  /* The logo: three lights, the bottom one lit */
+  --color-light-off: #3b4440;
+  --color-light-on: #43c26b;
+  --color-light-case: #0e1110;
 
   /* Semáforo: a soft background and a text color for each light; text passes 4.5:1 on its background */
-  --color-ok-bg: #e4efe7;
-  --color-ok: #2f6243;
+  --color-ok-bg: #e1efe5;
+  --color-ok: #24603d;
   --color-warn-bg: #f7eed0;
   --color-warn: #765500;
   --color-risk-bg: #f6e3df;
   --color-risk: #9a3324;
+  /* The answer block (Livre do dia) is filled with its light; text passes 4.5:1 on each fill */
+  --color-ok-solid: #2b7d4b;
+  --color-on-ok-solid: #ffffff;
+  --color-warn-solid: #e3b341;
+  --color-on-warn-solid: #2a2208;
+  --color-risk-solid: #f3d9d3;
+  --color-on-risk-solid: #7d2619;
 
   /* Importâncias (dots and bars). Impulso is orange so it never reads as the red of the semáforo */
   --color-obrigatorio: #4a6178;
@@ -88,6 +115,8 @@
   --size-search: 240px;
   --size-month-label: 128px;
   --size-dialog: 560px;
+  /* Running text: about 72 characters a line */
+  --size-reading: 640px;
   /* Lançamentos: a filter button's widest, and its list of choices */
   --size-filter-button: 280px;
   --size-filter-menu-min: 220px;
@@ -114,31 +143,52 @@
   /* The dots of the Cofre calendar */
   --size-dot: 34px;
   --font-size-small: 0.75rem;
+  /* The logo's lights */
+  --size-light: 6px;
+  --size-light-gap: 3px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
 
-    --color-bg: #161917;
-    --color-surface: #1f2421;
-    --color-text: #e9ece8;
-    --color-text-muted: #a2aaa4;
-    --color-border: #323a35;
-    --color-brand: #9cc7a9;
-    --color-on-brand: #161917;
+    --color-bg: #141716;
+    --color-surface: #1d2120;
+    --color-text: #e8ebe9;
+    --color-text-muted: #a3aba6;
+    --color-border: #313835;
+    --color-brand: #8fd0a6;
+    --color-on-brand: #10140f;
     --color-danger: #f2b8b5;
     --color-on-danger: #161917;
-    --color-sunken: #1a1e1b;
-    --color-brand-strong: #b8d9c2;
-    --color-brand-soft: #26332b;
+    --color-sunken: #181c1a;
+    --color-brand-strong: #b4e2c4;
+    --color-brand-soft: #22332a;
+    --color-disabled: #262b29;
+    --color-on-disabled: #7f8883;
 
-    --color-ok-bg: #213a2a;
+    --color-frame: #0f1211;
+    --color-frame-raised: #1a1f1d;
+    --color-frame-active: #242b27;
+    --color-frame-border: #222826;
+    --color-on-frame: #e3e8e5;
+    --color-on-frame-muted: #959f99;
+
+    --color-light-off: #343c38;
+    --color-light-case: #070908;
+
+    --color-ok-bg: #203a2a;
     --color-ok: #a9d6b6;
     --color-warn-bg: #3a3218;
     --color-warn: #e9cf7a;
     --color-risk-bg: #3e2420;
     --color-risk: #f2b8b5;
+    --color-ok-solid: #2b7d4b;
+    --color-on-ok-solid: #ffffff;
+    --color-warn-solid: #d9a93a;
+    --color-on-warn-solid: #221b06;
+    --color-risk-solid: #4a2722;
+    --color-on-risk-solid: #f6cdc8;
 
     --color-obrigatorio: #9fb4c9;
     --color-rotina: #a8c79b;

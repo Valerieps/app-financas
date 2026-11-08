@@ -14,9 +14,9 @@ export function Provisorios() {
   const list = query.data ?? [];
 
   return (
-    <section className="card stack">
+    <section className="tile">
       <header>
-        <h2>{text.title}</h2>
+        <h2 className="text-title">{text.title}</h2>
         <p className="muted">{text.subtitle}</p>
       </header>
       {query.error && query.error !== 'unauthenticated' && query.error !== 'locked' && (

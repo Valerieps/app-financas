@@ -7,6 +7,7 @@ import { cleanName, type TagAssignment } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
 import { useServices } from '../backend-context';
 import { useQuery } from '../use-query';
+import { PageHeader } from '../shell/PageHeader';
 
 const text = strings.regras;
 
@@ -87,11 +88,8 @@ export function Regras() {
   const loaded = rulesQuery.data && layersQuery.data;
 
   return (
-    <section className="stack tags">
-      <header>
-        <h1>{text.title}</h1>
-        <p className="muted">{text.subtitle}</p>
-      </header>
+    <section className="page tags">
+      <PageHeader title={text.title} subtitle={text.subtitle} />
       {error && error !== 'unauthenticated' && error !== 'locked' && (
         <p className="notice" role="alert">
           {strings.genericError}{' '}
