@@ -1,0 +1,140 @@
+import { describe, expect, it } from 'vitest';
+import type { RulePreviewView, RuleView } from '../../src/application/api-contract';
+import { fakePluggy, testContext } from '../testing/node-sql';
+import { ITEM_ID, routes } from '../testing/pluggy-fixtures';
+import { AppService } from './app-service';
+import { NO_CALLER } from './lock';
+import { statement } from './ports';
+
+const NOW = '2026-11-02T12:00:00Z';
+
+async function setup(pluggy = fakePluggy({})) {
+  const test = testContext(NOW, pluggy);
+  const service = new AppService(test.ctx);
+  const command = (name: string, input: Record<string, unknown>) => service.command(name, input, NO_CALLER);
+  const query = async <T>(name: string, input: Record<string, unknown> = {}): Promise<T> => {
+    const result = await service.query(name, input, NO_CALLER);
+    if (!result.ok) throw new Error(result.error);
+    return result.value as T;
+  };
+  const create = async (name: string, input: Record<string, unknown>): Promise<string> => {
+    const result = await command(name, input);
+    if (!result.ok) throw new Error(result.error);
+    return (result.value as { id: string }).id;
+  };
+  const tipo = await create('tagLayer.create', { name: 'Tipo' });
+  const origem = await create('tagLayer.create', { name: 'Origem' });
+  const restaurante = await create('tag.create', { layerId: tipo, name: 'Restaurante' });
+  const mercado = await create('tag.create', { layerId: tipo, name: 'Mercado' });
+  const impulso = await create('tag.create', { layerId: origem, name: 'Impulso' });
+  return { ...test, command, query, create, tipo, origem, restaurante, mercado, impulso };
+}
+
+const rule = (text: string, tags: Record<string, string>) => ({
+  conditions: [{ kind: 'descriptionContains', text }],
+  actions: [{ kind: 'addTags', tags }],
+});
+
+async function seedTransactions(sql: { batch: (s: ReturnType<typeof statement>[]) => Promise<void> }, list: [string, string, string][]) {
+  await sql.batch([
+    statement('INSERT INTO items (item_id, registered_at, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?)', 'item', NOW, NOW, NOW),
+    statement(
+      "INSERT INTO accounts (id, pluggy_id, item_id, type, name, currency_code, raw_json, first_seen_at, last_seen_at) VALUES ('bank', 'p-bank', 'item', 'BANK', 'Conta', 'BRL', '{}', ?, ?)",
+      NOW,
+      NOW,
+    ),
+    ...list.map(([id, date, description]) =>
+      statement(
+        `INSERT INTO transactions (id, pluggy_id, account_id, match_key, date, amount_cents, currency_code, type, description, raw_json, first_seen_at, last_seen_at)
+         VALUES (?, ?, 'bank', ?, ?, -1000, 'BRL', 'DEBIT', ?, '{}', ?, ?)`,
+        id,
+        `p-${id}`,
+        `k-${id}`,
+        date,
+        description,
+        NOW,
+        NOW,
+      ),
+    ),
+  ]);
+}
+
+describe('automatic rules', () => {
+  it('are created, listed in order, moved, edited and deleted', async () => {
+    const { command, query, create, tipo, restaurante, mercado } = await setup();
+    const a = await create('rule.create', rule('  ifood ', { [tipo]: restaurante }));
+    const b = await create('rule.create', rule('mercado', { [tipo]: mercado }));
+    expect(await query<RuleView[]>('rules')).toEqual([
+      { id: a, ...rule('ifood', { [tipo]: restaurante }) },
+      { id: b, ...rule('mercado', { [tipo]: mercado }) },
+    ]);
+    expect(await command('rule.move', { id: b, direction: 'up' })).toEqual({ ok: true, value: null, changed: ['rules'] });
+    expect((await query<RuleView[]>('rules')).map((r) => r.id)).toEqual([b, a]);
+    expect((await command('rule.update', { id: a, ...rule('rappi', { [tipo]: restaurante }) })).ok).toBe(true);
+    expect((await query<RuleView[]>('rules'))[1]?.conditions).toEqual([{ kind: 'descriptionContains', text: 'rappi' }]);
+    expect((await command('rule.delete', { id: b })).ok).toBe(true);
+    expect((await query<RuleView[]>('rules')).map((r) => r.id)).toEqual([a]);
+  });
+
+  it('refuse malformed rules, unknown tags and unknown ids', async () => {
+    const { command, tipo, origem, restaurante } = await setup();
+    expect(await command('rule.create', rule(' ', { [tipo]: restaurante }))).toEqual({ ok: false, error: 'invalid' });
+    expect(await command('rule.create', rule('x', { [tipo]: 'nada' }))).toEqual({ ok: false, error: 'invalid' });
+    expect(await command('rule.create', rule('x', { [origem]: restaurante }))).toEqual({ ok: false, error: 'invalid' });
+    expect(await command('rule.update', { id: 'nada', ...rule('x', { [tipo]: restaurante }) })).toEqual({ ok: false, error: 'not_found' });
+    expect(await command('rule.delete', { id: 'nada' })).toEqual({ ok: false, error: 'not_found' });
+    expect(await command('rule.move', { id: 'nada', direction: 'sideways' })).toEqual({ ok: false, error: 'invalid' });
+  });
+
+  it('drop a deleted tag from their actions', async () => {
+    const { command, query, create, tipo, origem, restaurante, impulso } = await setup();
+    await create('rule.create', rule('ifood', { [tipo]: restaurante, [origem]: impulso }));
+    await command('tag.delete', { id: impulso });
+    expect((await query<RuleView[]>('rules'))[0]?.actions).toEqual([{ kind: 'addTags', tags: { [tipo]: restaurante } }]);
+  });
+
+  it('are tested against the stored lançamentos, newest first, at most 10', async () => {
+    const { sql, query } = await setup();
+    const list: [string, string, string][] = Array.from({ length: 12 }, (_, i) => [`if${i}`, `2026-10-${String(i + 10)}T12:00:00.000Z`, `IFOOD *Loja ${i}`]);
+    await seedTransactions(sql, [...list, ['uber', '2026-10-30T12:00:00.000Z', 'Uber Trip']]);
+    const preview = await query<RulePreviewView>('rulePreview', { conditions: [{ kind: 'descriptionContains', text: 'iFóod' }] });
+    expect(preview.total).toBe(12);
+    expect(preview.items.map((i) => i.id)).toEqual(['if11', 'if10', 'if9', 'if8', 'if7', 'if6', 'if5', 'if4', 'if3', 'if2']);
+    expect(preview.items[0]).toMatchObject({ description: 'IFOOD *Loja 11', day: '2026-10-21', amountCents: 1000 });
+    await expect(query('rulePreview', { conditions: [] })).rejects.toThrow('invalid');
+  });
+
+  it('fill only the empty layers of the stored lançamentos when applied, the first rule winning', async () => {
+    const { sql, command, create, tipo, origem, restaurante, mercado, impulso } = await setup();
+    await seedTransactions(sql, [
+      ['a', '2026-10-10T12:00:00.000Z', 'IFOOD Loja'],
+      ['b', '2026-10-11T12:00:00.000Z', 'IFOOD Mercado'],
+      ['c', '2026-10-12T12:00:00.000Z', 'Uber'],
+    ]);
+    await command('lancamentos.tag', { ids: ['b'], changes: [{ layerId: tipo, tagId: mercado }] });
+    await create('rule.create', rule('ifood', { [tipo]: restaurante, [origem]: impulso }));
+    await create('rule.create', rule('loja', { [tipo]: mercado }));
+    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 2 }, changed: ['tags'] });
+    expect(await sql.all('SELECT transaction_id, layer_id, tag_id FROM transaction_tags ORDER BY transaction_id, layer_id')).toEqual(
+      [
+        { transaction_id: 'a', layer_id: tipo, tag_id: restaurante },
+        { transaction_id: 'a', layer_id: origem, tag_id: impulso },
+        { transaction_id: 'b', layer_id: tipo, tag_id: mercado },
+        { transaction_id: 'b', layer_id: origem, tag_id: impulso },
+      ].sort((x, y) => x.transaction_id.localeCompare(y.transaction_id) || x.layer_id.localeCompare(y.layer_id)),
+    );
+    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 0 }, changed: ['tags'] });
+  });
+
+  it('tag each new lançamento the collection stores', async () => {
+    const test = await setup(fakePluggy(routes()));
+    await test.create('rule.create', rule('padaria', { [test.tipo]: test.mercado }));
+    expect((await test.command('connection.add', { itemId: ITEM_ID })).ok).toBe(true);
+    await Promise.all(test.tasks);
+    expect(
+      await test.sql.all(
+        'SELECT t.pluggy_id, tt.tag_id FROM transaction_tags tt JOIN transactions t ON t.id = tt.transaction_id ORDER BY t.pluggy_id',
+      ),
+    ).toEqual([{ pluggy_id: 't1', tag_id: test.mercado }]);
+  });
+});

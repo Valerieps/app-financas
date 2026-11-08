@@ -150,6 +150,49 @@ export const strings = {
     },
   },
 
+  // Automatic rules, "se isso, então aquilo" (docs/spec/regras-automaticas.md).
+  regras: {
+    title: 'Regras automáticas',
+    subtitle: 'Cada regra põe tags sozinha nos lançamentos que chegam. Ela só preenche camadas vazias, e a de cima vence.',
+    empty: 'Nenhuma regra ainda. Crie a primeira abaixo.',
+    noLayers: 'Para criar uma regra, primeiro crie camadas e tags em Categorias.',
+    newRule: 'Nova regra',
+    when: 'Sempre que a descrição contiver',
+    whenPlaceholder: 'Ex.: ifood',
+    then: 'aplique as tags',
+    noTag: '—',
+    test: 'Testar',
+    testing: 'Testando…',
+    create: 'Criar regra',
+    save: 'Salvar',
+    cancel: 'Cancelar',
+    edit: 'Editar',
+    delete: 'Excluir',
+    up: 'Subir a regra',
+    down: 'Descer a regra',
+    needText: 'Escreva o texto que a descrição deve conter.',
+    textTooLong: 'O texto pode ter até 100 caracteres.',
+    needTag: 'Escolha ao menos uma tag.',
+    limit: 'Já tenho 200 regras, o máximo.',
+    confirmDelete: 'Excluir esta regra? As tags que ela já pôs continuam nos lançamentos.',
+    summary: (text: string) => `Sempre que a descrição contiver "${text}"`,
+    tagsSummary: (tags: string) => `aplique ${tags}`,
+    deletedTags: 'as tags desta regra foram excluídas',
+    preview: {
+      none: 'Nenhum lançamento guardado casa com esta regra.',
+      count: (total: number, shown: number) =>
+        total === 1 ? '1 lançamento casa com esta regra.' : total > shown ? `${total} lançamentos casam; estes são os ${shown} mais recentes.` : `${total} lançamentos casam com esta regra.`,
+      noDescription: 'Sem descrição',
+    },
+    apply: {
+      title: 'Lançamentos que já estão guardados',
+      hint: 'As regras rodam sozinhas nos lançamentos novos. Para os que já estão guardados, rode aqui; só as camadas vazias recebem tag.',
+      button: 'Aplicar as regras aos lançamentos guardados',
+      running: 'Aplicando…',
+      done: (n: number) => (n === 0 ? 'Nenhum lançamento novo recebeu tag.' : n === 1 ? '1 lançamento recebeu tags.' : `${n} lançamentos receberam tags.`),
+    },
+  },
+
   // The desktop shell (docs/rascunhos/arquitetura-desktop.md): sidebar, header, tabs, detail panel.
   shell: {
     mainNav: 'Navegação principal',
@@ -161,6 +204,7 @@ export const strings = {
       financas: 'Finanças',
       investimentos: 'Investimentos',
       patrimonio: 'Patrimônio',
+      regras: 'Regras automáticas',
       categorias: 'Categorias',
       cofre: 'Cofre',
       ajustes: 'Ajustes',

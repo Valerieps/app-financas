@@ -16,6 +16,11 @@ const PATHS: Record<string, ReactNode> = {
     </>
   ),
   patrimonio: <path d="M3 21h18M5 21v-9M10 21v-9M14 21v-9M19 21v-9M2 10l10-6 10 6z" />,
+  regras: (
+    <>
+      <path d="M13 3 5 14h6l-1 7 8-11h-6z" />
+    </>
+  ),
   categorias: (
     <>
       <path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z" />

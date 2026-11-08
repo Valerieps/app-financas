@@ -12,6 +12,7 @@ import { categorizeLancamentos, lancamento, lancamentos, pluggyCategories, tagLa
 import { cleanUpLock, type Caller } from './lock';
 import { provisionalExpenses } from './notifications';
 import { statement } from './ports';
+import { applyRules, createRule, deleteRule, moveRule, rulePreview, rules, updateRule } from './rules';
 import { spendingByCategory, spendingByMonth } from './spending';
 import { createLayer, createTag, deleteLayer, deleteTag, moveLayer, renameLayer, renameTag, tagLayers } from './tags';
 
@@ -58,6 +59,8 @@ const QUERIES: { [N in QueryName]: Handler<Queries[N]['output'] | QueryError> } 
   tagLayers: async (ctx) => tagLayers(ctx),
   pluggyCategories: async (ctx) => pluggyCategories(ctx),
   cartao: async (ctx) => cartao(ctx),
+  rules: async (ctx) => rules(ctx),
+  rulePreview: async (ctx, input) => rulePreview(ctx, input),
   passkeys: async (ctx, _input, caller) => {
     const rows = await ctx.sql.all<Omit<PasskeyView, 'thisDevice'> & { device: string }>(
       'SELECT id, label, created_at AS createdAt, last_used_at AS lastUsedAt, device_token_hash AS device FROM passkeys ORDER BY created_at',
@@ -85,4 +88,9 @@ const COMMANDS: { [N in CommandName]: Handler<CommandResult<Commands[N]['output'
   'tag.delete': async (ctx, input) => deleteTag(ctx, input),
   'lancamentos.tag': async (ctx, input) => tagLancamentos(ctx, input),
   'lancamentos.categorize': async (ctx, input) => categorizeLancamentos(ctx, input),
+  'rule.create': async (ctx, input) => createRule(ctx, input),
+  'rule.update': async (ctx, input) => updateRule(ctx, input),
+  'rule.delete': async (ctx, input) => deleteRule(ctx, input),
+  'rule.move': async (ctx, input) => moveRule(ctx, input),
+  'rules.apply': async (ctx) => applyRules(ctx),
 };

@@ -120,7 +120,7 @@ Classificação, orçamento e decisões (fases 2 a 4):
 | `categories` | categoria | nome, pai, id do Pluggy de origem |
 | `importance_levels` | importância | nome, conta no orçamento, ordem |
 | `category_importance_map` | ligação categoria → importância | categoria, importância, vigente de/até |
-| `classification_rules` | regra | condição (estabelecimento, pagador, `operation_type`), categoria e/ou importância |
+| `rules` | regra automática | posição, condições e ações em JSON (ADR-009); hoje "descrição contém" → "aplique as tags" |
 | `user_overrides` | decisão sobre uma transação | importância, reembolsável (%), nota (a categoria fica em `transaction_categories`) |
 | `reimbursements` | reembolso ↔ gasto | gasto, reembolso, valor coberto |
 

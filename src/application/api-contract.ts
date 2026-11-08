@@ -2,6 +2,7 @@
 // Types only. The server imports it with `import type`, so nothing here runs on either side.
 import type { BillStatus } from '../domain/faturas';
 import type { CategoryOption } from '../domain/pluggy-categories';
+import type { RuleAction, RuleCondition, RuleDefinition } from '../domain/rules';
 import type { CategoryChart, Comparison, MonthlyChart } from '../domain/spending';
 import type { TagAssignment, TagChange } from '../domain/tags';
 
@@ -189,6 +190,20 @@ export interface TagLayerView {
   readonly tags: readonly TagView[];
 }
 
+/** One automatic rule, in screen order (docs/spec/regras-automaticas.md). */
+export interface RuleView {
+  readonly id: string;
+  readonly conditions: readonly RuleCondition[];
+  /** Tags deleted after the rule was saved are already gone from them. */
+  readonly actions: readonly RuleAction[];
+}
+
+/** The "Testar" button: the newest lançamentos the conditions match, and how many match in all. */
+export interface RulePreviewView {
+  readonly total: number;
+  readonly items: readonly LancamentoView[];
+}
+
 /** A device with a passkey asks for it after an hour without use (docs/spec/acesso.md). */
 export interface LockStatusView {
   readonly deviceHasPasskey: boolean;
@@ -250,6 +265,10 @@ export interface Queries {
   tagLayers: { input: Record<string, never>; output: TagLayerView[] };
   /** Pluggy's category tree, in reading order: the choices for a lançamento's category. */
   pluggyCategories: { input: Record<string, never>; output: CategoryOption[] };
+  /** The automatic rules, in order (docs/spec/regras-automaticas.md). */
+  rules: { input: Record<string, never>; output: RuleView[] };
+  /** The stored lançamentos that `conditions` match, newest first, at most RULE_PREVIEW_LIMIT. */
+  rulePreview: { input: { conditions: readonly RuleCondition[] }; output: RulePreviewView };
 }
 
 /** Writes: `POST /api/command/<name>`. Each sends its writes in one atomic batch. */
@@ -280,13 +299,21 @@ export interface Commands {
    * (`categoryId: null`). An unknown lançamento or category is `not_found`.
    */
   'lancamentos.categorize': { input: { ids: readonly string[]; categoryId: string | null }; output: null };
+  // Automatic rules (docs/spec/regras-automaticas.md). A malformed rule, or a tag that does not
+  // exist, is `invalid`; a rule beyond MAX_RULES is `conflict`.
+  'rule.create': { input: RuleDefinition; output: { id: string } };
+  'rule.update': { input: RuleDefinition & { id: string }; output: null };
+  'rule.delete': { input: { id: string }; output: null };
+  'rule.move': { input: { id: string; direction: 'up' | 'down' }; output: null };
+  /** Runs every rule, in order, over the stored lançamentos; returns how many got a tag. */
+  'rules.apply': { input: Record<string, never>; output: { tagged: number } };
 }
 
 export type QueryName = keyof Queries;
 export type CommandName = keyof Commands;
 
 /** What a command says changed; screens that read these topics refetch. */
-export type Topic = 'vault' | 'passkeys' | 'tags' | 'categories';
+export type Topic = 'vault' | 'passkeys' | 'tags' | 'categories' | 'rules';
 
 /** `locked`: this device has a passkey and must be unlocked first. */
 export type ApiError = 'unauthenticated' | 'locked' | 'forbidden' | 'not_found' | 'invalid' | 'conflict' | 'unavailable';

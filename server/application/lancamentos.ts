@@ -112,6 +112,21 @@ export async function lancamentos(ctx: Context, month: unknown): Promise<Lancame
   return { month, items, totals: totals(items) };
 }
 
+/** The list's view of the stored lançamentos `ids`, in that order (the rules' "Testar" button). */
+export async function lancamentoViews(ctx: Context, ids: readonly string[]): Promise<LancamentoView[]> {
+  const list = JSON.stringify(ids);
+  const [rows, links] = await Promise.all([
+    ctx.sql.all<Row>(`${SELECT} ${FROM} WHERE t.id IN (SELECT value FROM json_each(?))`, list),
+    ctx.sql.all<TagLink>('SELECT transaction_id, layer_id, tag_id FROM transaction_tags WHERE transaction_id IN (SELECT value FROM json_each(?))', list),
+  ]);
+  const tags = tagsById(links);
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return ids.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [toView(row, tags.get(id))] : [];
+  });
+}
+
 export async function lancamento(ctx: Context, id: unknown): Promise<LancamentoDetailView | QueryError> {
   if (typeof id !== 'string' || !id) return new QueryError('invalid');
   const [row] = await ctx.sql.all<
