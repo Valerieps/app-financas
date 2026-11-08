@@ -111,6 +111,14 @@ describe('lancamentos', () => {
     expect(view.items.find((i) => i.id === 'salario')).toMatchObject({ direction: 'in', pending: false, installment: null, cardPayment: false });
   });
 
+  it('lists each lançamento with its operação and who paid', async () => {
+    const service = await seed();
+    const result = await service.query('lancamentos', { month: '2026-11' }, NO_CALLER);
+    const view = (result as { value: LancamentosView }).value;
+    expect(view.items.find((i) => i.id === 'salario')).toMatchObject({ operation: 'PIX', payer: 'Empresa' });
+    expect(view.items.find((i) => i.id === 'mercado')).toMatchObject({ payer: null });
+  });
+
   it('lists card bill payments but leaves them out of the totals', async () => {
     const service = await seed(true);
     const result = await service.query('lancamentos', { month: '2026-11' }, NO_CALLER);

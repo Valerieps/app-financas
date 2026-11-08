@@ -24,6 +24,13 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
   "Ontem" quando for o caso, senão o dia da semana e o dia ("qui, 5 nov"). As entradas aparecem em
   verde, com "+". Um lançamento que o banco ainda não fechou aparece como **pendente**, e uma compra
   parcelada mostra a parcela. *(1)*
+- Eu posso ligar mais três colunas: **Tipo** (Entrada, Saída ou Pgto. cartão), **Operação** (o tipo
+  de operação e o meio de pagamento, como no painel) e **Quem pagou** (o nome que o banco mandou;
+  vazio quando não mandou). *(2)*
+- O botão **Colunas**, no fim da linha dos filtros, mostra ou oculta cada coluna; a descrição e o
+  valor ficam sempre. A escolha fica guardada neste aparelho, não na URL, e continua quando eu troco
+  de mês ou volto à tela. Na primeira vez, aparecem as colunas de sempre, sem as três novas. *(2)*
+  Por quê: é uma preferência de como eu leio a tabela, não um filtro que eu queira mandar num link.
 - No topo, eu vejo o total de saídas, de entradas e o saldo do mês, separados por moeda. *(1)*
 - Com algum filtro ligado, o topo diz quantos lançamentos a lista mostra de quantos há no mês
   ("12 de 106"), e os totais (e o pagamento de cartão à parte) passam a somar só o que a lista

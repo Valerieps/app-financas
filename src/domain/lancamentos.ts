@@ -231,3 +231,48 @@ export function sortLancamentos<T extends Sortable>(items: readonly T[], sort: S
     .sort((a, b) => compare(a.item, b.item) || b.item.day.localeCompare(a.item.day) || a.index - b.index)
     .map(({ item }) => item);
 }
+
+/** A lançamento's type as the Tipo column shows it: a card bill payment, or else money in or out. */
+export type LancamentoKind = 'entrada' | 'saida' | 'cartao';
+
+export function lancamentoKind(item: { direction: Direction; cardPayment: boolean }): LancamentoKind {
+  if (item.cardPayment) return 'cartao';
+  return item.direction === 'in' ? 'entrada' : 'saida';
+}
+
+/** The list's columns, in the order the table shows them. */
+export type ListColumn = 'data' | 'descricao' | 'tipo' | 'categoria' | 'tags' | 'operacao' | 'pagador' | 'valor';
+export const LIST_COLUMNS: readonly ListColumn[] = ['data', 'descricao', 'tipo', 'categoria', 'tags', 'operacao', 'pagador', 'valor'];
+
+/** Columns that always show: without them a row says nothing. */
+export const FIXED_COLUMNS: readonly ListColumn[] = ['descricao', 'valor'];
+
+/** The columns a first visit shows; the new ones wait until I turn them on. */
+export const DEFAULT_COLUMNS: readonly ListColumn[] = ['data', 'descricao', 'categoria', 'tags', 'valor'];
+
+/** Each column's share of the row's width. */
+const COLUMN_WIDTH: Record<ListColumn, number> = { data: 1, descricao: 3, tipo: 1, categoria: 2, tags: 2, operacao: 2, pagador: 2, valor: 1 };
+
+/** The columns remembered on this device (a JSON list); anything unreadable falls back to the default. */
+export function parseColumns(raw: string | null): ListColumn[] {
+  if (!raw) return [...DEFAULT_COLUMNS];
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (!Array.isArray(value)) return [...DEFAULT_COLUMNS];
+    return LIST_COLUMNS.filter((c) => FIXED_COLUMNS.includes(c) || value.includes(c));
+  } catch {
+    return [...DEFAULT_COLUMNS];
+  }
+}
+
+/** The columns after a tap on one: shown or hidden, in the table's order; the fixed ones stay. */
+export function toggleColumn(shown: readonly ListColumn[], column: ListColumn): ListColumn[] {
+  if (FIXED_COLUMNS.includes(column)) return LIST_COLUMNS.filter((c) => shown.includes(c));
+  const next = shown.includes(column) ? shown.filter((c) => c !== column) : [...shown, column];
+  return LIST_COLUMNS.filter((c) => next.includes(c));
+}
+
+/** The CSS grid template for the shown columns. */
+export function columnTemplate(shown: readonly ListColumn[]): string {
+  return shown.map((c) => `minmax(0, ${COLUMN_WIDTH[c]}fr)`).join(' ');
+}

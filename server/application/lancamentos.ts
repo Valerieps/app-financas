@@ -32,6 +32,9 @@ interface Row {
   installment_number: number | null;
   total_installments: number | null;
   card_payment: number;
+  operation_type: string | null;
+  payment_method: string | null;
+  payer_name: string | null;
 }
 
 const SELECT = `
@@ -41,7 +44,8 @@ const SELECT = `
          COALESCE(c.description_translated, c.description,
                   CASE WHEN tc.pluggy_category_id IS NULL THEN json_extract(t.raw_json, '$.category') END) AS category,
          a.name AS account_name, a.type AS account_type,
-         cd.installment_number, cd.total_installments`;
+         cd.installment_number, cd.total_installments,
+         t.operation_type, p.payment_method, p.payer_name`;
 
 const FROM = `
   FROM transactions t
@@ -49,7 +53,8 @@ const FROM = `
   ${CHOICE_JOIN}
   LEFT JOIN transaction_descriptions td ON td.transaction_id = t.id
   LEFT JOIN pluggy_categories c ON c.id = ${CATEGORY_ID}
-  LEFT JOIN transaction_card_data cd ON cd.transaction_id = t.id`;
+  LEFT JOIN transaction_card_data cd ON cd.transaction_id = t.id
+  LEFT JOIN transaction_payment_data p ON p.transaction_id = t.id`;
 
 /** The row as the list shows it; the description is the one my rules left (docs/spec/regras-automaticas.md). */
 function toView(row: Row, tags: TagAssignment = {}): LancamentoView {
@@ -74,6 +79,8 @@ function toView(row: Row, tags: TagAssignment = {}): LancamentoView {
         ? { number: row.installment_number, total: row.total_installments }
         : null,
     tags,
+    operation: operationLabel(row.operation_type, row.payment_method),
+    payer: row.payer_name,
   };
 }
 
@@ -141,20 +148,15 @@ export async function lancamento(ctx: Context, id: unknown): Promise<LancamentoD
   const [row] = await ctx.sql.all<
     Row & {
       description_raw: string | null;
-      operation_type: string | null;
-      payment_method: string | null;
-      payer_name: string | null;
       receiver_name: string | null;
       card_number: string | null;
       first_seen_at: string;
       pluggy_category: string | null;
     }
   >(
-    `${SELECT}, t.description_raw, t.operation_type, t.first_seen_at,
-            p.payment_method, p.payer_name, p.receiver_name, cd.card_number,
+    `${SELECT}, t.description_raw, t.first_seen_at, p.receiver_name, cd.card_number,
             COALESCE(pc.description_translated, pc.description, json_extract(t.raw_json, '$.category')) AS pluggy_category
      ${FROM}
-     LEFT JOIN transaction_payment_data p ON p.transaction_id = t.id
      LEFT JOIN pluggy_categories pc ON pc.id = t.pluggy_category_id
      WHERE t.id = ? AND t.deleted_at IS NULL`,
     id,
@@ -167,7 +169,6 @@ export async function lancamento(ctx: Context, id: unknown): Promise<LancamentoD
     date: row.date,
     descriptionOriginal: view.description !== row.bank_description ? row.bank_description : null,
     descriptionRaw: row.description_raw && row.description_raw !== row.bank_description ? row.description_raw : null,
-    operation: operationLabel(row.operation_type, row.payment_method),
     counterpart: view.direction === 'in' ? row.payer_name : row.receiver_name,
     cardDigits: row.card_number,
     firstSeenAt: row.first_seen_at,
