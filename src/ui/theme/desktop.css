@@ -864,6 +864,27 @@ a.lanc-row[aria-current='true'] {
   align-items: start;
 }
 
+/* Por tag: the table is as tall as the donut's tile, never taller, and scrolls inside it. */
+.charts-pair--fit {
+  align-items: stretch;
+}
+
+.tag-table-tile {
+  position: relative;
+}
+
+.tag-table-scroll {
+  position: absolute;
+  inset: var(--space-6);
+  overflow-y: auto;
+}
+
+.tag-table-scroll .chart-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+}
+
 .charts-legend {
   display: flex;
   flex-wrap: wrap;
@@ -1261,6 +1282,12 @@ a.lanc-row[aria-current='true'] {
 @media (max-width: 1023px) {
   .charts-pair {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Stacked, the table has no donut beside it to match: cap it instead. */
+  .tag-table-scroll {
+    position: static;
+    max-height: var(--size-donut);
   }
 }
 
