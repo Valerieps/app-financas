@@ -1,5 +1,6 @@
 // Automatic rules, "if this then that" (docs/spec/regras-automaticas.md): each rule has conditions,
-// all of which must hold, and actions. The conditions are "the description contains a text" and
+// all of which must hold, and actions. The conditions are "the description contains a text" (with
+// "|" for or and "&" for and) and
 // "the lançamento is of this type"; the only action is "add these tags". New kinds join the unions
 // below (ADR-009).
 import type { Direction } from './lancamentos';
@@ -57,10 +58,25 @@ export function textKey(text: string): string {
     .toLocaleLowerCase('pt-BR');
 }
 
+/**
+ * A "descrição contém" text read as alternatives ("|", ou) of terms that must all appear ("&", e);
+ * "&" binds tighter, so "ifood | uber & eats" is "ifood" or ("uber" and "eats"). Terms are already
+ * in `textKey` form. Null when an operator has no text on one side.
+ */
+export function containsExpression(text: string): string[][] | null {
+  const alternatives = text.split('|').map((alternative) => alternative.split('&').map(textKey));
+  return alternatives.every((terms) => terms.every(Boolean)) ? alternatives : null;
+}
+
+function descriptionContains(description: string, text: string): boolean {
+  const key = textKey(description);
+  return (containsExpression(text) ?? []).some((terms) => terms.every((term) => key.includes(term)));
+}
+
 export function conditionHolds(condition: RuleCondition, subject: RuleSubject): boolean {
   switch (condition.kind) {
     case 'descriptionContains':
-      return subject.description !== null && textKey(subject.description).includes(textKey(condition.text));
+      return subject.description !== null && descriptionContains(subject.description, condition.text);
     case 'type':
       return lancamentoType(subject) === condition.type;
   }
@@ -108,7 +124,7 @@ function parseCondition(raw: unknown): RuleCondition | null {
   if (!isRecord(raw)) return null;
   if (raw.kind === 'descriptionContains' && typeof raw.text === 'string') {
     const text = cleanName(raw.text);
-    if (!text || [...text].length > MAX_RULE_TEXT_LENGTH) return null;
+    if (!text || [...text].length > MAX_RULE_TEXT_LENGTH || !containsExpression(text)) return null;
     return { kind: 'descriptionContains', text };
   }
   if (raw.kind === 'type' && (LANCAMENTO_TYPES as readonly unknown[]).includes(raw.type)) {

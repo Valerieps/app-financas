@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lancamentoType, parseConditions, parseRule, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
+import { containsExpression, lancamentoType, parseConditions, parseRule, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
 
 const contains = (text: string) => ({ kind: 'descriptionContains', text }) as const;
 const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, ...more });
@@ -27,6 +27,34 @@ describe('ruleMatches', () => {
     const both = { conditions: [contains('uber'), contains('trip')] };
     expect(ruleMatches(both, subject('Uber Trip'))).toBe(true);
     expect(ruleMatches(both, subject('Uber Eats'))).toBe(false);
+  });
+});
+
+describe('"|" (ou) and "&" (e) in the description text', () => {
+  it('matches any alternative of "|"', () => {
+    expect(ruleMatches(rule('ifood | rappi', {}), subject('RAPPI*Pedido'))).toBe(true);
+    expect(ruleMatches(rule('ifood|rappi', {}), subject('IFOOD'))).toBe(true);
+    expect(ruleMatches(rule('ifood | rappi', {}), subject('Uber'))).toBe(false);
+  });
+
+  it('needs every term of "&", in any order', () => {
+    expect(ruleMatches(rule('eats & uber', {}), subject('Uber Eats'))).toBe(true);
+    expect(ruleMatches(rule('uber & eats', {}), subject('Uber Trip'))).toBe(false);
+  });
+
+  it('binds "&" tighter than "|"', () => {
+    expect(containsExpression(' iFood | Uber & Eats ')).toEqual([['ifood'], ['uber', 'eats']]);
+    expect(ruleMatches(rule('ifood | uber & eats', {}), subject('Uber Trip'))).toBe(false);
+    expect(ruleMatches(rule('ifood | uber & eats', {}), subject('Uber Eats'))).toBe(true);
+    expect(ruleMatches(rule('ifood | uber & eats', {}), subject('iFood'))).toBe(true);
+  });
+
+  it('refuses an operator without text on both sides', () => {
+    expect(containsExpression('ifood |')).toBeNull();
+    expect(containsExpression('& uber')).toBeNull();
+    expect(containsExpression('a || b')).toBeNull();
+    expect(parseConditions([contains('ifood | ')])).toBeNull();
+    expect(parseConditions([contains('ifood | rappi')])).toEqual([contains('ifood | rappi')]);
   });
 });
 
