@@ -101,7 +101,9 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
   const anchor = useRef<string | null>(null);
   const clickBox = (id: string, shift: boolean) => {
     const order = items.map((i) => i.id);
-    setSelection((s) => clickSelection(s, order, anchor.current, id, shift));
+    // Read the anchor now: React may run the updater after the line below has moved it to `id`.
+    const from = anchor.current;
+    setSelection((s) => clickSelection(s, order, from, id, shift));
     anchor.current = id;
   };
   const monthTotals = view?.totals ?? [];
