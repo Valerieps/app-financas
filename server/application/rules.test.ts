@@ -260,6 +260,27 @@ describe('"quem pagou" rules that set the category', () => {
   });
 });
 
+describe('"operação" rules', () => {
+  const pixRule = { conditions: [{ kind: 'operationContains', text: 'pix' }] };
+
+  it('are tested against the operation type and the payment method', async () => {
+    const { sql, query } = await setup();
+    await seedTransactions(sql, [
+      ['tipo', '2026-10-10T12:00:00.000Z', 'A'],
+      ['meio', '2026-10-11T12:00:00.000Z', 'B'],
+      ['ted', '2026-10-12T12:00:00.000Z', 'C'],
+      ['nada', '2026-10-13T12:00:00.000Z', 'D'],
+    ]);
+    await sql.batch([
+      statement("UPDATE transactions SET operation_type = 'PIX' WHERE id = 'tipo'"),
+      statement("UPDATE transactions SET operation_type = 'TED' WHERE id = 'ted'"),
+      statement('INSERT INTO transaction_payment_data (transaction_id, payment_method) VALUES (?, ?)', 'meio', 'PIX'),
+    ]);
+    const preview = await query<RulePreviewView>('rulePreview', { conditions: pixRule.conditions });
+    expect(preview.items.map((i) => i.id)).toEqual(['meio', 'tipo']);
+  });
+});
+
 describe('the descriptions my rules leave', () => {
   const replace = (text: string, find: string, by: string, extra: Record<string, unknown>[] = []) => ({
     conditions: [{ kind: 'descriptionContains', text }, ...extra],

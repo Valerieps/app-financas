@@ -406,7 +406,7 @@ export function LancamentoDetail({ id }: { id: string }) {
     [d.account, account(item)],
     [d.status, item.pending ? d.pending : d.posted],
     [item.direction === 'in' ? d.counterpartIn : d.counterpartOut, item.counterpart],
-    [d.operation, [item.operationType, item.paymentMethod].filter(Boolean).join(' · ') || null],
+    [d.operation, item.operation],
     [d.installment, item.installment && `${item.installment.number}/${item.installment.total}`],
     [d.card, item.cardDigits],
     [d.originalDescription, item.descriptionOriginal],

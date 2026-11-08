@@ -133,7 +133,7 @@ describe('lancamento', () => {
     const service = await seed();
     const result = await service.query('lancamento', { id: 'salario' }, NO_CALLER);
     const view = (result as { value: LancamentoDetailView }).value;
-    expect(view).toMatchObject({ id: 'salario', direction: 'in', counterpart: 'Empresa', descriptionRaw: 'RAW salario', operationType: 'PIX' });
+    expect(view).toMatchObject({ id: 'salario', direction: 'in', counterpart: 'Empresa', descriptionRaw: 'RAW salario', operation: 'PIX' });
   });
 
   it('does not find a deleted or unknown transaction', async () => {
