@@ -123,6 +123,7 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
   return (
     <div className="lanc">
       <section className="tile lanc-panel" aria-label={text.title}>
+        <div className="lanc-sticky">
         <div className="lanc-summary">
           {(monthTotals.length > 0 ? monthTotals : [{ currency: 'BRL', inCents: 0, outCents: 0 }]).map((t) => (
             <dl key={t.currency} className="lanc-figures">
@@ -224,30 +225,34 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
           </div>
         )}
 
+        {items.length > 0 && (
+          <div className="lanc-line lanc-line--head">
+            <input
+              type="checkbox"
+              className="lanc-check"
+              aria-label={text.selectAll}
+              checked={allSelected}
+              ref={(box) => {
+                if (box) box.indeterminate = selected.length > 0 && !allSelected;
+              }}
+              onChange={() => setSelection(allSelected ? [] : items.map((i) => i.id))}
+            />
+            <div className="lanc-row lanc-row--head text-over muted">
+              <SortHeader column="data" sort={sort} path={listPath} search={search} />
+              <SortHeader column="descricao" sort={sort} path={listPath} search={search} />
+              <SortHeader column="categoria" sort={sort} path={listPath} search={search} />
+              <span>{text.columns.tags}</span>
+              <SortHeader column="valor" sort={sort} path={listPath} search={search} />
+            </div>
+          </div>
+        )}
+        </div>
+
         <LoadError error={query.error} reload={query.reload} />
         {view && items.length === 0 && <p className="muted">{view.items.length === 0 ? text.empty : text.emptyFiltered}</p>}
 
         {items.length > 0 && (
           <div className="lanc-table">
-            <div className="lanc-line lanc-line--head">
-              <input
-                type="checkbox"
-                className="lanc-check"
-                aria-label={text.selectAll}
-                checked={allSelected}
-                ref={(box) => {
-                  if (box) box.indeterminate = selected.length > 0 && !allSelected;
-                }}
-                onChange={() => setSelection(allSelected ? [] : items.map((i) => i.id))}
-              />
-              <div className="lanc-row lanc-row--head text-over muted">
-                <SortHeader column="data" sort={sort} path={listPath} search={search} />
-                <SortHeader column="descricao" sort={sort} path={listPath} search={search} />
-                <SortHeader column="categoria" sort={sort} path={listPath} search={search} />
-                <span>{text.columns.tags}</span>
-                <SortHeader column="valor" sort={sort} path={listPath} search={search} />
-              </div>
-            </div>
             <ul className="lanc-list">
               {items.map((item) => (
                 <li key={item.id} className="lanc-line">
