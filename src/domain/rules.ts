@@ -1,6 +1,8 @@
 // Automatic rules, "if this then that" (docs/spec/regras-automaticas.md): each rule has conditions,
-// all of which must hold, and actions. Today the only condition is "the description contains a
-// text" and the only action is "add these tags"; new kinds join the two unions below (ADR-009).
+// all of which must hold, and actions. The conditions are "the description contains a text" and
+// "the lançamento is of this type"; the only action is "add these tags". New kinds join the unions
+// below (ADR-009).
+import type { Direction } from './lancamentos';
 import { assignTag, cleanName, type TagAssignment } from './tags';
 
 /** At most this many rules. */
@@ -12,7 +14,13 @@ export const MAX_RULE_PARTS = 5;
 /** The "Testar" button shows at most this many lançamentos. */
 export const RULE_PREVIEW_LIMIT = 10;
 
-export type RuleCondition = { readonly kind: 'descriptionContains'; readonly text: string };
+/** Entrada, saída or transferência. */
+export type LancamentoType = 'in' | 'out' | 'transfer';
+export const LANCAMENTO_TYPES: readonly LancamentoType[] = ['out', 'in', 'transfer'];
+
+export type RuleCondition =
+  | { readonly kind: 'descriptionContains'; readonly text: string }
+  | { readonly kind: 'type'; readonly type: LancamentoType };
 export type RuleAction = { readonly kind: 'addTags'; readonly tags: TagAssignment };
 
 export interface RuleDefinition {
@@ -23,6 +31,22 @@ export interface RuleDefinition {
 /** What a rule looks at in a lançamento. */
 export interface RuleSubject {
   readonly description: string | null;
+  readonly direction: Direction;
+  /** The category that counts: the one I chose, or else Pluggy's. */
+  readonly categoryId: string | null;
+  readonly cardPayment: boolean;
+}
+
+/** Pluggy's top categories for money moved between accounts: "Same person transfer" and "Transfers". */
+const TRANSFER_CATEGORIES = ['04', '05'];
+
+/**
+ * A lançamento's type: a transferência when its category is a transfer (Pluggy's groups 04 and 05)
+ * or it pays the card bill; otherwise an entrada or a saída, by the money's direction.
+ */
+export function lancamentoType(subject: Pick<RuleSubject, 'direction' | 'categoryId' | 'cardPayment'>): LancamentoType {
+  if (subject.cardPayment || TRANSFER_CATEGORIES.some((prefix) => subject.categoryId?.startsWith(prefix))) return 'transfer';
+  return subject.direction;
 }
 
 /** Text as rules compare it: no case, no accents, single spaces. */
@@ -37,6 +61,8 @@ export function conditionHolds(condition: RuleCondition, subject: RuleSubject): 
   switch (condition.kind) {
     case 'descriptionContains':
       return subject.description !== null && textKey(subject.description).includes(textKey(condition.text));
+    case 'type':
+      return lancamentoType(subject) === condition.type;
   }
 }
 
@@ -84,6 +110,9 @@ function parseCondition(raw: unknown): RuleCondition | null {
     const text = cleanName(raw.text);
     if (!text || [...text].length > MAX_RULE_TEXT_LENGTH) return null;
     return { kind: 'descriptionContains', text };
+  }
+  if (raw.kind === 'type' && (LANCAMENTO_TYPES as readonly unknown[]).includes(raw.type)) {
+    return { kind: 'type', type: raw.type as LancamentoType };
   }
   return null;
 }

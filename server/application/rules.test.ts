@@ -104,6 +104,24 @@ describe('automatic rules', () => {
     await expect(query('rulePreview', { conditions: [] })).rejects.toThrow('invalid');
   });
 
+  it('test the type condition: entrada, saída or transferência', async () => {
+    const { sql, query } = await setup();
+    await seedTransactions(sql, [
+      ['out', '2026-10-10T12:00:00.000Z', 'Pix Ana'],
+      ['in', '2026-10-11T12:00:00.000Z', 'Pix Ana'],
+      ['transfer', '2026-10-12T12:00:00.000Z', 'Pix Ana'],
+    ]);
+    await sql.batch([
+      statement("UPDATE transactions SET type = 'CREDIT', amount_cents = 1000 WHERE id = 'in'"),
+      statement("UPDATE transactions SET pluggy_category_id = '05000000' WHERE id = 'transfer'"),
+    ]);
+    const ids = async (type: string) =>
+      (await query<RulePreviewView>('rulePreview', { conditions: [{ kind: 'descriptionContains', text: 'pix' }, { kind: 'type', type }] })).items.map((i) => i.id);
+    expect(await ids('out')).toEqual(['out']);
+    expect(await ids('in')).toEqual(['in']);
+    expect(await ids('transfer')).toEqual(['transfer']);
+  });
+
   it('fill only the empty layers of the stored lançamentos when applied, the first rule winning', async () => {
     const { sql, command, create, tipo, origem, restaurante, mercado, impulso } = await setup();
     await seedTransactions(sql, [

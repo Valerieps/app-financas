@@ -159,6 +159,9 @@ export const strings = {
     newRule: 'Nova regra',
     when: 'Sempre que a descrição contiver',
     whenPlaceholder: 'Ex.: ifood',
+    type: 'e o lançamento for',
+    types: { any: 'Qualquer tipo', out: 'Saída', in: 'Entrada', transfer: 'Transferência' },
+    typeSummary: { out: 'uma saída', in: 'uma entrada', transfer: 'uma transferência' },
     then: 'aplique as tags',
     noTag: '—',
     test: 'Testar',
@@ -175,7 +178,7 @@ export const strings = {
     needTag: 'Escolha ao menos uma tag.',
     limit: 'Já tenho 200 regras, o máximo.',
     confirmDelete: 'Excluir esta regra? As tags que ela já pôs continuam nos lançamentos.',
-    summary: (text: string) => `Sempre que a descrição contiver "${text}"`,
+    summary: (text: string, type: string | null) => `Sempre que a descrição contiver "${text}"${type ? ` e o lançamento for ${type}` : ''}`,
     tagsSummary: (tags: string) => `aplique ${tags}`,
     deletedTags: 'as tags desta regra foram excluídas',
     preview: {

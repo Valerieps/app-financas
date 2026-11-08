@@ -2,7 +2,7 @@
 // id may (the card deletes and recreates a transaction when its date, amount or description
 // change), so a fetched transaction is recognized by its Pluggy id or else by its match key.
 // Nothing is deleted: a transaction that disappears gets deleted_at, and may come back.
-import { isCardPayment } from '../../../src/domain/lancamentos';
+import { direction, isCardPayment } from '../../../src/domain/lancamentos';
 import { tagsFromRules } from '../../../src/domain/rules';
 import { matchKeys, toCents } from '../../../src/domain/vault';
 import { nowIso, type Context } from '../context';
@@ -153,7 +153,12 @@ export async function syncTransactions(ctx: Context, account: AccountRef, option
       const row: Row = { id, ...columns, deleted_at: null, raw_json: JSON.stringify(transaction), first_seen_at: now, last_seen_at: now };
       const names = Object.keys(row);
       group.push(statement(`INSERT INTO transactions (${names.join(', ')}) VALUES (${names.map(() => '?').join(', ')})`, ...names.map((n) => row[n])));
-      const tags = tagsFromRules(rules, { description: (columns.description as string | null) ?? null });
+      const tags = tagsFromRules(rules, {
+        description: (columns.description as string | null) ?? null,
+        direction: direction(transaction.type ?? null, columns.amount_cents as number, account.type),
+        categoryId: transaction.categoryId ?? null,
+        cardPayment: columns.card_payment === 1,
+      });
       group.push(...ruleTagStatements(new Map([[id, tags]]), now));
       counts.inserted++;
     } else {

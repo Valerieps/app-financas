@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { parseConditions, parseRule, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition } from './rules';
+import { lancamentoType, parseConditions, parseRule, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
 
 const contains = (text: string) => ({ kind: 'descriptionContains', text }) as const;
+const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, ...more });
 const rule = (text: string, tags: Record<string, string>): RuleDefinition => ({ conditions: [contains(text)], actions: [{ kind: 'addTags', tags }] });
 
 describe('textKey', () => {
@@ -12,20 +13,44 @@ describe('textKey', () => {
 
 describe('ruleMatches', () => {
   it('finds the text anywhere in the description, without case or accents', () => {
-    expect(ruleMatches(rule('ifood', {}), { description: 'IFOOD *Restaurante' })).toBe(true);
-    expect(ruleMatches(rule('padaria', {}), { description: 'Padaría do Zé' })).toBe(true);
-    expect(ruleMatches(rule('uber', {}), { description: 'Mercado' })).toBe(false);
+    expect(ruleMatches(rule('ifood', {}), subject('IFOOD *Restaurante'))).toBe(true);
+    expect(ruleMatches(rule('padaria', {}), subject('Padaría do Zé'))).toBe(true);
+    expect(ruleMatches(rule('uber', {}), subject('Mercado'))).toBe(false);
   });
 
   it('never matches a lançamento without description, nor a rule without conditions', () => {
-    expect(ruleMatches(rule('x', {}), { description: null })).toBe(false);
-    expect(ruleMatches({ conditions: [] }, { description: 'x' })).toBe(false);
+    expect(ruleMatches(rule('x', {}), subject(null))).toBe(false);
+    expect(ruleMatches({ conditions: [] }, subject('x'))).toBe(false);
   });
 
   it('needs every condition', () => {
     const both = { conditions: [contains('uber'), contains('trip')] };
-    expect(ruleMatches(both, { description: 'Uber Trip' })).toBe(true);
-    expect(ruleMatches(both, { description: 'Uber Eats' })).toBe(false);
+    expect(ruleMatches(both, subject('Uber Trip'))).toBe(true);
+    expect(ruleMatches(both, subject('Uber Eats'))).toBe(false);
+  });
+});
+
+describe('lancamentoType', () => {
+  it('is a transferência for transfer categories and card bill payments, else the direction', () => {
+    expect(lancamentoType(subject('x', { direction: 'in' }))).toBe('in');
+    expect(lancamentoType(subject('x', { categoryId: '11000000' }))).toBe('out');
+    expect(lancamentoType(subject('x', { direction: 'in', categoryId: '05070000' }))).toBe('transfer');
+    expect(lancamentoType(subject('x', { categoryId: '04000000' }))).toBe('transfer');
+    expect(lancamentoType(subject('x', { cardPayment: true }))).toBe('transfer');
+  });
+});
+
+describe('type condition', () => {
+  it('matches the lançamento type, together with the text', () => {
+    const outIfood = { conditions: [contains('ifood'), { kind: 'type', type: 'out' } as const] };
+    expect(ruleMatches(outIfood, subject('iFood'))).toBe(true);
+    expect(ruleMatches(outIfood, subject('iFood', { direction: 'in' }))).toBe(false);
+    expect(ruleMatches({ conditions: [{ kind: 'type', type: 'transfer' }] }, subject(null, { categoryId: '05000000' }))).toBe(true);
+  });
+
+  it('parses only the known types', () => {
+    expect(parseConditions([{ kind: 'type', type: 'in' }])).toEqual([{ kind: 'type', type: 'in' }]);
+    expect(parseConditions([{ kind: 'type', type: 'both' }])).toBeNull();
   });
 });
 
@@ -33,15 +58,15 @@ describe('tagsFromRules', () => {
   const rules = [rule('ifood', { tipo: 'restaurante' }), rule('food', { tipo: 'mercado', origem: 'impulso' })];
 
   it('fills only empty layers, and the first rule wins a layer', () => {
-    expect(tagsFromRules(rules, { description: 'iFood' })).toEqual({ tipo: 'restaurante', origem: 'impulso' });
+    expect(tagsFromRules(rules, subject('iFood'))).toEqual({ tipo: 'restaurante', origem: 'impulso' });
   });
 
   it('keeps the tags the lançamento already has', () => {
-    expect(tagsFromRules(rules, { description: 'iFood' }, { tipo: 'outra' })).toEqual({ origem: 'impulso' });
+    expect(tagsFromRules(rules, subject('iFood'), { tipo: 'outra' })).toEqual({ origem: 'impulso' });
   });
 
   it('adds nothing when no rule matches', () => {
-    expect(tagsFromRules(rules, { description: 'Uber' })).toEqual({});
+    expect(tagsFromRules(rules, subject('Uber'))).toEqual({});
   });
 });
 

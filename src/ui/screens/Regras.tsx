@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { RulePreviewView, RuleView, TagLayerView } from '../../application/api-contract';
 import { dayLabel } from '../../domain/lancamentos';
-import { MAX_RULE_TEXT_LENGTH, MAX_RULES, type RuleCondition, type RuleDefinition } from '../../domain/rules';
+import { LANCAMENTO_TYPES, MAX_RULE_TEXT_LENGTH, MAX_RULES, type LancamentoType, type RuleCondition, type RuleDefinition } from '../../domain/rules';
 import { strings } from '../../domain/strings';
 import { cleanName, type TagAssignment } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
@@ -15,6 +15,10 @@ const amount = (item: { amountCents: number; currency: string; direction: 'in' |
 
 /** The text of a rule's first "descrição contém" condition, the only kind the screen edits today. */
 const containsText = (rule: Pick<RuleDefinition, 'conditions'>) => rule.conditions.find((c) => c.kind === 'descriptionContains')?.text ?? '';
+
+/** The type a rule's "tipo" condition asks for; null when it takes any type. */
+const ruleType = (rule: Pick<RuleDefinition, 'conditions'>): LancamentoType | null =>
+  rule.conditions.reduce<LancamentoType | null>((found, c) => (c.kind === 'type' ? c.type : found), null);
 
 /** The tags of a rule's "adicionar tags" actions, layer by layer. */
 function ruleTags(rule: Pick<RuleDefinition, 'actions'>): TagAssignment {
@@ -31,8 +35,8 @@ function tagNames(tags: TagAssignment, layers: readonly TagLayerView[]): string 
     .join(', ');
 }
 
-// Regras automáticas (docs/spec/regras-automaticas.md): "sempre que a descrição contiver X, aplique
-// as tags Y". Here I create, test, edit, reorder and delete rules, and run them over what is stored.
+// Regras automáticas (docs/spec/regras-automaticas.md): "sempre que a descrição contiver X (e o
+// lançamento for uma saída, entrada ou transferência), aplique as tags Y". Here I create, test, edit, reorder and delete rules, and run them over what is stored.
 export function Regras() {
   const rulesQuery = useQuery('rules', {}, ['rules', 'tags']);
   const layersQuery = useQuery('tagLayers', {}, ['tags']);
@@ -101,11 +105,12 @@ function Rule({ rule, layers, first, last }: { rule: RuleView; layers: readonly 
   }
 
   const tags = tagNames(ruleTags(rule), layers);
+  const type = ruleType(rule);
   return (
     <article className="tile">
       <div className="tile-head">
         <p className="rules-summary">
-          {text.summary(containsText(rule))}, {tags ? text.tagsSummary(tags) : <span className="tags-danger">{text.deletedTags}</span>}.
+          {text.summary(containsText(rule), type && text.typeSummary[type])}, {tags ? text.tagsSummary(tags) : <span className="tags-danger">{text.deletedTags}</span>}.
         </p>
         <div className="tags-actions">
           <button type="button" className="icon-button" aria-label={text.up} title={text.up} disabled={first} onClick={() => void run(backend.command('rule.move', { id: rule.id, direction: 'up' }))}>
@@ -137,17 +142,18 @@ function Rule({ rule, layers, first, last }: { rule: RuleView; layers: readonly 
   );
 }
 
-/** "Sempre que a descrição contiver <texto>, aplique as tags <uma por camada>", with a test button. */
+/** "Sempre que a descrição contiver <texto> e o lançamento for <tipo>, aplique as tags <uma por camada>", with a test button. */
 function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLayerView[]; initial?: RuleView; submit: string; onDone?: () => void }) {
   const { backend } = useServices();
   const [contains, setContains] = useState(initial ? containsText(initial) : '');
+  const [type, setType] = useState<LancamentoType | null>(initial ? ruleType(initial) : null);
   const [tags, setTags] = useState<TagAssignment>(initial ? ruleTags(initial) : {});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<RulePreviewView | null>(null);
   const [testing, setTesting] = useState(false);
 
-  const conditions: RuleCondition[] = [{ kind: 'descriptionContains', text: cleanName(contains) }];
+  const conditions: RuleCondition[] = [{ kind: 'descriptionContains', text: cleanName(contains) }, ...(type ? [{ kind: 'type', type } as const] : [])];
 
   function textProblem(): string | null {
     const cleaned = cleanName(contains);
@@ -181,6 +187,7 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
     if (onDone) onDone();
     else {
       setContains('');
+      setType(null);
       setTags({});
     }
   }
@@ -205,6 +212,23 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
           {testing ? text.testing : text.test}
         </button>
       </div>
+      <label className="lanc-category-field rules-type">
+        <span className="text-label muted">{text.type}</span>
+        <select
+          value={type ?? ''}
+          onChange={(e) => {
+            setType(LANCAMENTO_TYPES.find((t) => t === e.target.value) ?? null);
+            setPreview(null);
+          }}
+        >
+          <option value="">{text.types.any}</option>
+          {LANCAMENTO_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {text.types[t]}
+            </option>
+          ))}
+        </select>
+      </label>
       <fieldset className="rules-tags">
         <legend className="text-label muted">{text.then}</legend>
         {layers

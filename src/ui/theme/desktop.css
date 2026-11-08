@@ -1192,6 +1192,10 @@ a.lanc-row[aria-current='true'] {
   border: 0;
 }
 
+.rules-type {
+  max-width: var(--size-search);
+}
+
 .rules-tags legend {
   padding: 0;
   margin-bottom: var(--space-2);
