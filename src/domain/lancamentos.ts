@@ -95,19 +95,20 @@ export function sortByDay<T extends { day: string }>(items: readonly T[]): T[] {
 }
 
 /**
- * The list's filter, as the URL carries it (`?tipo=entradas`). Card bill payments show only under
- * `cartao` (and `todos`), never as saídas or entradas.
+ * The direction filter, as the URL carries it (`?tipo=saidas&tipo=cartao`): one or more kinds. Card
+ * bill payments show only under `cartao`, never as saídas or entradas. None chosen keeps everything.
  */
-export type DirectionFilter = 'todos' | 'saidas' | 'entradas' | 'cartao';
+export type DirectionFilter = 'saidas' | 'entradas' | 'cartao';
+export const DIRECTION_FILTERS: readonly DirectionFilter[] = ['saidas', 'entradas', 'cartao'];
 
-export function parseDirectionFilter(value: string | null): DirectionFilter {
-  return value === 'saidas' || value === 'entradas' || value === 'cartao' ? value : 'todos';
+export function parseDirectionFilters(values: readonly string[]): DirectionFilter[] {
+  return DIRECTION_FILTERS.filter((f) => values.includes(f));
 }
 
-export function matchesFilter(filter: DirectionFilter, item: { direction: Direction; cardPayment: boolean }): boolean {
-  if (filter === 'todos') return true;
-  if (filter === 'cartao') return item.cardPayment;
-  return !item.cardPayment && (filter === 'entradas') === (item.direction === 'in');
+export function matchesDirections(chosen: readonly DirectionFilter[], item: { direction: Direction; cardPayment: boolean }): boolean {
+  if (chosen.length === 0) return true;
+  const kind: DirectionFilter = item.cardPayment ? 'cartao' : item.direction === 'in' ? 'entradas' : 'saidas';
+  return chosen.includes(kind);
 }
 
 /** The account filter, as the URL carries it (`?conta=a&conta=b`); none chosen keeps every account. */
@@ -115,9 +116,20 @@ export function matchesAccounts(chosen: readonly string[], account: string): boo
   return chosen.length === 0 || chosen.includes(account);
 }
 
-/** The accounts chosen after a tap on one: adds it, or takes it out when it was chosen. */
-export function toggleAccount(chosen: readonly string[], account: string): string[] {
-  return chosen.includes(account) ? chosen.filter((a) => a !== account) : [...chosen, account];
+/** The key of "Vazio" in a filter: a lançamento with no value in that column. */
+export const EMPTY_CHOICE = 'vazio';
+
+/**
+ * A filter over a column that may be empty, as the URL carries it (`?categoria=<id>&categoria=vazio`):
+ * the values chosen, plus "Vazio" for the lançamentos without one. None chosen keeps every lançamento.
+ */
+export function matchesChoice(chosen: readonly string[], value: string | null): boolean {
+  return chosen.length === 0 || chosen.includes(value || EMPTY_CHOICE);
+}
+
+/** The choices after a tap on one: adds it, or takes it out when it was chosen. */
+export function toggleChoice(chosen: readonly string[], key: string): string[] {
+  return chosen.includes(key) ? chosen.filter((a) => a !== key) : [...chosen, key];
 }
 
 /**
@@ -134,7 +146,7 @@ export function clickSelection(
 ): string[] {
   const from = anchor === null ? -1 : order.indexOf(anchor);
   const to = order.indexOf(id);
-  if (!shift || from < 0 || to < 0) return toggleAccount(selection, id);
+  if (!shift || from < 0 || to < 0) return toggleChoice(selection, id);
   const range = order.slice(Math.min(from, to), Math.max(from, to) + 1);
   if (selection.includes(id)) return selection.filter((x) => !range.includes(x));
   return [...selection, ...range.filter((x) => !selection.includes(x))];

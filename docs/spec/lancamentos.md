@@ -27,7 +27,7 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 - Eu posso ligar mais três colunas: **Tipo** (Entrada, Saída ou Pgto. cartão), **Operação** (o tipo
   de operação e o meio de pagamento, como no painel) e **Quem pagou** (o nome que o banco mandou;
   vazio quando não mandou). *(2)*
-- O botão **Colunas**, no fim da linha dos filtros, mostra ou oculta cada coluna; a descrição e o
+- O botão **Colunas**, acima da tabela à direita, mostra ou oculta cada coluna; a descrição e o
   valor ficam sempre. A escolha fica guardada neste aparelho, não na URL, e continua quando eu troco
   de mês ou volto à tela. Na primeira vez, aparecem as colunas de sempre, sem as três novas. *(2)*
   Por quê: é uma preferência de como eu leio a tabela, não um filtro que eu queira mandar num link.
@@ -52,19 +52,28 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 
 ## Filtros
 
-- Os filtros ficam numa linha só: Todos, Saídas, Entradas e Cartão de crédito lado a lado, e um
-  botão para as contas e um para cada camada de tags, que abre a lista para eu escolher. "Limpar
-  filtros" desliga todos de uma vez. *(1)*
-- Eu posso mostrar todos, só as saídas, só as entradas ou só os pagamentos de cartão. Saídas e
-  Entradas não mostram pagamento de cartão; Todos mostra tudo. O filtro fica na URL
-  (`?tipo=cartao`) e continua quando eu troco de mês. *(1)*
-- Eu posso escolher uma ou mais contas e cartões para ver só os lançamentos deles; sem nenhum
-  escolhido, vejo todos. A escolha fica na URL (`?conta=...`) e continua quando eu troco de mês. *(1)*
-- Eu posso escolher uma ou mais tags, numa linha por camada. Tags da mesma camada somam (Mercado ou
-  Restaurante); camadas diferentes se cruzam (Mercado e Impulso). Sem nenhuma escolhida, vejo todos.
-  A escolha fica na URL (`?tag=...`) e continua quando eu troco de mês. *(2)*
-- Cada camada também tem a opção "Vazio", que mostra os lançamentos sem tag nessa camada; ela soma
-  com as tags da mesma camada como qualquer outra. *(2)*
+- Cada filtro fica no título da sua coluna, num funil ao lado do nome; o nome continua ordenando a
+  tabela. O funil fica cheio quando o filtro daquela coluna está ligado. "Limpar filtros", acima da
+  tabela, aparece com algum filtro ligado e desliga todos de uma vez. *(2)*
+- Todo filtro aceita várias escolhas e começa com "Todos", que desliga as escolhas daquele filtro.
+  Onde um lançamento pode não ter valor (categoria, operação, quem pagou e cada camada de tags), há
+  também "Vazio". *(2)*
+  Por quê: o tipo e a conta nunca ficam vazios, então ali "Vazio" não mostraria nada.
+- No Tipo (ou no Valor, enquanto a coluna Tipo está oculta), eu escolho entre saídas, entradas e
+  pagamentos de cartão, um ou mais. Saídas e Entradas
+  não mostram pagamento de cartão. A escolha fica na URL (`?tipo=saidas&tipo=cartao`) e continua
+  quando eu troco de mês. *(2)*
+- Na Descrição, eu escolho uma ou mais contas e cartões para ver só os lançamentos deles (aparece
+  quando há mais de uma conta). A escolha fica na URL (`?conta=...`) e continua quando eu troco de
+  mês. *(2)*
+- Na Categoria, eu escolho uma ou mais categorias do mês, ou "Vazio" para os lançamentos sem
+  categoria. A escolha fica na URL (`?categoria=...`) e continua quando eu troco de mês. *(2)*
+- Na Operação e em Quem pagou, eu escolho um ou mais dos valores do mês, ou "Vazio". A escolha fica
+  na URL (`?operacao=...`, `?pagador=...`) e continua quando eu troco de mês. *(2)*
+- Nas Tags, cada camada é um grupo. Tags da mesma camada somam (Mercado ou Restaurante); camadas
+  diferentes se cruzam (Mercado e Impulso). "Vazio" mostra os lançamentos sem tag naquela camada e
+  soma com as outras tags dela; "Todos" desliga só aquela camada. A escolha fica na URL (`?tag=...`)
+  e continua quando eu troco de mês. *(2)*
 
 ## Seleção
 
@@ -73,8 +82,8 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 - Com lançamentos selecionados, eu ponho ou tiro tags de todos de uma vez (`categorias.md`). *(2)*
 - Com lançamentos selecionados, eu mudo a categoria de todos de uma vez, ou volto à do Pluggy
   (`classificacao.md`). *(2)*
-- Enquanto há lançamentos selecionados, a barra de filtros dá lugar às ações com eles; limpar a
-  seleção traz os filtros de volta. *(2)*
+- Enquanto há lançamentos selecionados, as ações com eles aparecem acima da tabela, no lugar de
+  "Limpar filtros" e de Colunas; limpar a seleção os traz de volta. *(2)*
 
 ## Painel de detalhe
 

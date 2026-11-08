@@ -1,30 +1,32 @@
 // Finanças › Lançamentos (docs/spec/lancamentos.md): every transaction of the month, money out and
 // money in, newest day first; each row opens in the detail panel. The category shown is the one I
 // chose from Pluggy's tree, or else Pluggy's (docs/spec/classificacao.md); I change it in the panel or
-// on many lançamentos at once. My tags (docs/spec/categorias.md) show in their own column, filter the
-// list, and go on many lançamentos at once from the checkboxes. The Colunas menu shows or hides the
-// table's columns, remembered on this device.
+// on many lançamentos at once. My tags (docs/spec/categorias.md) show in their own column. Each column
+// title sorts the list and carries its filter; every filter takes several choices. The Colunas menu
+// shows or hides the table's columns, remembered on this device.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isBareDay } from '../../domain/calendar';
 import {
   columnTemplate,
+  DIRECTION_FILTERS,
+  EMPTY_CHOICE,
   dayCell,
   dayLabel,
   FIXED_COLUMNS,
   lancamentoKind,
   LIST_COLUMNS,
   matchesAccounts,
-  matchesFilter,
+  matchesChoice,
+  matchesDirections,
   nextSort,
   parseColumns,
-  parseDirectionFilter,
+  parseDirectionFilters,
   parseSort,
   sortLancamentos,
   sortParams,
-  toggleAccount,
+  toggleChoice,
   toggleColumn,
   totals,
-  type DirectionFilter,
   type ListColumn,
   type Sort,
   type SortColumn,
@@ -35,13 +37,13 @@ import { emptyTagKey, matchesTags } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
 import { useServices } from '../backend-context';
 import { Link } from '../router';
+import { Icon } from '../shell/Icon';
 import { tabPath, withQuery } from '../shell/routes';
 import { useQuery } from '../use-query';
 import type { LancamentoView, TagLayerView } from '../../application/api-contract';
 import { account, money, optionLabel, PLUGGY, SelectionActions, signed, TagCell, useSelection } from './LancamentoBatch';
 
 const text = strings.lancamentos;
-const FILTERS: readonly DirectionFilter[] = ['todos', 'saidas', 'entradas', 'cartao'];
 
 // The shown columns, remembered on this device only (a layout preference, not financial data).
 const COLUMNS_KEY = 'sinal-verde:lancamentos-colunas';
@@ -75,8 +77,12 @@ const COLUMN_LABEL: Record<ListColumn, string> = {
 
 const SORTABLE: readonly ListColumn[] = ['data', 'descricao', 'categoria', 'valor'];
 
+/** The URL lists that hold the filters. */
+type ListKey = 'tipo' | 'conta' | 'categoria' | 'tag' | 'operacao' | 'pagador';
+const LIST_KEYS: readonly ListKey[] = ['tipo', 'conta', 'categoria', 'tag', 'operacao', 'pagador'];
+
 /** The list path with the filter `key` set to `chosen` (`?conta=a&conta=b`, `?tag=x&tag=y`). */
-function withList(path: string, search: URLSearchParams, key: 'conta' | 'tag', chosen: readonly string[]): string {
+function withList(path: string, search: URLSearchParams, key: ListKey, chosen: readonly string[]): string {
   const params = new URLSearchParams(search);
   params.delete(key);
   for (const a of chosen) params.append(key, a);
@@ -84,12 +90,23 @@ function withList(path: string, search: URLSearchParams, key: 'conta' | 'tag', c
   return query ? `${path}?${query}` : path;
 }
 
-/** The list path with no direction, account or tag filter, keeping the sort. */
+/** The list path with no filter, keeping the sort. */
 function withoutFilters(path: string, search: URLSearchParams): string {
   const params = new URLSearchParams(search);
-  for (const key of ['tipo', 'conta', 'tag']) params.delete(key);
+  for (const key of LIST_KEYS) params.delete(key);
   const query = params.toString();
   return query ? `${path}?${query}` : path;
+}
+
+/** The distinct non-empty values of a column, sorted, plus chosen ones the month lacks (so I can take them out). */
+function valuesOf(items: readonly LancamentoView[], value: (item: LancamentoView) => string | null, chosen: readonly string[]): string[] {
+  const all = new Set<string>();
+  for (const item of items) {
+    const v = value(item);
+    if (v) all.add(v);
+  }
+  for (const c of chosen) if (c !== EMPTY_CHOICE) all.add(c);
+  return [...all].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 }
 
 function LoadError({ error, reload }: { error: string | undefined; reload: () => void }) {
@@ -104,24 +121,54 @@ function LoadError({ error, reload }: { error: string | undefined; reload: () =>
   );
 }
 
+interface FilterOption {
+  readonly key: string;
+  readonly label: string;
+  readonly checked: boolean;
+  readonly to: string;
+}
+
+/** A set of choices in a column's filter; with none checked, "Todos" is. */
+interface FilterGroup {
+  readonly title: string;
+  /** Where "Todos" goes: the list without this group's choices. */
+  readonly allTo: string;
+  readonly options: readonly FilterOption[];
+}
+
 export function Lancamentos({ month, search, selectedId }: { month: Month; search: URLSearchParams; selectedId: string | null }) {
   const query = useQuery('lancamentos', { month: monthKey(month) }, ['vault', 'tags', 'categories', 'rules']);
   const layersQuery = useQuery('tagLayers', {}, ['tags']);
   const layers = useMemo(() => layersQuery.data ?? [], [layersQuery.data]);
-  const filter = parseDirectionFilter(search.get('tipo'));
   const view = query.data?.month === monthKey(month) ? query.data : undefined;
+  const all = view?.items ?? [];
+  const chosenDirections = parseDirectionFilters(search.getAll('tipo'));
   const chosenAccounts = search.getAll('conta');
+  const chosenCategories = search.getAll('categoria');
   const chosenTags = search.getAll('tag');
+  const chosenOperations = search.getAll('operacao');
+  const chosenPayers = search.getAll('pagador');
   const layerOf = useMemo(() => new Map(layers.flatMap((l) => l.tags.map((t) => [t.id, l.id] as const))), [layers]);
-  const accounts = [...new Set([...(view?.items ?? []).map(account), ...chosenAccounts])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const accounts = [...new Set([...all.map(account), ...chosenAccounts])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  // The month's categories by name; a chosen one the month lacks still shows, so I can take it out.
+  const categoryNames = new Map<string, string>();
+  for (const item of all) if (item.categoryId) categoryNames.set(item.categoryId, item.category ?? item.categoryId);
+  for (const id of chosenCategories) if (id !== EMPTY_CHOICE && !categoryNames.has(id)) categoryNames.set(id, id);
+  const categories = [...categoryNames].sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
   const sort = parseSort(search.get('ordem'), search.get('sentido'));
   const items = sortLancamentos(
-    (view?.items ?? []).filter(
-      (item) => matchesFilter(filter, item) && matchesAccounts(chosenAccounts, account(item)) && matchesTags(chosenTags, layerOf, item.tags),
+    all.filter(
+      (item) =>
+        matchesDirections(chosenDirections, item) &&
+        matchesAccounts(chosenAccounts, account(item)) &&
+        matchesChoice(chosenCategories, item.categoryId) &&
+        matchesTags(chosenTags, layerOf, item.tags) &&
+        matchesChoice(chosenOperations, item.operation) &&
+        matchesChoice(chosenPayers, item.payer),
     ),
     sort,
   );
-  const filtering = filter !== 'todos' || chosenAccounts.length > 0 || chosenTags.length > 0;
+  const filtering = LIST_KEYS.some((key) => search.getAll(key).length > 0);
   const { selection, setSelection, selected, allSelected, clickBox, toggleAll } = useSelection(items, monthKey(month));
   // The totals follow the filters: they add up only what the list shows.
   const monthTotals = filtering ? totals(items) : (view?.totals ?? []);
@@ -138,6 +185,55 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
     const next = toggleColumn(columns, column);
     setColumns(next);
     saveColumns(next);
+  };
+
+  /** A filter group over the URL list `key`: "Todos" clears it, each option toggles its key. */
+  const group = (title: string, key: ListKey, chosen: readonly string[], options: readonly { key: string; label: string }[]): FilterGroup => ({
+    title,
+    allTo: withList(listPath, search, key, []),
+    options: options.map((o) => ({
+      key: o.key,
+      label: o.label,
+      checked: chosen.includes(o.key),
+      to: withList(listPath, search, key, toggleChoice(chosen, o.key)),
+    })),
+  });
+  /** A filter over a column that may be empty: "Vazio" first, then the month's values. */
+  const withEmpty = (title: string, key: ListKey, chosen: readonly string[], values: readonly string[]) =>
+    group(title, key, chosen, [{ key: EMPTY_CHOICE, label: text.emptyChoice }, ...values.map((v) => ({ key: v, label: v }))]);
+
+  // One group per layer; "Todos" in a layer clears only that layer's choices.
+  const tagFilter: FilterGroup[] = layers
+    .filter((layer) => layer.tags.length > 0)
+    .map((layer) => {
+      const inLayer = (id: string) => id === emptyTagKey(layer.id) || layerOf.get(id) === layer.id;
+      return {
+        title: layer.name,
+        allTo: withList(listPath, search, 'tag', chosenTags.filter((id) => !inLayer(id))),
+        options: [{ id: emptyTagKey(layer.id), name: text.emptyChoice }, ...layer.tags].map((tag) => ({
+          key: tag.id,
+          label: tag.name,
+          checked: chosenTags.includes(tag.id),
+          to: withList(listPath, search, 'tag', toggleChoice(chosenTags, tag.id)),
+        })),
+      };
+    });
+  const directionFilter = [group(text.kinds, 'tipo', chosenDirections, DIRECTION_FILTERS.map((f) => ({ key: f, label: text.filter[f] })))];
+  // Each column's filter. The kind filter sits on Tipo, or on Valor while Tipo is hidden.
+  const FILTERS: Record<ListColumn, readonly FilterGroup[]> = {
+    data: [],
+    descricao: accounts.length > 1 ? [group(text.accounts, 'conta', chosenAccounts, accounts.map((a) => ({ key: a, label: a })))] : [],
+    tipo: directionFilter,
+    categoria: [
+      group(text.categories, 'categoria', chosenCategories, [
+        { key: EMPTY_CHOICE, label: text.emptyChoice },
+        ...categories.map(([id, name]) => ({ key: id, label: name })),
+      ]),
+    ],
+    tags: tagFilter,
+    operacao: [withEmpty(text.columns.operation, 'operacao', chosenOperations, valuesOf(all, (i) => i.operation, chosenOperations))],
+    pagador: [withEmpty(text.columns.payer, 'pagador', chosenPayers, valuesOf(all, (i) => i.payer, chosenPayers))],
+    valor: columns.includes('tipo') ? [] : directionFilter,
   };
 
   return (
@@ -177,96 +273,38 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
           <SelectionActions selected={selected} layers={layers} onClear={() => setSelection([])} />
         ) : (
           <div className="lanc-toolbar" role="group" aria-label={text.filters}>
-            <div className="lanc-segmented" role="group" aria-label={text.directionFilter}>
-              {FILTERS.map((f) => (
-                <Link
-                  key={f}
-                  to={withQuery(listPath, search, { tipo: f === 'todos' ? null : f })}
-                  className="lanc-segment"
-                  aria-current={f === filter ? 'true' : undefined}
-                >
-                  {text.filter[f]}
-                </Link>
-              ))}
-            </div>
-            {accounts.length > 1 && (
-              <FilterMenu
-                label={text.accounts}
-                chosen={accounts.filter((a) => chosenAccounts.includes(a))}
-                clearTo={withList(listPath, search, 'conta', [])}
-                options={accounts.map((a) => ({
-                  key: a,
-                  label: a,
-                  checked: chosenAccounts.includes(a),
-                  to: withList(listPath, search, 'conta', toggleAccount(chosenAccounts, a)),
-                }))}
-              />
-            )}
-            {layers.map((layer) =>
-              layer.tags.length === 0 ? null : (
-                <FilterMenu
-                  key={layer.id}
-                  label={layer.name}
-                  chosen={[
-                    ...(chosenTags.includes(emptyTagKey(layer.id)) ? [text.emptyTag] : []),
-                    ...layer.tags.filter((t) => chosenTags.includes(t.id)).map((t) => t.name),
-                  ]}
-                  clearTo={withList(
-                    listPath,
-                    search,
-                    'tag',
-                    chosenTags.filter((id) => id !== emptyTagKey(layer.id) && layerOf.get(id) !== layer.id),
-                  )}
-                  options={[{ id: emptyTagKey(layer.id), name: text.emptyTag }, ...layer.tags].map((tag) => ({
-                    key: tag.id,
-                    label: tag.name,
-                    checked: chosenTags.includes(tag.id),
-                    to: withList(listPath, search, 'tag', toggleAccount(chosenTags, tag.id)),
-                  }))}
-                />
-              ),
-            )}
             {filtering && (
               <Link to={withoutFilters(listPath, search)} className="lanc-clear text-label">
                 {text.clearFilters}
               </Link>
             )}
-            <FilterMenu
-              className="lanc-menu--end"
-              label={text.columnsMenu}
-              listLabel={text.columnsMenuLabel}
-              chosen={[]}
-              options={LIST_COLUMNS.map((c) => ({
-                key: c,
-                label: COLUMN_LABEL[c],
-                checked: columns.includes(c),
-                disabled: FIXED_COLUMNS.includes(c),
-                onSelect: () => flipColumn(c),
-              }))}
-            />
+            <ColumnsMenu columns={columns} onFlip={flipColumn} />
           </div>
         )}
 
-        {items.length > 0 && (
+        {view && view.items.length > 0 && (
           <div className="lanc-line lanc-line--head">
             <input
               type="checkbox"
               className="lanc-check"
               aria-label={text.selectAll}
               checked={allSelected}
+              disabled={items.length === 0}
               ref={(box) => {
                 if (box) box.indeterminate = selected.length > 0 && !allSelected;
               }}
               onChange={toggleAll}
             />
             <div className="lanc-row lanc-row--head text-over muted" style={grid}>
-              {columns.map((c) =>
-                SORTABLE.includes(c) ? (
-                  <SortHeader key={c} column={c as SortColumn} sort={sort} path={listPath} search={search} />
-                ) : (
-                  <span key={c}>{COLUMN_LABEL[c]}</span>
-                ),
-              )}
+              {columns.map((c) => (
+                <HeadCell
+                  key={c}
+                  label={COLUMN_LABEL[c]}
+                  sort={SORTABLE.includes(c) ? { column: c as SortColumn, current: sort, path: listPath, search } : undefined}
+                  filter={FILTERS[c]}
+                  end={c === 'valor'}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -349,55 +387,44 @@ function Cell({ column, item, layers, today }: { column: ListColumn; item: Lanca
   }
 }
 
-/** A column title that sorts the list by it; a second click flips the direction. The sort lives in the URL. */
-function SortHeader({ column, sort, path, search }: { column: SortColumn; sort: Sort; path: string; search: URLSearchParams }) {
-  const active = sort.column === column;
-  const label = COLUMN_LABEL[column];
+/**
+ * A column title: the name sorts the list by it (a second click flips the direction; the sort lives in
+ * the URL), and the funnel opens the column's filter.
+ */
+function HeadCell({
+  label,
+  sort,
+  filter,
+  end,
+}: {
+  label: string;
+  sort?: { column: SortColumn; current: Sort; path: string; search: URLSearchParams };
+  filter: readonly FilterGroup[];
+  end: boolean;
+}) {
+  const active = sort !== undefined && sort.current.column === sort.column;
   return (
-    <Link
-      to={withQuery(path, search, sortParams(nextSort(sort, column)))}
-      className={`lanc-sort${column === 'valor' ? ' lanc-amount' : ''}`}
-      aria-label={text.sortBy(label)}
-      aria-current={active ? 'true' : undefined}
-    >
-      {label}
-      <span aria-hidden="true" className="lanc-sort-arrow">
-        {active ? (sort.direction === 'asc' ? '↑' : '↓') : '↕'}
-      </span>
-    </Link>
+    <div className={`lanc-head${end ? ' lanc-head--end' : ''}`}>
+      {sort ? (
+        <Link
+          to={withQuery(sort.path, sort.search, sortParams(nextSort(sort.current, sort.column)))}
+          className="lanc-sort"
+          aria-label={text.sortBy(label)}
+          aria-current={active ? 'true' : undefined}
+        >
+          <span className="lanc-head-label">{label}</span>
+          <Icon name={active && sort.current.direction === 'desc' ? 'sortDesc' : 'sortAsc'} />
+        </Link>
+      ) : (
+        <span className="lanc-head-label">{label}</span>
+      )}
+      {filter.length > 0 && <FilterMenu label={label} groups={filter} end={end} />}
+    </div>
   );
 }
 
-interface FilterOption {
-  readonly key: string;
-  readonly label: string;
-  readonly checked: boolean;
-  /** A filter choice is a link (the filter lives in the URL)... */
-  readonly to?: string;
-  /** ...a column choice, a button. */
-  readonly onSelect?: () => void;
-  readonly disabled?: boolean;
-}
-
-/**
- * A compact button that opens a list of choices: a filter's, or the columns'. The list stays open so
- * I can pick several.
- */
-function FilterMenu({
-  label,
-  listLabel,
-  chosen,
-  options,
-  clearTo,
-  className,
-}: {
-  label: string;
-  listLabel?: string;
-  chosen: readonly string[];
-  options: readonly FilterOption[];
-  clearTo?: string;
-  className?: string;
-}) {
+/** A menu that opens below its button and closes on a click outside or Escape. */
+function useDropdown() {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
@@ -417,59 +444,92 @@ function FilterMenu({
     };
   }, [open]);
 
-  const summary = chosen.length === 0 ? null : chosen.length === 1 ? chosen[0] : String(chosen.length);
+  return { open, toggle: () => setOpen((o) => !o), root };
+}
+
+/**
+ * A column's filter: a funnel that opens its choices, "Todos" first in each group. Each choice is a
+ * link (the filter lives in the URL), and the list stays open so I can pick several.
+ */
+function FilterMenu({ label, groups, end }: { label: string; groups: readonly FilterGroup[]; end: boolean }) {
+  const { open, toggle, root } = useDropdown();
+  const chosen = groups.flatMap((g) => g.options.filter((o) => o.checked).map((o) => o.label));
+  const name = chosen.length > 0 ? text.filteredBy(label, chosen.join(', ')) : text.filterBy(label);
   return (
-    <div className={className ? `lanc-menu ${className}` : 'lanc-menu'} ref={root}>
+    <div className="lanc-menu" ref={root}>
       <button
         type="button"
-        className="chip lanc-menu-button"
+        className="lanc-filter-button"
         aria-expanded={open}
         aria-current={chosen.length > 0 ? 'true' : undefined}
-        title={chosen.length > 0 ? `${label}: ${chosen.join(', ')}` : undefined}
-        onClick={() => setOpen((o) => !o)}
+        aria-label={name}
+        title={name}
+        onClick={toggle}
       >
-        <span>{label}</span>
-        {summary && <span className="lanc-menu-value">{summary}</span>}
-        <span aria-hidden="true">▾</span>
+        <Icon name="filter" />
       </button>
       {open && (
-        <div className="lanc-menu-list" role="group" aria-label={listLabel ?? text.filterBy(label)}>
-          {options.map((o) => {
-            const content = (
-              <>
-                <span aria-hidden="true" className="lanc-menu-check">
-                  {o.checked ? '✓' : ''}
-                </span>
-                <span className="lanc-menu-label">{o.label}</span>
-              </>
-            );
-            return o.onSelect ? (
-              <button
-                key={o.key}
-                type="button"
-                className="lanc-menu-item"
-                aria-pressed={o.checked}
-                disabled={o.disabled}
-                title={o.label}
-                onClick={o.onSelect}
-              >
-                {content}
-              </button>
-            ) : (
-              <Link key={o.key} to={o.to ?? ''} className="lanc-menu-item" aria-current={o.checked ? 'true' : undefined} title={o.label}>
-                {content}
-              </Link>
+        <div className={`lanc-menu-list${end ? ' lanc-menu-list--end' : ''}`} role="group" aria-label={text.filterBy(label)}>
+          {groups.map((g) => {
+            const none = !g.options.some((o) => o.checked);
+            return (
+              <div key={g.title} className="lanc-menu-group" role="group" aria-label={g.title}>
+                <p className="text-over muted lanc-menu-title">{g.title}</p>
+                <Link to={g.allTo} className="lanc-menu-item" aria-current={none ? 'true' : undefined}>
+                  <MenuCheck checked={none} label={text.allChoices} />
+                </Link>
+                {g.options.map((o) => (
+                  <Link key={o.key} to={o.to} className="lanc-menu-item" aria-current={o.checked ? 'true' : undefined} title={o.label}>
+                    <MenuCheck checked={o.checked} label={o.label} />
+                  </Link>
+                ))}
+              </div>
             );
           })}
-          {clearTo && chosen.length > 0 && (
-            <Link to={clearTo} className="lanc-menu-item lanc-menu-clear">
-              <span aria-hidden="true" className="lanc-menu-check" />
-              {text.clearChoice}
-            </Link>
-          )}
         </div>
       )}
     </div>
+  );
+}
+
+/** "Colunas": shows or hides each column; the fixed ones stay. */
+function ColumnsMenu({ columns, onFlip }: { columns: readonly ListColumn[]; onFlip: (column: ListColumn) => void }) {
+  const { open, toggle, root } = useDropdown();
+  return (
+    <div className="lanc-menu lanc-menu--end" ref={root}>
+      <button type="button" className="chip lanc-menu-button" aria-expanded={open} onClick={toggle}>
+        <span>{text.columnsMenu}</span>
+        <span aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="lanc-menu-list lanc-menu-list--end" role="group" aria-label={text.columnsMenuLabel}>
+          {LIST_COLUMNS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className="lanc-menu-item"
+              aria-pressed={columns.includes(c)}
+              disabled={FIXED_COLUMNS.includes(c)}
+              title={COLUMN_LABEL[c]}
+              onClick={() => onFlip(c)}
+            >
+              <MenuCheck checked={columns.includes(c)} label={COLUMN_LABEL[c]} />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MenuCheck({ checked, label }: { checked: boolean; label: string }) {
+  return (
+    <>
+      <span aria-hidden="true" className="lanc-menu-check">
+        {checked ? '✓' : ''}
+      </span>
+      <span className="lanc-menu-label">{label}</span>
+    </>
   );
 }
 

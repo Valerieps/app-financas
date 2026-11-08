@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_COLUMNS, DEFAULT_SORT, cardPaymentWithChoice, columnTemplate, lancamentoKind, parseColumns, toggleColumn, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesFilter, monthDays, nextSort, parseDirectionFilter, parseSort, sortByDay, sortLancamentos, sortParams, toggleAccount, totals } from './lancamentos';
+import { DEFAULT_COLUMNS, DEFAULT_SORT, EMPTY_CHOICE, cardPaymentWithChoice, columnTemplate, lancamentoKind, parseColumns, toggleColumn, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesChoice, matchesDirections, monthDays, nextSort, parseDirectionFilters, parseSort, sortByDay, sortLancamentos, sortParams, toggleChoice, totals } from './lancamentos';
 
 describe('direction', () => {
   it("follows Pluggy's type", () => {
@@ -57,38 +57,47 @@ describe('the account filter', () => {
     expect(matchesAccounts(['Nubank conta', 'Nubank cartão'], 'Nubank cartão')).toBe(true);
   });
 
-  it('adds an account on a tap and takes it out on the next', () => {
-    expect(toggleAccount(['a'], 'b')).toEqual(['a', 'b']);
-    expect(toggleAccount(['a', 'b'], 'a')).toEqual(['b']);
+  it('adds a choice on a tap and takes it out on the next', () => {
+    expect(toggleChoice(['a'], 'b')).toEqual(['a', 'b']);
+    expect(toggleChoice(['a', 'b'], 'a')).toEqual(['b']);
+  });
+});
+
+describe('a filter with Vazio', () => {
+  it('keeps everything when none is chosen, and Vazio keeps the ones without a value', () => {
+    expect(matchesChoice([], null)).toBe(true);
+    expect(matchesChoice(['05'], '05')).toBe(true);
+    expect(matchesChoice(['05'], null)).toBe(false);
+    expect(matchesChoice(['05', EMPTY_CHOICE], null)).toBe(true);
+    expect(matchesChoice([EMPTY_CHOICE], '05')).toBe(false);
+    expect(matchesChoice([EMPTY_CHOICE], '')).toBe(true);
   });
 });
 
 describe('the direction filter', () => {
-  it('reads the URL and defaults to everything', () => {
-    expect(parseDirectionFilter('entradas')).toBe('entradas');
-    expect(parseDirectionFilter('saidas')).toBe('saidas');
-    expect(parseDirectionFilter(null)).toBe('todos');
-    expect(parseDirectionFilter('x')).toBe('todos');
+  it('reads every kind in the URL and ignores the rest', () => {
+    expect(parseDirectionFilters(['cartao', 'x', 'saidas'])).toEqual(['saidas', 'cartao']);
+    expect(parseDirectionFilters([])).toEqual([]);
   });
 
-  it('keeps what matches', () => {
+  it('keeps what matches any chosen kind; none chosen keeps everything', () => {
     const plain = (direction: 'in' | 'out') => ({ direction, cardPayment: false });
-    expect(matchesFilter('todos', plain('in'))).toBe(true);
-    expect(matchesFilter('entradas', plain('in'))).toBe(true);
-    expect(matchesFilter('entradas', plain('out'))).toBe(false);
-    expect(matchesFilter('saidas', plain('out'))).toBe(true);
-    expect(matchesFilter('cartao', plain('out'))).toBe(false);
+    expect(matchesDirections([], plain('in'))).toBe(true);
+    expect(matchesDirections(['entradas'], plain('in'))).toBe(true);
+    expect(matchesDirections(['entradas'], plain('out'))).toBe(false);
+    expect(matchesDirections(['saidas', 'entradas'], plain('out'))).toBe(true);
+    expect(matchesDirections(['cartao'], plain('out'))).toBe(false);
   });
 
   it('isolates card bill payments under cartao', () => {
-    expect(parseDirectionFilter('cartao')).toBe('cartao');
     const paid = { direction: 'out' as const, cardPayment: true };
     const received = { direction: 'in' as const, cardPayment: true };
-    expect(matchesFilter('cartao', paid)).toBe(true);
-    expect(matchesFilter('cartao', received)).toBe(true);
-    expect(matchesFilter('saidas', paid)).toBe(false);
-    expect(matchesFilter('entradas', received)).toBe(false);
-    expect(matchesFilter('todos', paid)).toBe(true);
+    expect(matchesDirections(['cartao'], paid)).toBe(true);
+    expect(matchesDirections(['cartao'], received)).toBe(true);
+    expect(matchesDirections(['saidas'], paid)).toBe(false);
+    expect(matchesDirections(['entradas'], received)).toBe(false);
+    expect(matchesDirections(['saidas', 'cartao'], paid)).toBe(true);
+    expect(matchesDirections([], paid)).toBe(true);
   });
 });
 
