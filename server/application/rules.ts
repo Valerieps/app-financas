@@ -2,8 +2,10 @@
 // and running them over the stored lançamentos. The collection runs them on each new lançamento
 // (collect/transactions.ts) through `rules` and `ruleTagStatements`.
 import type { RulePreviewView, RuleView } from '../../src/application/api-contract';
-import { MAX_RULES, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition } from '../../src/domain/rules';
+import { direction } from '../../src/domain/lancamentos';
+import { MAX_RULES, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition, type RuleSubject } from '../../src/domain/rules';
 import { MAX_BULK_TAGGING, moveInOrder, type TagAssignment } from '../../src/domain/tags';
+import { CARD_PAYMENT, CATEGORY_ID, CHOICE_JOIN } from './category-choice';
 import { failure, nowIso, QueryError, type CommandResult, type Context } from './context';
 import { lancamentoViews } from './lancamentos';
 import { statement, type Statement } from './ports';
@@ -70,10 +72,31 @@ export function ruleTagStatements(byTransaction: ReadonlyMap<string, TagAssignme
 }
 
 /** The stored lançamentos a rule can look at, newest first. */
-const stored = (ctx: Context) =>
-  ctx.sql.all<{ id: string; description: string | null }>(
-    'SELECT id, description FROM transactions WHERE deleted_at IS NULL ORDER BY date DESC, first_seen_at DESC, id',
+async function stored(ctx: Context): Promise<(RuleSubject & { id: string })[]> {
+  const rows = await ctx.sql.all<{
+    id: string;
+    description: string | null;
+    type: string | null;
+    amount_cents: number;
+    account_type: string | null;
+    category_id: string | null;
+    card_payment: number;
+  }>(
+    `SELECT t.id, t.description, t.type, t.amount_cents, a.type AS account_type,
+            ${CATEGORY_ID} AS category_id, ${CARD_PAYMENT} AS card_payment
+     FROM transactions t
+     JOIN accounts a ON a.id = t.account_id
+     ${CHOICE_JOIN}
+     WHERE t.deleted_at IS NULL ORDER BY t.date DESC, t.first_seen_at DESC, t.id`,
   );
+  return rows.map((row) => ({
+    id: row.id,
+    description: row.description,
+    direction: direction(row.type, row.amount_cents, row.account_type),
+    categoryId: row.category_id,
+    cardPayment: row.card_payment === 1,
+  }));
+}
 
 export async function rulePreview(ctx: Context, input: Record<string, unknown>): Promise<RulePreviewView | QueryError> {
   const conditions = parseConditions(input.conditions);
