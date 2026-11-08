@@ -106,6 +106,20 @@ A base é a de `tokens.css`. Entraram: `--color-sunken` (trilho de barras), `--c
 `--color-impulso`, `--color-projetos`). Impulso é laranja para nunca parecer o vermelho do semáforo.
 A cor só aparece onde significa algo; as cores dos bancos (roxo Nubank) só como ponto pequeno.
 
+**Direção "Sinal" (escolhida em 8 nov 2026).** O app é grafite frio e quieto, para que o semáforo
+seja a única coisa colorida da tela:
+
+- A barra lateral é a moldura escura da janela (`--color-frame*`); o item ativo tem um filete verde.
+- A logo é um semáforo de três luzes com a de baixo acesa (`--color-light-*`), na barra lateral e no
+  ícone do app.
+- O bloco-resposta (o Livre do dia, quando existir) é preenchido com a cor da sua luz, com o número
+  em Display (`--color-ok-solid`, `--color-warn-solid`, `--color-risk-solid`). O vermelho é suave,
+  nunca cheio, e vem com a forma ■ e uma frase neutra.
+- Botão desativado é cinza chapado (`--color-disabled`), nunca a cor da marca desbotada.
+- Toda tela fora de um módulo (Regras, Categorias, Cofre) começa com o mesmo cabeçalho
+  (`PageHeader`); todo bloco é um `.tile`. `src/ui/theme/tokens.test.ts` recusa cor, tamanho ou
+  peso de fonte escritos fora de `tokens.css`.
+
 ## Prompt para a sessão de implementação
 
 Para abrir numa sessão nova, quando a fase do desktop estiver definida:

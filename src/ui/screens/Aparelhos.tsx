@@ -46,9 +46,9 @@ export function Aparelhos({ onChanged }: { onChanged: () => void }) {
   }
 
   return (
-    <section className="card stack">
+    <section className="tile">
       <header>
-        <h2>{strings.aparelhos.title}</h2>
+        <h2 className="text-title">{strings.aparelhos.title}</h2>
         <p className="muted">{strings.aparelhos.subtitle}</p>
       </header>
 
