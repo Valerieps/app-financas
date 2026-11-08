@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { applyReplacements, categoryFromRules, containsExpression, describeWithRules, lancamentoType, parseConditions, parseRule, replaceText, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
+import { applyReplacements, categoryFromRules, containsExpression, describeWithRules, lancamentoType, operationLabel, parseConditions, parseRule, replaceText, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
 
 const contains = (text: string) => ({ kind: 'descriptionContains', text }) as const;
-const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, payer: null, ...more });
+const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, payer: null, operation: null, ...more });
 const rule = (text: string, tags: Record<string, string>): RuleDefinition => ({ conditions: [contains(text)], actions: [{ kind: 'addTags', tags }] });
 
 describe('textKey', () => {
@@ -162,6 +162,28 @@ describe('replacing text in the description', () => {
     expect(parseRule({ conditions: [contains('ifood')], actions: [replace('ifood', '')] })?.actions).toEqual([replace('ifood', '')]);
     expect(parseRule({ conditions: [contains('x')], actions: [replace(' ', 'y')] })).toBeNull();
     expect(parseRule({ conditions: [contains('x')], actions: [replace('x', 'y'.repeat(101))] })).toBeNull();
+  });
+});
+
+describe('"operação" condition', () => {
+  const operation = (text: string) => ({ kind: 'operationContains', text }) as const;
+
+  it('joins the operation type and the payment method as the detail shows them', () => {
+    expect(operationLabel('PIX', 'PIX')).toBe('PIX · PIX');
+    expect(operationLabel(null, 'TED')).toBe('TED');
+    expect(operationLabel(undefined, null)).toBeNull();
+  });
+
+  it('matches the operação of any lançamento, like the description text', () => {
+    expect(ruleMatches({ conditions: [operation('pix | ted')] }, subject('x', { operation: 'PIX · PIX' }))).toBe(true);
+    expect(ruleMatches({ conditions: [operation('pix')] }, subject('x', { direction: 'in', operation: 'TRANSFERENCIA_MESMA_INSTITUICAO · PIX' }))).toBe(true);
+    expect(ruleMatches({ conditions: [operation('boleto')] }, subject('x', { operation: 'PIX' }))).toBe(false);
+    expect(ruleMatches({ conditions: [operation('pix')] }, subject('x'))).toBe(false);
+  });
+
+  it('is read and cleaned like the description text', () => {
+    expect(parseConditions([{ kind: 'operationContains', text: '  PIX  ' }])).toEqual([operation('PIX')]);
+    expect(parseConditions([{ kind: 'operationContains', text: '& pix' }])).toBeNull();
   });
 });
 

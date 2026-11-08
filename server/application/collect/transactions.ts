@@ -3,7 +3,7 @@
 // change), so a fetched transaction is recognized by its Pluggy id or else by its match key.
 // Nothing is deleted: a transaction that disappears gets deleted_at, and may come back.
 import { cardPaymentWithChoice, direction, isCardPayment } from '../../../src/domain/lancamentos';
-import { categoryFromRules, tagsFromRules } from '../../../src/domain/rules';
+import { categoryFromRules, operationLabel, tagsFromRules } from '../../../src/domain/rules';
 import { matchKeys, toCents } from '../../../src/domain/vault';
 import { nowIso, type Context } from '../context';
 import { descriptionStatements, storedDescriptions } from '../descriptions';
@@ -151,6 +151,7 @@ export async function syncTransactions(ctx: Context, account: AccountRef, option
     categoryId: chosen ?? transaction.categoryId ?? null,
     cardPayment: cardPaymentWithChoice(columns.card_payment === 1, chosen),
     payer: transaction.paymentData?.payer?.name ?? null,
+    operation: operationLabel(transaction.operationType, transaction.paymentData?.paymentMethod),
   });
 
   for (const transaction of fetched) {

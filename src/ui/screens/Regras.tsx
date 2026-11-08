@@ -18,17 +18,19 @@ const amount = (item: { amountCents: number; currency: string; direction: 'in' |
 type ConditionField = keyof typeof text.conditionFields;
 type ActionField = keyof typeof text.actionFields;
 
-const conditionField = (c: RuleCondition): ConditionField => (c.kind === 'descriptionContains' ? 'description' : c.kind === 'payerContains' ? 'payer' : 'type');
+const CONDITION_FIELDS: Record<RuleCondition['kind'], ConditionField> = { descriptionContains: 'description', type: 'type', payerContains: 'payer', operationContains: 'operation' };
+const conditionField = (c: RuleCondition): ConditionField => CONDITION_FIELDS[c.kind];
 const actionField = (a: RuleAction): ActionField => (a.kind === 'addTags' ? 'tags' : a.kind === 'setCategory' ? 'category' : 'description');
 
 function newCondition(field: ConditionField): RuleCondition {
   if (field === 'description') return { kind: 'descriptionContains', text: '' };
   if (field === 'payer') return { kind: 'payerContains', text: '' };
+  if (field === 'operation') return { kind: 'operationContains', text: '' };
   return { kind: 'type', type: 'out' };
 }
 
 /** The conditions that compare a text, with "|" and "&". */
-const isTextCondition = (c: RuleCondition): c is Extract<RuleCondition, { text: string }> => c.kind === 'descriptionContains' || c.kind === 'payerContains';
+const isTextCondition = (c: RuleCondition): c is Extract<RuleCondition, { text: string }> => 'text' in c;
 
 /** A new action; "substitua" starts with the first "descrição contém" text, when it is a plain one. */
 function newAction(field: ActionField, conditions: readonly RuleCondition[]): RuleAction {
@@ -42,6 +44,7 @@ function newAction(field: ActionField, conditions: readonly RuleCondition[]): Ru
 function conditionSummary(c: RuleCondition): string {
   if (c.kind === 'descriptionContains') return text.containsSummary(c.text);
   if (c.kind === 'payerContains') return text.payerSummary(c.text);
+  if (c.kind === 'operationContains') return text.operationSummary(c.text);
   return text.typeLine(text.typeSummary[c.type]);
 }
 
@@ -54,9 +57,12 @@ function containsProblem(raw: string, empty: string): string | null {
   return null;
 }
 
+const PLACEHOLDERS = { descriptionContains: text.whenPlaceholder, payerContains: text.payerPlaceholder, operationContains: text.operationPlaceholder };
+const TEXT_NEEDED = { descriptionContains: text.needText, payerContains: text.needPayer, operationContains: text.needOperation };
+
 function conditionsProblem(conditions: readonly RuleCondition[]): string | null {
   for (const c of conditions) {
-    const problem = isTextCondition(c) ? containsProblem(c.text, c.kind === 'payerContains' ? text.needPayer : text.needText) : null;
+    const problem = isTextCondition(c) ? containsProblem(c.text, TEXT_NEEDED[c.kind]) : null;
     if (problem) return problem;
   }
   return null;
@@ -310,7 +316,7 @@ function RuleForm({ layers, categories, initial, submit, onDone }: { initial?: R
                 <span className="text-caption muted">&nbsp;</span>
                 <input
                   value={condition.text}
-                  placeholder={condition.kind === 'payerContains' ? text.payerPlaceholder : text.whenPlaceholder}
+                  placeholder={PLACEHOLDERS[condition.kind]}
                   onChange={(e) => changeCondition(index, { kind: condition.kind, text: e.target.value })}
                   autoComplete="off"
                   autoFocus={Boolean(initial) && index === 0}

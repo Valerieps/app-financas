@@ -15,7 +15,7 @@ O que ainda não está pronto.
 | Lançamentos: filtros por categoria, importância, caixinha, valor e texto; outras ações em lote; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
 | Tags no painel de detalhe | 2 | `spec/categorias.md` | Marcar em lote, filtrar, a coluna Tags e o gráfico por tag já existem; responder o "Em aberto" de `spec/categorias.md` |
 | Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | Mudar a categoria de um lançamento (da árvore do Pluggy), à mão ou por regra, já existe; falta a lista própria de categorias, a importância, regras que mudam a importância, a oferta de criar regra e o Gemini |
-| Regras automáticas: outras condições e ações | 2 | `spec/regras-automaticas.md` | "Descrição contém", "o tipo é" e "quem pagou contém" → "aplique as tags", "substitua na descrição" e "mude a categoria" já existem; responder o "Em aberto". O botão Testar ainda não mostra a categoria que a regra poria || Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
+| Regras automáticas: outras condições e ações | 2 | `spec/regras-automaticas.md` | "Descrição contém", "o tipo é", "quem pagou contém" e "a operação contém" → "aplique as tags", "substitua na descrição" e "mude a categoria" já existem; responder o "Em aberto". O botão Testar ainda não mostra a categoria que a regra poria || Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
 | Bot do Telegram | 3 | `spec/telegram.md` | |
 | Tela do semáforo | 3 | `spec/tela-do-celular.md` | |

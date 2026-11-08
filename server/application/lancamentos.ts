@@ -7,6 +7,7 @@ import { cardPaymentWithChoice, direction, monthDays, totals } from '../../src/d
 import { parseMonth } from '../../src/domain/month';
 import { categoryOptions, type CategoryOption } from '../../src/domain/pluggy-categories';
 import { MAX_BULK_TAGGING, type TagAssignment, type TagChange } from '../../src/domain/tags';
+import { operationLabel } from '../../src/domain/rules';
 import { addDays } from '../../src/domain/vault';
 import { CATEGORY_ID, CHOICE_JOIN } from './category-choice';
 import { descriptionStatements, ruleSubjects, storedDescriptions } from './descriptions';
@@ -166,8 +167,7 @@ export async function lancamento(ctx: Context, id: unknown): Promise<LancamentoD
     date: row.date,
     descriptionOriginal: view.description !== row.bank_description ? row.bank_description : null,
     descriptionRaw: row.description_raw && row.description_raw !== row.bank_description ? row.description_raw : null,
-    operationType: row.operation_type,
-    paymentMethod: row.payment_method,
+    operation: operationLabel(row.operation_type, row.payment_method),
     counterpart: view.direction === 'in' ? row.payer_name : row.receiver_name,
     cardDigits: row.card_number,
     firstSeenAt: row.first_seen_at,

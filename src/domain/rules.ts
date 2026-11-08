@@ -1,7 +1,7 @@
 // Automatic rules, "if this then that" (docs/spec/regras-automaticas.md): each rule has conditions,
 // all of which must hold, and actions. The conditions are "the description contains a text" (with
-// "|" for or and "&" for and), "the lançamento is of this type" and "who paid an entrada contains a
-// text"; the actions are "add these tags", "replace this text in the description" and "set the
+// "|" for or and "&" for and), "the lançamento is of this type", "who paid an entrada contains a
+// text" and "the operação contains a text"; the actions are "add these tags", "replace this text in the description" and "set the
 // category". New kinds join the unions below (ADR-009).
 import type { Direction } from './lancamentos';
 import { assignTag, cleanName, type TagAssignment } from './tags';
@@ -24,7 +24,8 @@ export const LANCAMENTO_TYPES: readonly LancamentoType[] = ['out', 'in', 'transf
 export type RuleCondition =
   | { readonly kind: 'descriptionContains'; readonly text: string }
   | { readonly kind: 'type'; readonly type: LancamentoType }
-  | { readonly kind: 'payerContains'; readonly text: string };
+  | { readonly kind: 'payerContains'; readonly text: string }
+  | { readonly kind: 'operationContains'; readonly text: string };
 export type RuleAction =
   | { readonly kind: 'addTags'; readonly tags: TagAssignment }
   | { readonly kind: 'replaceInDescription'; readonly find: string; readonly replace: string }
@@ -44,6 +45,13 @@ export interface RuleSubject {
   readonly cardPayment: boolean;
   /** Who paid, as the bank names them; null when the bank sent no name. */
   readonly payer: string | null;
+  /** The operação as the detail shows it (`operationLabel`); null when the bank sent none. */
+  readonly operation: string | null;
+}
+
+/** The operação: Pluggy's operation type and payment method, like "PIX · PIX"; null when neither came. */
+export function operationLabel(operationType: string | null | undefined, paymentMethod: string | null | undefined): string | null {
+  return [operationType, paymentMethod].filter(Boolean).join(' · ') || null;
 }
 
 /** Pluggy's top categories for money moved between accounts: "Same person transfer" and "Transfers". */
@@ -90,6 +98,8 @@ export function conditionHolds(condition: RuleCondition, subject: RuleSubject): 
     case 'payerContains':
       // Money coming in, even a "transferência recebida" (Pluggy files those under Transfers).
       return subject.direction === 'in' && !subject.cardPayment && subject.payer !== null && descriptionContains(subject.payer, condition.text);
+    case 'operationContains':
+      return subject.operation !== null && descriptionContains(subject.operation, condition.text);
   }
 }
 
@@ -197,7 +207,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(v
 
 function parseCondition(raw: unknown): RuleCondition | null {
   if (!isRecord(raw)) return null;
-  if ((raw.kind === 'descriptionContains' || raw.kind === 'payerContains') && typeof raw.text === 'string') {
+  if ((raw.kind === 'descriptionContains' || raw.kind === 'payerContains' || raw.kind === 'operationContains') && typeof raw.text === 'string') {
     const text = cleanName(raw.text);
     if (!text || [...text].length > MAX_RULE_TEXT_LENGTH || !containsExpression(text)) return null;
     return { kind: raw.kind, text };

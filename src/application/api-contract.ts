@@ -133,8 +133,8 @@ export interface LancamentoDetailView extends LancamentoView {
   /** The bank's own text, when it differs from the bank's description. */
   readonly descriptionRaw: string | null;
   /** Pluggy's operation type (PIX, CARTAO, TED...). */
-  readonly operationType: string | null;
-  readonly paymentMethod: string | null;
+  /** Pluggy's operation type and payment method, as `operationLabel` joins them. */
+  readonly operation: string | null;
   /** Who paid, on money in; who received, on money out. */
   readonly counterpart: string | null;
   readonly cardDigits: string | null;

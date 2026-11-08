@@ -3,7 +3,7 @@
 // rerun the rules: every write that can change a description (a rule, my category choice, a
 // lançamento the collection stores) adds these statements to its own batch.
 import { cardPaymentWithChoice, direction } from '../../src/domain/lancamentos';
-import { describeWithRules, type RuleDefinition, type RuleSubject } from '../../src/domain/rules';
+import { describeWithRules, operationLabel, type RuleDefinition, type RuleSubject } from '../../src/domain/rules';
 import { nowIso, type Context } from './context';
 import { statement, type Statement } from './ports';
 import { storedRules } from './rule-store';
@@ -32,9 +32,12 @@ export async function ruleSubjects(ctx: Context, options: { ids?: readonly strin
     chosen_category_id: string | null;
     card_payment: number;
     payer_name: string | null;
+    operation_type: string | null;
+    payment_method: string | null;
   }>(
     `SELECT t.id, t.description, t.type, t.amount_cents, a.type AS account_type, t.pluggy_category_id,
-            tc.pluggy_category_id AS chosen_category_id, t.card_payment, p.payer_name
+            tc.pluggy_category_id AS chosen_category_id, t.card_payment, p.payer_name,
+            t.operation_type, p.payment_method
      FROM transactions t
      JOIN accounts a ON a.id = t.account_id
      LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
@@ -52,6 +55,7 @@ export async function ruleSubjects(ctx: Context, options: { ids?: readonly strin
       categoryId: chosen ?? row.pluggy_category_id,
       cardPayment: cardPaymentWithChoice(row.card_payment === 1, chosen),
       payer: row.payer_name,
+      operation: operationLabel(row.operation_type, row.payment_method),
       categoryChosen: chosen !== null,
     };
   });
