@@ -66,10 +66,6 @@ export function Regras() {
           </button>
         </p>
       )}
-      {loaded && rules.length === 0 && <p className="muted">{text.empty}</p>}
-      {rules.map((rule, index) => (
-        <Rule key={rule.id} rule={rule} layers={layers} first={index === 0} last={index === rules.length - 1} />
-      ))}
       {loaded &&
         (layers.every((l) => l.tags.length === 0) ? (
           <p className="muted">{text.noLayers}</p>
@@ -81,6 +77,10 @@ export function Regras() {
             <RuleForm layers={layers} submit={text.create} />
           </article>
         ))}
+      {loaded && rules.length === 0 && <p className="muted">{text.empty}</p>}
+      {rules.map((rule, index) => (
+        <Rule key={rule.id} rule={rule} layers={layers} first={index === 0} last={index === rules.length - 1} />
+      ))}
       {loaded && rules.length > 0 && <ApplyRules />}
     </section>
   );
@@ -109,9 +109,11 @@ function Rule({ rule, layers, first, last }: { rule: RuleView; layers: readonly 
   return (
     <article className="tile">
       <div className="tile-head">
-        <p className="rules-summary">
-          {text.summary(containsText(rule), type && text.typeSummary[type])}, {tags ? text.tagsSummary(tags) : <span className="tags-danger">{text.deletedTags}</span>}.
-        </p>
+        <div className="rules-summary">
+          <p className="rules-summary-main">{tags ? text.tagsSummary(tags) : <span className="tags-danger">{text.deletedTags}</span>}</p>
+          <p>{text.summary(containsText(rule))}</p>
+          {type && <p>{text.typeLine(text.typeSummary[type])}</p>}
+        </div>
         <div className="tags-actions">
           <button type="button" className="icon-button" aria-label={text.up} title={text.up} disabled={first} onClick={() => void run(backend.command('rule.move', { id: rule.id, direction: 'up' }))}>
             ↑
@@ -194,7 +196,7 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
   }
 
   return (
-    <form className="stack" onSubmit={(event) => void onSubmit(event)}>
+    <form className="stack rules-form" onSubmit={(event) => void onSubmit(event)}>
       <div className="tags-form">
         <label className="grow">
           <span className="text-label muted">{text.when}</span>
@@ -210,27 +212,27 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
           />
           <span className="text-caption muted">{text.whenHint}</span>
         </label>
+        <label className="lanc-category-field rules-type">
+          <span className="text-label muted">{text.type}</span>
+          <select
+            value={type ?? ''}
+            onChange={(e) => {
+              setType(LANCAMENTO_TYPES.find((t) => t === e.target.value) ?? null);
+              setPreview(null);
+            }}
+          >
+            <option value="">{text.types.any}</option>
+            {LANCAMENTO_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {text.types[t]}
+              </option>
+            ))}
+          </select>
+        </label>
         <button type="button" className="secondary" disabled={testing || !cleanName(contains)} onClick={() => void test()}>
           {testing ? text.testing : text.test}
         </button>
       </div>
-      <label className="lanc-category-field rules-type">
-        <span className="text-label muted">{text.type}</span>
-        <select
-          value={type ?? ''}
-          onChange={(e) => {
-            setType(LANCAMENTO_TYPES.find((t) => t === e.target.value) ?? null);
-            setPreview(null);
-          }}
-        >
-          <option value="">{text.types.any}</option>
-          {LANCAMENTO_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {text.types[t]}
-            </option>
-          ))}
-        </select>
-      </label>
       <fieldset className="rules-tags">
         <legend className="text-label muted">{text.then}</legend>
         {layers

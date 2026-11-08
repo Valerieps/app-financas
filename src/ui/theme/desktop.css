@@ -1180,7 +1180,27 @@ a.lanc-row[aria-current='true'] {
 
 /* Regras automáticas (docs/spec/regras-automaticas.md) */
 .rules-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.rules-summary p {
   margin: 0;
+}
+
+.rules-summary-main {
+  font-weight: 700;
+}
+
+/* The form's dropdowns look like the description field: grey, rounded border */
+.rules-form select {
+  font: inherit;
+  padding: 0 var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .rules-tags {
@@ -1193,7 +1213,8 @@ a.lanc-row[aria-current='true'] {
 }
 
 .rules-type {
-  max-width: var(--size-search);
+  flex: 0 0 auto;
+  min-width: var(--size-search);
 }
 
 .rules-tags legend {
