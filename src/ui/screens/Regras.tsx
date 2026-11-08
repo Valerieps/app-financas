@@ -107,6 +107,7 @@ export function Regras() {
           </button>
         </p>
       )}
+      {loaded && rules.length > 0 && <ApplyRules />}
       {loaded &&
         (rules.length >= MAX_RULES ? (
           <p className="muted">{text.limit}</p>
@@ -120,7 +121,6 @@ export function Regras() {
       {rules.map((rule, index) => (
         <Rule key={rule.id} rule={rule} layers={layers} first={index === 0} last={index === rules.length - 1} />
       ))}
-      {loaded && rules.length > 0 && <ApplyRules />}
     </section>
   );
 }
@@ -433,7 +433,7 @@ function ApplyRules() {
     setMessage(null);
     const result = await backend.command('rules.apply', {});
     setRunning(false);
-    setMessage(result.ok ? text.apply.done(result.value.tagged) : strings.genericError);
+    setMessage(result.ok ? text.apply.done(result.value.tagged, result.value.described) : strings.genericError);
   }
 
   return (
