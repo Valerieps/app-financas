@@ -674,6 +674,7 @@ export function LancamentoDetail({ id }: { id: string }) {
     [d.operation, [item.operationType, item.paymentMethod].filter(Boolean).join(' · ') || null],
     [d.installment, item.installment && `${item.installment.number}/${item.installment.total}`],
     [d.card, item.cardDigits],
+    [d.originalDescription, item.descriptionOriginal],
     [d.bankText, item.descriptionRaw],
     [d.firstSeen, dateTime(item.firstSeenAt)],
   ];

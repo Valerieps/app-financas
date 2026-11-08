@@ -3,28 +3,15 @@
 // (collect/transactions.ts) through `rules` and `ruleTagStatements`.
 import type { RulePreviewView, RuleView } from '../../src/application/api-contract';
 import { direction } from '../../src/domain/lancamentos';
-import { MAX_RULES, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition, type RuleSubject } from '../../src/domain/rules';
+import { applyReplacements, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition, type RuleSubject } from '../../src/domain/rules';
 import { MAX_BULK_TAGGING, moveInOrder, type TagAssignment } from '../../src/domain/tags';
 import { CARD_PAYMENT, CATEGORY_ID, CHOICE_JOIN } from './category-choice';
 import { failure, nowIso, QueryError, type CommandResult, type Context } from './context';
 import { lancamentoViews } from './lancamentos';
 import { statement, type Statement } from './ports';
-
-interface RuleRow {
-  id: string;
-  position: number;
-  conditions_json: string;
-  actions_json: string;
-}
+import { definition, ruleRows } from './rule-store';
 
 const CHANGED = ['rules'] as const;
-
-const ruleRows = (ctx: Context) => ctx.sql.all<RuleRow>('SELECT id, position, conditions_json, actions_json FROM rules ORDER BY position, created_at');
-
-/** A stored rule as the domain reads it; null if the stored JSON no longer parses. */
-function definition(row: RuleRow): RuleDefinition | null {
-  return parseRule({ conditions: JSON.parse(row.conditions_json), actions: JSON.parse(row.actions_json) });
-}
 
 async function tagExists(ctx: Context): Promise<(layerId: string, tagId: string) => boolean> {
   const tags = await ctx.sql.all<{ id: string; layer_id: string }>('SELECT id, layer_id FROM tags');
@@ -98,11 +85,17 @@ async function stored(ctx: Context): Promise<(RuleSubject & { id: string })[]> {
   }));
 }
 
+/**
+ * The stored lançamentos the conditions match, newest first. With `actions`, each one's description
+ * shows what this rule would make of it, after the saved rules.
+ */
 export async function rulePreview(ctx: Context, input: Record<string, unknown>): Promise<RulePreviewView | QueryError> {
   const conditions = parseConditions(input.conditions);
-  if (!conditions) return new QueryError('invalid');
+  const actions = input.actions === undefined ? [] : parseActions(input.actions);
+  if (!conditions || !actions) return new QueryError('invalid');
   const matched = (await stored(ctx)).filter((t) => ruleMatches({ conditions }, t));
-  return { total: matched.length, items: await lancamentoViews(ctx, matched.slice(0, RULE_PREVIEW_LIMIT).map((t) => t.id)) };
+  const items = await lancamentoViews(ctx, matched.slice(0, RULE_PREVIEW_LIMIT).map((t) => t.id));
+  return { total: matched.length, items: items.map((item) => ({ ...item, description: applyReplacements(actions, item.description) })) };
 }
 
 /** `invalid` for a malformed rule or one whose tags do not exist. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { containsExpression, lancamentoType, parseConditions, parseRule, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
+import { applyReplacements, containsExpression, describeWithRules, lancamentoType, parseConditions, parseRule, replaceText, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
 
 const contains = (text: string) => ({ kind: 'descriptionContains', text }) as const;
 const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, ...more });
@@ -123,5 +123,44 @@ describe('parseRule', () => {
   it('reads conditions alone for the test button', () => {
     expect(parseConditions([contains('Uber ')])).toEqual([contains('Uber')]);
     expect(parseConditions('uber')).toBeNull();
+  });
+});
+
+describe('replacing text in the description', () => {
+  const replace = (find: string, by: string) => ({ kind: 'replaceInDescription', find, replace: by }) as const;
+
+  it('replaces only the piece, every time, without case, accents or repeated spaces', () => {
+    expect(replaceText('IFOOD *Restaurante', 'ifood', 'iFood')).toBe('iFood *Restaurante');
+    expect(replaceText('Padaría do Zé, padaria', 'padaria', 'Padaria')).toBe('Padaria do Zé, Padaria');
+    expect(replaceText('PIX  ENVIADO Ana', 'pix enviado', 'Pix para')).toBe('Pix para Ana');
+    expect(replaceText('Uber Trip', 'ifood', 'x')).toBe('Uber Trip');
+  });
+
+  it('tidies the spaces left and gives null when nothing is left', () => {
+    expect(replaceText('PIX * Ana', '*', '')).toBe('PIX Ana');
+    expect(replaceText('IFOOD', 'ifood', '')).toBeNull();
+  });
+
+  it("applies a rule's replacements in order", () => {
+    expect(applyReplacements([replace('ifood', 'iFood'), { kind: 'addTags', tags: {} }, replace('*', '·')], 'IFOOD *Loja')).toBe('iFood ·Loja');
+    expect(applyReplacements([replace('x', 'y')], null)).toBeNull();
+  });
+
+  it("chains the matching rules in order, their conditions looking at the bank's description", () => {
+    const rules: RuleDefinition[] = [
+      { conditions: [contains('ifood')], actions: [replace('ifood', 'iFood')] },
+      { conditions: [contains('ifood')], actions: [replace('*', '-')] },
+      { conditions: [contains('rappi')], actions: [replace('loja', 'X')] },
+    ];
+    expect(describeWithRules(rules, subject('IFOOD *Loja'))).toBe('iFood -Loja');
+    expect(describeWithRules(rules, subject('Uber'))).toBe('Uber');
+    expect(describeWithRules(rules, subject(null))).toBeNull();
+  });
+
+  it('is read and cleaned like the other actions', () => {
+    expect(parseRule({ conditions: [contains('ifood')], actions: [replace(' IFOOD ', '  iFood ')] })).toEqual({ conditions: [contains('ifood')], actions: [replace('IFOOD', '  iFood ')] });
+    expect(parseRule({ conditions: [contains('ifood')], actions: [replace('ifood', '')] })?.actions).toEqual([replace('ifood', '')]);
+    expect(parseRule({ conditions: [contains('x')], actions: [replace(' ', 'y')] })).toBeNull();
+    expect(parseRule({ conditions: [contains('x')], actions: [replace('x', 'y'.repeat(101))] })).toBeNull();
   });
 });

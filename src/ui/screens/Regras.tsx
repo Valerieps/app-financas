@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { RulePreviewView, RuleView, TagLayerView } from '../../application/api-contract';
 import { dayLabel } from '../../domain/lancamentos';
-import { containsExpression, LANCAMENTO_TYPES, MAX_RULE_TEXT_LENGTH, MAX_RULES, type LancamentoType, type RuleCondition, type RuleDefinition } from '../../domain/rules';
+import { containsExpression, LANCAMENTO_TYPES, MAX_RULE_PARTS, MAX_RULE_TEXT_LENGTH, MAX_RULES, type RuleAction, type RuleCondition, type RuleDefinition } from '../../domain/rules';
 import { strings } from '../../domain/strings';
 import { cleanName, type TagAssignment } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
@@ -13,17 +13,58 @@ const text = strings.regras;
 const amount = (item: { amountCents: number; currency: string; direction: 'in' | 'out' }) =>
   `${item.direction === 'in' ? '+ ' : ''}${(item.amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: item.currency })}`;
 
-/** The text of a rule's first "descrição contém" condition, the only kind the screen edits today. */
-const containsText = (rule: Pick<RuleDefinition, 'conditions'>) => rule.conditions.find((c) => c.kind === 'descriptionContains')?.text ?? '';
+type ConditionField = keyof typeof text.conditionFields;
+type ActionField = keyof typeof text.actionFields;
 
-/** The type a rule's "tipo" condition asks for; null when it takes any type. */
-const ruleType = (rule: Pick<RuleDefinition, 'conditions'>): LancamentoType | null =>
-  rule.conditions.reduce<LancamentoType | null>((found, c) => (c.kind === 'type' ? c.type : found), null);
+const conditionField = (c: RuleCondition): ConditionField => (c.kind === 'descriptionContains' ? 'description' : 'type');
+const actionField = (a: RuleAction): ActionField => (a.kind === 'addTags' ? 'tags' : 'description');
 
-/** The tags of a rule's "adicionar tags" actions, layer by layer. */
-function ruleTags(rule: Pick<RuleDefinition, 'actions'>): TagAssignment {
-  return Object.assign({}, ...rule.actions.map((a) => (a.kind === 'addTags' ? a.tags : {}))) as TagAssignment;
+const newCondition = (field: ConditionField): RuleCondition => (field === 'description' ? { kind: 'descriptionContains', text: '' } : { kind: 'type', type: 'out' });
+
+/** A new action; "substitua" starts with the first "descrição contém" text, when it is a plain one. */
+function newAction(field: ActionField, conditions: readonly RuleCondition[]): RuleAction {
+  if (field === 'tags') return { kind: 'addTags', tags: {} };
+  const contains = conditions.find((c) => c.kind === 'descriptionContains');
+  const find = contains && !/[|&]/.test(contains.text) ? cleanName(contains.text) : '';
+  return { kind: 'replaceInDescription', find, replace: '' };
 }
+
+function conditionSummary(c: RuleCondition): string {
+  return c.kind === 'descriptionContains' ? text.containsSummary(c.text) : text.typeLine(text.typeSummary[c.type]);
+}
+
+/** Why the description text of a "contém" condition cannot be saved; null when it can. */
+function containsProblem(raw: string): string | null {
+  const cleaned = cleanName(raw);
+  if (!cleaned) return text.needText;
+  if ([...cleaned].length > MAX_RULE_TEXT_LENGTH) return text.textTooLong;
+  if (!containsExpression(cleaned)) return text.loneOperator;
+  return null;
+}
+
+function conditionsProblem(conditions: readonly RuleCondition[]): string | null {
+  for (const c of conditions) {
+    const problem = c.kind === 'descriptionContains' ? containsProblem(c.text) : null;
+    if (problem) return problem;
+  }
+  return null;
+}
+
+function actionsProblem(actions: readonly RuleAction[]): string | null {
+  for (const a of actions) {
+    if (a.kind === 'addTags' && Object.keys(a.tags).length === 0) return text.needTag;
+    if (a.kind === 'replaceInDescription') {
+      if (!cleanName(a.find)) return text.needFind;
+      if ([...cleanName(a.find)].length > MAX_RULE_TEXT_LENGTH || [...a.replace].length > MAX_RULE_TEXT_LENGTH) return text.textTooLong;
+    }
+  }
+  return null;
+}
+
+const cleanConditions = (conditions: readonly RuleCondition[]): RuleCondition[] =>
+  conditions.map((c) => (c.kind === 'descriptionContains' ? { kind: c.kind, text: cleanName(c.text) } : c));
+const cleanActions = (actions: readonly RuleAction[]): RuleAction[] =>
+  actions.map((a) => (a.kind === 'replaceInDescription' ? { kind: a.kind, find: cleanName(a.find), replace: a.replace } : a));
 
 /** "Tipo: Restaurante, Origem: Impulso", in the layers' order. */
 function tagNames(tags: TagAssignment, layers: readonly TagLayerView[]): string {
@@ -35,8 +76,8 @@ function tagNames(tags: TagAssignment, layers: readonly TagLayerView[]): string 
     .join(', ');
 }
 
-// Regras automáticas (docs/spec/regras-automaticas.md): "sempre que a descrição contiver X (e o
-// lançamento for uma saída, entrada ou transferência), aplique as tags Y". Here I create, test, edit, reorder and delete rules, and run them over what is stored.
+// Regras automáticas (docs/spec/regras-automaticas.md): "sempre que <campo> <condição>, faça
+// <campo> <consequência>". Here I create, test, edit, reorder and delete rules, and run them over what is stored.
 export function Regras() {
   const rulesQuery = useQuery('rules', {}, ['rules', 'tags']);
   const layersQuery = useQuery('tagLayers', {}, ['tags']);
@@ -67,9 +108,7 @@ export function Regras() {
         </p>
       )}
       {loaded &&
-        (layers.every((l) => l.tags.length === 0) ? (
-          <p className="muted">{text.noLayers}</p>
-        ) : rules.length >= MAX_RULES ? (
+        (rules.length >= MAX_RULES ? (
           <p className="muted">{text.limit}</p>
         ) : (
           <article className="tile">
@@ -104,15 +143,21 @@ function Rule({ rule, layers, first, last }: { rule: RuleView; layers: readonly 
     );
   }
 
-  const tags = tagNames(ruleTags(rule), layers);
-  const type = ruleType(rule);
   return (
     <article className="tile">
       <div className="tile-head">
         <div className="rules-summary">
-          <p className="rules-summary-main">{tags ? text.tagsSummary(tags) : <span className="tags-danger">{text.deletedTags}</span>}</p>
-          <p>{text.summary(containsText(rule))}</p>
-          {type && <p>{text.typeLine(text.typeSummary[type])}</p>}
+          {rule.actions.map((action, index) => {
+            const tags = action.kind === 'addTags' ? tagNames(action.tags, layers) : '';
+            return (
+              <p key={index} className="rules-summary-main">
+                {action.kind === 'replaceInDescription' ? text.replaceSummary(action.find, action.replace.trim()) : tags ? text.tagsSummary(tags) : <span className="tags-danger">{text.deletedTags}</span>}
+              </p>
+            );
+          })}
+          {rule.conditions.map((condition, index) => (
+            <p key={index}>{text.whenLine(conditionSummary(condition), index === 0)}</p>
+          ))}
         </div>
         <div className="tags-actions">
           <button type="button" className="icon-button" aria-label={text.up} title={text.up} disabled={first} onClick={() => void run(backend.command('rule.move', { id: rule.id, direction: 'up' }))}>
@@ -144,33 +189,42 @@ function Rule({ rule, layers, first, last }: { rule: RuleView; layers: readonly 
   );
 }
 
-/** "Sempre que a descrição contiver <texto> e o lançamento for <tipo>, aplique as tags <uma por camada>", with a test button. */
+/**
+ * "Sempre que <campo> <condição> (e ...), faça <campo> <consequência> (e ...)", with a test button.
+ * Each condition and each consequence is a row: the field it looks at or changes, then what.
+ */
 function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLayerView[]; initial?: RuleView; submit: string; onDone?: () => void }) {
   const { backend } = useServices();
-  const [contains, setContains] = useState(initial ? containsText(initial) : '');
-  const [type, setType] = useState<LancamentoType | null>(initial ? ruleType(initial) : null);
-  const [tags, setTags] = useState<TagAssignment>(initial ? ruleTags(initial) : {});
+  const hasTags = layers.some((layer) => layer.tags.length > 0);
+  const actionFields = (Object.keys(text.actionFields) as ActionField[]).filter((field) => field !== 'tags' || hasTags);
+  const blank = (): { conditions: RuleCondition[]; actions: RuleAction[] } => {
+    const conditions = [newCondition('description')];
+    return { conditions, actions: [newAction(actionFields[0], conditions)] };
+  };
+  const [conditions, setConditionsState] = useState<RuleCondition[]>(() => (initial ? [...initial.conditions] : blank().conditions));
+  const [actions, setActions] = useState<RuleAction[]>(() => (initial ? [...initial.actions] : blank().actions));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<RulePreviewView | null>(null);
   const [testing, setTesting] = useState(false);
 
-  const conditions: RuleCondition[] = [{ kind: 'descriptionContains', text: cleanName(contains) }, ...(type ? [{ kind: 'type', type } as const] : [])];
-
-  function textProblem(): string | null {
-    const cleaned = cleanName(contains);
-    if (!cleaned) return text.needText;
-    if ([...cleaned].length > MAX_RULE_TEXT_LENGTH) return text.textTooLong;
-    if (!containsExpression(cleaned)) return text.loneOperator;
-    return null;
+  function setConditions(next: RuleCondition[]) {
+    setConditionsState(next);
+    setPreview(null);
   }
+  const changeCondition = (index: number, c: RuleCondition) => setConditions(conditions.map((old, i) => (i === index ? c : old)));
+  function changeActions(next: RuleAction[]) {
+    setActions(next);
+    setPreview(null);
+  }
+  const changeAction = (index: number, a: RuleAction) => changeActions(actions.map((old, i) => (i === index ? a : old)));
 
   async function test() {
-    const problem = textProblem();
+    const problem = conditionsProblem(conditions);
     if (problem) return setError(problem);
     setError(null);
     setTesting(true);
-    const result = await backend.query('rulePreview', { conditions });
+    const result = await backend.query('rulePreview', { conditions: cleanConditions(conditions), ...(actionsProblem(actions) ? {} : { actions: cleanActions(actions) }) });
     setTesting(false);
     if (result.ok) setPreview(result.value);
     else setError(strings.genericError);
@@ -178,10 +232,10 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    const problem = textProblem() ?? (Object.keys(tags).length === 0 ? text.needTag : null);
+    const problem = conditionsProblem(conditions) ?? actionsProblem(actions);
     if (problem) return setError(problem);
     setBusy(true);
-    const rule: RuleDefinition = { conditions, actions: [{ kind: 'addTags', tags }] };
+    const rule: RuleDefinition = { conditions: cleanConditions(conditions), actions: cleanActions(actions) };
     const result = initial ? await backend.command('rule.update', { id: initial.id, ...rule }) : await backend.command('rule.create', rule);
     setBusy(false);
     if (!result.ok) return setError(strings.genericError);
@@ -189,73 +243,146 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
     setPreview(null);
     if (onDone) onDone();
     else {
-      setContains('');
-      setType(null);
-      setTags({});
+      const fresh = blank();
+      setConditionsState(fresh.conditions);
+      setActions(fresh.actions);
     }
   }
 
+  const removeButton = (onClick: () => void, disabled: boolean) => (
+    <button type="button" className="icon-button" aria-label={text.removeRow} title={text.removeRow} disabled={disabled} onClick={onClick}>
+      ×
+    </button>
+  );
+
   return (
     <form className="stack rules-form" onSubmit={(event) => void onSubmit(event)}>
-      <div className="tags-form">
-        <label className="grow">
-          <span className="text-label muted">{text.when}</span>
-          <input
-            value={contains}
-            placeholder={text.whenPlaceholder}
-            onChange={(e) => {
-              setContains(e.target.value);
-              setPreview(null);
-            }}
-            autoComplete="off"
-            autoFocus={Boolean(initial)}
-          />
-          <span className="text-caption muted">{text.whenHint}</span>
-        </label>
-        <label className="lanc-category-field rules-type">
-          <span className="text-label muted">{text.type}</span>
-          <select
-            value={type ?? ''}
-            onChange={(e) => {
-              setType(LANCAMENTO_TYPES.find((t) => t === e.target.value) ?? null);
-              setPreview(null);
-            }}
-          >
-            <option value="">{text.types.any}</option>
-            {LANCAMENTO_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {text.types[t]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="button" className="secondary" disabled={testing || !cleanName(contains)} onClick={() => void test()}>
-          {testing ? text.testing : text.test}
-        </button>
-      </div>
-      <fieldset className="rules-tags">
-        <legend className="text-label muted">{text.then}</legend>
-        {layers
-          .filter((layer) => layer.tags.length > 0)
-          .map((layer) => (
-            <label key={layer.id} className="lanc-category-field">
-              <span className="text-caption muted">{layer.name}</span>
-              <select
-                value={tags[layer.id] ?? ''}
-                onChange={(e) => {
-                  const { [layer.id]: _old, ...rest } = tags;
-                  setTags(e.target.value ? { ...rest, [layer.id]: e.target.value } : rest);
-                }}
-              >
-                <option value="">{text.noTag}</option>
-                {layer.tags.map((tag) => (
-                  <option key={tag.id} value={tag.id}>
-                    {tag.name}
+      <fieldset className="rules-group">
+        <legend className="text-label muted">{text.when}</legend>
+        {conditions.map((condition, index) => (
+          <div key={index} className="rules-row">
+            <label className="lanc-category-field">
+              <span className="text-caption muted">{text.field}</span>
+              <select value={conditionField(condition)} onChange={(e) => changeCondition(index, newCondition(e.target.value as ConditionField))}>
+                {(Object.keys(text.conditionFields) as ConditionField[]).map((field) => (
+                  <option key={field} value={field}>
+                    {text.conditionFields[field]}
                   </option>
                 ))}
               </select>
             </label>
-          ))}
+            <label className="lanc-category-field">
+              <span className="text-caption muted">{text.condition}</span>
+              <select defaultValue={condition.kind}>
+                <option value={condition.kind}>{condition.kind === 'descriptionContains' ? text.operators.contains : text.operators.is}</option>
+              </select>
+            </label>
+            {condition.kind === 'descriptionContains' ? (
+              <label className="grow">
+                <span className="text-caption muted">&nbsp;</span>
+                <input
+                  value={condition.text}
+                  placeholder={text.whenPlaceholder}
+                  onChange={(e) => changeCondition(index, { kind: 'descriptionContains', text: e.target.value })}
+                  autoComplete="off"
+                  autoFocus={Boolean(initial) && index === 0}
+                />
+              </label>
+            ) : (
+              <label className="lanc-category-field rules-type">
+                <span className="text-caption muted">&nbsp;</span>
+                <select value={condition.type} onChange={(e) => changeCondition(index, { kind: 'type', type: LANCAMENTO_TYPES.find((t) => t === e.target.value) ?? 'out' })}>
+                  {LANCAMENTO_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {text.types[t]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {removeButton(() => setConditions(conditions.filter((_, i) => i !== index)), conditions.length === 1)}
+          </div>
+        ))}
+        {conditions.some((c) => c.kind === 'descriptionContains') && <p className="text-caption muted">{text.whenHint}</p>}
+        <div className="tags-actions">
+          {conditions.length < MAX_RULE_PARTS && (
+            <button type="button" className="button-outline" onClick={() => setConditions([...conditions, newCondition('description')])}>
+              {text.addCondition}
+            </button>
+          )}
+          <button type="button" className="secondary" disabled={testing || conditionsProblem(conditions) !== null} onClick={() => void test()}>
+            {testing ? text.testing : text.test}
+          </button>
+        </div>
+      </fieldset>
+      <fieldset className="rules-group">
+        <legend className="text-label muted">{text.then}</legend>
+        {actions.map((action, index) => (
+          <div key={index} className="rules-row">
+            <label className="lanc-category-field">
+              <span className="text-caption muted">{text.field}</span>
+              <select value={actionField(action)} onChange={(e) => changeAction(index, newAction(e.target.value as ActionField, conditions))}>
+                {actionFields.map((field) => (
+                  <option key={field} value={field}>
+                    {text.actionFields[field]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="lanc-category-field">
+              <span className="text-caption muted">{text.consequence}</span>
+              <select defaultValue={action.kind}>
+                <option value={action.kind}>{action.kind === 'addTags' ? text.operators.addTags : text.operators.replace}</option>
+              </select>
+            </label>
+            {action.kind === 'addTags' ? (
+              <div className="rules-tags">
+                {layers
+                  .filter((layer) => layer.tags.length > 0)
+                  .map((layer) => (
+                    <label key={layer.id} className="lanc-category-field">
+                      <span className="text-caption muted">{layer.name}</span>
+                      <select
+                        value={action.tags[layer.id] ?? ''}
+                        onChange={(e) => {
+                          const { [layer.id]: _old, ...rest } = action.tags;
+                          changeAction(index, { kind: 'addTags', tags: e.target.value ? { ...rest, [layer.id]: e.target.value } : rest });
+                        }}
+                      >
+                        <option value="">{text.noTag}</option>
+                        {layer.tags.map((tag) => (
+                          <option key={tag.id} value={tag.id}>
+                            {tag.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ))}
+              </div>
+            ) : (
+              <>
+                <label className="grow">
+                  <span className="text-caption muted">&nbsp;</span>
+                  <input value={action.find} placeholder={text.findPlaceholder} onChange={(e) => changeAction(index, { ...action, find: e.target.value })} autoComplete="off" />
+                </label>
+                <span className="rules-by">{text.replaceBy}</span>
+                <label className="grow">
+                  <span className="text-caption muted">&nbsp;</span>
+                  <input value={action.replace} placeholder={text.replacePlaceholder} onChange={(e) => changeAction(index, { ...action, replace: e.target.value })} autoComplete="off" />
+                </label>
+              </>
+            )}
+            {removeButton(() => changeActions(actions.filter((_, i) => i !== index)), actions.length === 1)}
+          </div>
+        ))}
+        {actions.some((a) => a.kind === 'replaceInDescription') && <p className="text-caption muted">{text.replaceHint}</p>}
+        {actions.length < MAX_RULE_PARTS && (
+          <div>
+            <button type="button" className="button-outline" onClick={() => changeActions([...actions, newAction(actionFields[0], conditions)])}>
+              {text.addAction}
+            </button>
+          </div>
+        )}
       </fieldset>
       {preview && <Preview preview={preview} />}
       {error && (

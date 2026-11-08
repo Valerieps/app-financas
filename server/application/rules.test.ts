@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { RulePreviewView, RuleView } from '../../src/application/api-contract';
+import type { LancamentoDetailView, LancamentosView, RulePreviewView, RuleView } from '../../src/application/api-contract';
 import { fakePluggy, testContext } from '../testing/node-sql';
 import { ITEM_ID, routes } from '../testing/pluggy-fixtures';
 import { AppService } from './app-service';
@@ -120,6 +120,24 @@ describe('automatic rules', () => {
     expect(await ids('out')).toEqual(['out']);
     expect(await ids('in')).toEqual(['in']);
     expect(await ids('transfer')).toEqual(['transfer']);
+  });
+
+  it("replace a piece of the description wherever lançamentos are shown, keeping the bank's", async () => {
+    const { sql, query, create } = await setup();
+    await seedTransactions(sql, [
+      ['if', '2026-10-10T12:00:00.000Z', 'IFOOD *Loja'],
+      ['uber', '2026-10-11T12:00:00.000Z', 'Uber Trip'],
+    ]);
+    const replaceRule = { conditions: [{ kind: 'descriptionContains', text: 'ifood' }], actions: [{ kind: 'replaceInDescription', find: 'ifood *', replace: 'iFood ' }] };
+    const preview = await query<RulePreviewView>('rulePreview', replaceRule);
+    expect(preview.items.map((i) => i.description)).toEqual(['iFood Loja']);
+    await create('rule.create', replaceRule);
+    const list = await query<LancamentosView>('lancamentos', { month: '2026-10' });
+    expect(list.items.map((i) => i.description)).toEqual(['Uber Trip', 'iFood Loja']);
+    expect(await query<LancamentoDetailView>('lancamento', { id: 'if' })).toMatchObject({ description: 'iFood Loja', descriptionOriginal: 'IFOOD *Loja' });
+    expect(await query<LancamentoDetailView>('lancamento', { id: 'uber' })).toMatchObject({ description: 'Uber Trip', descriptionOriginal: null });
+    const stored = await sql.all<{ description: string }>("SELECT description FROM transactions WHERE id = 'if'");
+    expect(stored).toEqual([{ description: 'IFOOD *Loja' }]);
   });
 
   it('fill only the empty layers of the stored lançamentos when applied, the first rule winning', async () => {

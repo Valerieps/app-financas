@@ -93,6 +93,7 @@ export interface LancamentoView {
   readonly id: string;
   /** The Brasília day (yyyy-mm-dd). */
   readonly day: string;
+  /** The bank's description, with the texts my rules replace already replaced. */
   readonly description: string | null;
   /** The category that counts, translated: the one I chose, or else Pluggy's; null when it has none. */
   readonly category: string | null;
@@ -127,7 +128,9 @@ export interface LancamentosView {
 export interface LancamentoDetailView extends LancamentoView {
   /** When it happened, as Pluggy sent it. */
   readonly date: string;
-  /** The bank's own text, when it differs from the description. */
+  /** The bank's description, when a rule changed it. */
+  readonly descriptionOriginal: string | null;
+  /** The bank's own text, when it differs from the bank's description. */
   readonly descriptionRaw: string | null;
   /** Pluggy's operation type (PIX, CARTAO, TED...). */
   readonly operationType: string | null;

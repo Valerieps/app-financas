@@ -15,7 +15,7 @@ O que ainda não está pronto.
 | Lançamentos: filtros por categoria, importância, caixinha, valor e texto; outras ações em lote; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
 | Tags no painel de detalhe e gráficos por tag | 2 | `spec/categorias.md` | Marcar em lote, filtrar e a coluna Tags já existem; responder o "Em aberto" de `spec/categorias.md` |
 | Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | Mudar a categoria de um lançamento (da árvore do Pluggy) já existe; falta a lista própria de categorias, a importância, regras que mudam categoria e importância, a oferta de criar regra e o Gemini |
-| Regras automáticas: outras condições e ações | 2 | `spec/regras-automaticas.md` | "Descrição contém" e "o tipo é" → "aplique as tags" já existem; responder o "Em aberto" |
+| Regras automáticas: outras condições e ações | 2 | `spec/regras-automaticas.md` | "Descrição contém" e "o tipo é" → "aplique as tags" e "substitua na descrição" já existem; responder o "Em aberto" |
 | Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
 | Bot do Telegram | 3 | `spec/telegram.md` | |
@@ -53,6 +53,10 @@ O que ainda não está pronto.
 - [ ] A média conta só os meses que têm algum gasto (`spec/graficos.md`).
 - [ ] Nas regras, transferência é a categoria do grupo Transferências do Pluggy (04 e 05) ou um
   pagamento de fatura; o resto é entrada ou saída pelo sentido (`spec/regras-automaticas.md`).
+- [ ] A substituição na descrição vale na hora de mostrar, sem mexer na descrição do banco, para
+  todos os lançamentos; as condições olham sempre a descrição do banco; o pedaço é achado sem
+  maiúsculas nem acentos e trocado todas as vezes; o detalhe mostra a descrição do banco
+  (`spec/regras-automaticas.md`).
 - [ ] O nome de uma camada ou tag tem até 40 caracteres, e maiúsculas e acentos não distinguem nomes (`spec/categorias.md`).
 - [ ] As tags aparecem em ordem alfabética, e as camadas sobem e descem uma posição por vez (`spec/categorias.md`).
 - [ ] Excluir uma tag ou camada tira as tags dos lançamentos, depois de uma confirmação (`spec/categorias.md`).
