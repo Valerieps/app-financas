@@ -1,11 +1,11 @@
 // The desktop's addresses (docs/rascunhos/arquitetura-desktop.md, "Endereços"): every screen has a
 // URL, and the detail panel opens over a list at /financas/<list>/:id.
 
-export type ModuleId = 'inicio' | 'financas' | 'investimentos' | 'patrimonio' | 'categorias' | 'cofre' | 'ajustes';
+export type ModuleId = 'inicio' | 'financas' | 'investimentos' | 'patrimonio' | 'regras' | 'categorias' | 'cofre' | 'ajustes';
 export type FinancasTab = 'visao-geral' | 'lancamentos' | 'cartao' | 'graficos' | 'metas' | 'caixinhas';
 
 export const MODULES: readonly ModuleId[] = ['inicio', 'financas', 'investimentos', 'patrimonio'];
-export const SYSTEM_MODULES: readonly ModuleId[] = ['categorias', 'cofre', 'ajustes'];
+export const SYSTEM_MODULES: readonly ModuleId[] = ['regras', 'categorias', 'cofre', 'ajustes'];
 export const FINANCAS_TABS: readonly FinancasTab[] = ['visao-geral', 'lancamentos', 'cartao', 'graficos', 'metas', 'caixinhas'];
 
 export type Route =

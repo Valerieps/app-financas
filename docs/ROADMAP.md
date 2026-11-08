@@ -14,7 +14,8 @@ O que ainda não está pronto.
 | Casamento e órfãos | 2 | `spec/gastos-provisorios.md` | |
 | Lançamentos: filtros por categoria, importância, caixinha, valor e texto; outras ações em lote; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
 | Tags no painel de detalhe e gráficos por tag | 2 | `spec/categorias.md` | Marcar em lote, filtrar e a coluna Tags já existem; responder o "Em aberto" de `spec/categorias.md` |
-| Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | Mudar a categoria de um lançamento (da árvore do Pluggy) já existe; falta a lista própria de categorias, a importância, as regras e o Gemini |
+| Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | Mudar a categoria de um lançamento (da árvore do Pluggy) já existe; falta a lista própria de categorias, a importância, regras que mudam categoria e importância, a oferta de criar regra e o Gemini |
+| Regras automáticas: outras condições e ações | 2 | `spec/regras-automaticas.md` | "Descrição contém" → "aplique as tags" já existe; responder o "Em aberto" |
 | Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
 | Bot do Telegram | 3 | `spec/telegram.md` | |

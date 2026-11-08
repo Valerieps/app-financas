@@ -24,6 +24,7 @@ Um termo, um sentido. Estes nomes valem para os textos da interface e para as do
 - **Órfão:** gasto provisório que não casou com nenhuma transação do Pluggy dentro da janela. (`spec/gastos-provisorios.md`)
 - **Pagamento de cartão:** o débito na conta que paga a fatura do cartão e o crédito que entra no cartão por ele. Fica fora dos totais de Lançamentos. (`spec/lancamentos.md`)
 - **Projetos especiais:** a importância que fica fora do orçamento. (`spec/classificacao.md`)
+- **Regra automática:** "sempre que <condições>, aplique <ações>"; roda sozinha nos lançamentos novos e só preenche o que está vazio. (`spec/regras-automaticas.md`)
 - **Renovação:** a autorização anual do Meu Pluggy, que precisa ser renovada para a coleta continuar. (`spec/cofre-de-dados.md`)
 - **Retrato do dia:** os saldos e as posições de investimento guardados uma vez por dia. (`spec/cofre-de-dados.md`)
 - **Semáforo:** verde, amarelo ou vermelho, conforme o gasto de hoje comparado com o Livre do dia. (`spec/livre-do-dia.md`)

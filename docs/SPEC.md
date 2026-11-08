@@ -49,7 +49,8 @@ do Pluggy apaga.
 | [spec/lancamentos.md](spec/lancamentos.md) | A lista de lançamentos do mês no desktop, os filtros e o painel de detalhe |
 | [spec/gastos-provisorios.md](spec/gastos-provisorios.md) | Notificações do celular, `/gastei` e o casamento com o Pluggy |
 | [spec/categorias.md](spec/categorias.md) | Camadas de tags, as tags de cada lançamento e a tela Categorias |
-| [spec/classificacao.md](spec/classificacao.md) | Categoria, importância, regras, o que não é gasto, entradas e reembolsos |
+| [spec/classificacao.md](spec/classificacao.md) | Categoria, importância, ordem de decisão, o que não é gasto, entradas e reembolsos |
+| [spec/regras-automaticas.md](spec/regras-automaticas.md) | Regras "se isso, então aquilo", quando rodam e a tela Regras automáticas |
 | [spec/livre-do-dia.md](spec/livre-do-dia.md) | Orçamento flexível, Livre do dia, semáforo, termômetro de impulso, custos fixos |
 | [spec/telegram.md](spec/telegram.md) | Alertas e comandos do bot |
 | [spec/tela-do-celular.md](spec/tela-do-celular.md) | A tela do semáforo e as configurações |

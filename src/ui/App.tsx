@@ -10,6 +10,7 @@ import { Cofre } from './screens/Cofre';
 import { Graficos } from './screens/Graficos';
 import { LancamentoDetail, Lancamentos } from './screens/Lancamentos';
 import { Locked } from './screens/Locked';
+import { Regras } from './screens/Regras';
 import { VisaoGeral } from './screens/VisaoGeral';
 import { EmConstrucao } from './shell/EmConstrucao';
 import { graficosChart, parseRoute, type Route } from './shell/routes';
@@ -95,6 +96,8 @@ function Screen({
       if (route.tab === 'graficos')
         return <Graficos chart={graficosChart(path)} month={monthKey(month)} monthParam={monthParam} compareParam={search.get('comparar')} />;
       return <EmConstrucao title={strings.shell.tabs[route.tab]} hint={strings.screens[route.tab]} tall />;
+    case 'regras':
+      return <Regras />;
     case 'categorias':
       return <Categorias />;
     case 'cofre':

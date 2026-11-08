@@ -34,7 +34,7 @@ Todo gasto ganha uma categoria (o que ele é) e uma importância (como eu o julg
 
 ## Ordem de decisão
 
-- O app decide nesta ordem: as minhas regras; o tipo de operação e quem pagou ou recebeu; a categoria
+- O app decide nesta ordem: as minhas regras (`regras-automaticas.md`); o tipo de operação e quem pagou ou recebeu; a categoria
   e o estabelecimento que o Pluggy manda; e, só para o que sobrar, o Gemini. *(2)*
 - Quando eu mudo a categoria ou a importância de um gasto, o app me oferece criar uma regra para aquele
   estabelecimento ou pagador. *(2)*

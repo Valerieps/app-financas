@@ -4,7 +4,8 @@ Eu organizo os meus lançamentos com tags em camadas, cada camada com um sentido
 
 - **Entra aqui:** as camadas, as tags, quantas cabem, como um lançamento recebe tags (um ou vários
   de uma vez) e a tela Categorias.
-- **Não entra aqui:** a importância e as regras automáticas (`classificacao.md`), a lista de
+- **Não entra aqui:** a importância (`classificacao.md`), as regras automáticas
+  (`regras-automaticas.md`), a lista de
   lançamentos (`lancamentos.md`) e os gráficos (`graficos.md`).
 
 ## Em aberto

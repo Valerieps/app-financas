@@ -1,0 +1,7 @@
+# ADR-009: Automatic rules as JSON lists of conditions and actions
+
+**Status:** Accepted
+**Date:** 2026-11-08
+**Decision:** One table, `rules` (`migrations/0007_rules.sql`), with `position`, `conditions_json` and `actions_json`. Each JSON column holds a list of objects tagged by `kind` (today `descriptionContains` and `addTags`), read and validated by `parseRule` in `src/domain/rules.ts`; the same module decides matching (`ruleMatches`) and which tags a lançamento gets (`tagsFromRules`). The server runs the rules on each new transaction inside `collect/transactions.ts`, in the same batch as its insert, and over the stored ones with the `rules.apply` command; both insert with `ON CONFLICT DO NOTHING`, so a rule only fills empty layers. Text comparison happens in TypeScript, not SQL, because SQLite cannot ignore accents.
+**Why:** The owner wants more conditions and actions later (docs/spec/regras-automaticas.md). With tagged unions, a new kind is a new branch in the domain and a new field on the screen, with no migration; the domain stays the single place that knows what a rule means, shared by the app and the server.
+**Alternatives:** One column per condition and action (`description_contains`, `tag_id`...): simpler queries, but every new kind needs a migration and the rows fill with nulls. A table of conditions and a table of actions per rule: normalized, but more joins and writes for a list that stays small (at most 200 rules). Matching in SQL with `LIKE`: fast, but case-insensitive only for ASCII and blind to accents.
