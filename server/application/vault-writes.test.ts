@@ -37,7 +37,7 @@ const VAULT_TABLES = [
 ];
 
 /** Everything else: access, cron bookkeeping, phone notifications and my own decisions. */
-const OTHER_TABLES = ['job_runs', 'passkeys', 'webauthn_challenges', 'sessions', 'confirmed_empty_days', 'provisional_expenses', 'tag_layers', 'tags', 'transaction_tags', 'transaction_categories', 'rules'];
+const OTHER_TABLES = ['job_runs', 'passkeys', 'webauthn_challenges', 'sessions', 'confirmed_empty_days', 'provisional_expenses', 'tag_layers', 'tags', 'transaction_tags', 'transaction_categories', 'transaction_descriptions', 'rules'];
 
 /** The only folder whose code may write the vault. */
 const COLLECTION = 'server/application/collect/';

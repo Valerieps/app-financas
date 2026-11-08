@@ -7,6 +7,7 @@ import { addConnection } from './collect/connections';
 import { runSweeps } from './collect/sync';
 import { vault } from './collect/vault';
 import { processPendingEvents } from './collect/webhooks';
+import { rewriteDescriptionsJob } from './descriptions';
 import { cartao } from './faturas';
 import { categorizeLancamentos, lancamento, lancamentos, pluggyCategories, tagLancamentos } from './lancamentos';
 import { cleanUpLock, type Caller } from './lock';
@@ -41,6 +42,7 @@ export class AppService {
     await cleanUpLock(this.ctx);
     await processPendingEvents(this.ctx);
     await runSweeps(this.ctx);
+    await rewriteDescriptionsJob(this.ctx);
   }
 }
 

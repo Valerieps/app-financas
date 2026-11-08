@@ -53,7 +53,7 @@ O que ainda não está pronto.
 - [ ] A média conta só os meses que têm algum gasto (`spec/graficos.md`).
 - [ ] Nas regras, transferência é a categoria do grupo Transferências do Pluggy (04 e 05) ou um
   pagamento de fatura; o resto é entrada ou saída pelo sentido (`spec/regras-automaticas.md`).
-- [ ] A substituição na descrição vale na hora de mostrar, sem mexer na descrição do banco, para
+- [ ] A substituição na descrição fica guardada ao lado da descrição do banco, sem mexer nela, para
   todos os lançamentos; as condições olham sempre a descrição do banco; o pedaço é achado sem
   maiúsculas nem acentos e trocado todas as vezes; o detalhe mostra a descrição do banco
   (`spec/regras-automaticas.md`).

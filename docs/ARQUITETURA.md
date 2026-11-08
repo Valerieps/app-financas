@@ -117,10 +117,11 @@ Classificação, orçamento e decisões (fases 2 a 4):
 | `tags` | tag | camada, nome |
 | `transaction_tags` | tag num lançamento | transação, camada, tag; a chave (transação, camada) garante uma tag por camada |
 | `transaction_categories` | categoria que eu escolhi num lançamento | transação, categoria do Pluggy; vale por cima de `transactions.pluggy_category_id` e de `card_payment` nas leituras (`server/application/category-choice.ts`) |
+| `transaction_descriptions` | lançamento cuja descrição as regras trocaram | transação, descrição trocada (nula se as regras apagaram tudo); vale por cima de `transactions.description` nas leituras. Derivada das regras: toda escrita que pode mudá-la (regra, categoria escolhida, coleta) a regrava no mesmo `batch`, e o cron refaz todas uma vez por dia (`server/application/descriptions.ts`, ADR-009) |
 | `categories` | categoria | nome, pai, id do Pluggy de origem |
 | `importance_levels` | importância | nome, conta no orçamento, ordem |
 | `category_importance_map` | ligação categoria → importância | categoria, importância, vigente de/até |
-| `rules` | regra automática | posição, condições e ações em JSON (ADR-009); hoje "descrição contém" → "aplique as tags" |
+| `rules` | regra automática | posição, condições e ações em JSON (ADR-009) |
 | `user_overrides` | decisão sobre uma transação | importância, reembolsável (%), nota (a categoria fica em `transaction_categories`) |
 | `reimbursements` | reembolso ↔ gasto | gasto, reembolso, valor coberto |
 

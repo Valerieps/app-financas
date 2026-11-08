@@ -2,16 +2,25 @@
 // and running them over the stored lançamentos. The collection runs them on each new lançamento
 // (collect/transactions.ts) through `rules` and `ruleTagStatements`.
 import type { RulePreviewView, RuleView } from '../../src/application/api-contract';
-import { direction } from '../../src/domain/lancamentos';
-import { applyReplacements, describeWithRules, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition, type RuleSubject } from '../../src/domain/rules';
+import { applyReplacements, describeWithRules, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition } from '../../src/domain/rules';
 import { MAX_BULK_TAGGING, moveInOrder, type TagAssignment } from '../../src/domain/tags';
-import { CARD_PAYMENT, CATEGORY_ID, CHOICE_JOIN } from './category-choice';
 import { failure, nowIso, QueryError, type CommandResult, type Context } from './context';
+import { rewriteDescriptions, ruleSubjects } from './descriptions';
 import { lancamentoViews } from './lancamentos';
 import { statement, type Statement } from './ports';
-import { definition, ruleRows } from './rule-store';
+import { definition, ruleRows, type RuleRow } from './rule-store';
 
 const CHANGED = ['rules'] as const;
+
+/** The rules in `order` (ids), with `replaced` standing in for one of them: what the rules will be after a write. */
+function rulesAfter(rows: readonly RuleRow[], order: readonly string[], replaced?: { id: string; rule: RuleDefinition }): RuleDefinition[] {
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return order.flatMap((id) => {
+    if (replaced?.id === id) return [replaced.rule];
+    const row = byId.get(id);
+    return (row && definition(row)) || [];
+  });
+}
 
 async function tagExists(ctx: Context): Promise<(layerId: string, tagId: string) => boolean> {
   const tags = await ctx.sql.all<{ id: string; layer_id: string }>('SELECT id, layer_id FROM tags');
@@ -58,33 +67,6 @@ export function ruleTagStatements(byTransaction: ReadonlyMap<string, TagAssignme
   return statements;
 }
 
-/** The stored lançamentos a rule can look at, newest first. */
-async function stored(ctx: Context): Promise<(RuleSubject & { id: string })[]> {
-  const rows = await ctx.sql.all<{
-    id: string;
-    description: string | null;
-    type: string | null;
-    amount_cents: number;
-    account_type: string | null;
-    category_id: string | null;
-    card_payment: number;
-  }>(
-    `SELECT t.id, t.description, t.type, t.amount_cents, a.type AS account_type,
-            ${CATEGORY_ID} AS category_id, ${CARD_PAYMENT} AS card_payment
-     FROM transactions t
-     JOIN accounts a ON a.id = t.account_id
-     ${CHOICE_JOIN}
-     WHERE t.deleted_at IS NULL ORDER BY t.date DESC, t.first_seen_at DESC, t.id`,
-  );
-  return rows.map((row) => ({
-    id: row.id,
-    description: row.description,
-    direction: direction(row.type, row.amount_cents, row.account_type),
-    categoryId: row.category_id,
-    cardPayment: row.card_payment === 1,
-  }));
-}
-
 /**
  * The stored lançamentos the conditions match, newest first. With `actions`, each one's description
  * shows what this rule would make of it, after the saved rules.
@@ -93,7 +75,7 @@ export async function rulePreview(ctx: Context, input: Record<string, unknown>):
   const conditions = parseConditions(input.conditions);
   const actions = input.actions === undefined ? [] : parseActions(input.actions);
   if (!conditions || !actions) return new QueryError('invalid');
-  const matched = (await stored(ctx)).filter((t) => ruleMatches({ conditions }, t));
+  const matched = (await ruleSubjects(ctx)).filter((t) => ruleMatches({ conditions }, t));
   const items = await lancamentoViews(ctx, matched.slice(0, RULE_PREVIEW_LIMIT).map((t) => t.id));
   return { total: matched.length, items: items.map((item) => ({ ...item, description: applyReplacements(actions, item.description) })) };
 }
@@ -115,6 +97,7 @@ export async function createRule(ctx: Context, input: Record<string, unknown>): 
   const id = ctx.ids.next();
   const now = nowIso(ctx);
   const position = existing.reduce((max, r) => Math.max(max, r.position + 1), 0);
+  const descriptions = await rewriteDescriptions(ctx, [...rulesAfter(existing, existing.map((r) => r.id)), rule], now);
   await ctx.sql.batch([
     statement(
       'INSERT INTO rules (id, position, conditions_json, actions_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
@@ -125,6 +108,7 @@ export async function createRule(ctx: Context, input: Record<string, unknown>): 
       now,
       now,
     ),
+    ...descriptions,
   ]);
   return { ok: true, value: { id }, changed: CHANGED };
 }
@@ -139,26 +123,32 @@ export async function updateRule(ctx: Context, input: Record<string, unknown>): 
   if (found === 'invalid' || found === 'not_found') return failure(found);
   const rule = await checkedRule(ctx, input);
   if (rule === 'invalid') return failure('invalid');
+  const rows = await ruleRows(ctx);
+  const now = nowIso(ctx);
+  const descriptions = await rewriteDescriptions(ctx, rulesAfter(rows, rows.map((r) => r.id), { id: found, rule }), now);
   await ctx.sql.batch([
     statement(
       'UPDATE rules SET conditions_json = ?, actions_json = ?, updated_at = ? WHERE id = ?',
       JSON.stringify(rule.conditions),
       JSON.stringify(rule.actions),
-      nowIso(ctx),
+      now,
       found,
     ),
+    ...descriptions,
   ]);
   return { ok: true, value: null, changed: CHANGED };
 }
 
 const savePositions = (order: readonly string[]): Statement[] => order.map((id, position) => statement('UPDATE rules SET position = ? WHERE id = ?', position, id));
 
-/** Deleting a rule keeps the tags it already put on lançamentos. */
+/** Deleting a rule keeps the tags it already put on lançamentos; its description changes go. */
 export async function deleteRule(ctx: Context, input: Record<string, unknown>): Promise<CommandResult<null>> {
   const found = await findRule(ctx, input.id);
   if (found === 'invalid' || found === 'not_found') return failure(found);
-  const rest = (await ruleRows(ctx)).filter((r) => r.id !== found).map((r) => r.id);
-  await ctx.sql.batch([statement('DELETE FROM rules WHERE id = ?', found), ...savePositions(rest)]);
+  const rows = await ruleRows(ctx);
+  const rest = rows.filter((r) => r.id !== found).map((r) => r.id);
+  const descriptions = await rewriteDescriptions(ctx, rulesAfter(rows, rest), nowIso(ctx));
+  await ctx.sql.batch([statement('DELETE FROM rules WHERE id = ?', found), ...savePositions(rest), ...descriptions]);
   return { ok: true, value: null, changed: CHANGED };
 }
 
@@ -167,20 +157,22 @@ export async function moveRule(ctx: Context, input: Record<string, unknown>): Pr
   if (direction !== 'up' && direction !== 'down') return failure('invalid');
   const found = await findRule(ctx, input.id);
   if (found === 'invalid' || found === 'not_found') return failure(found);
-  const order = (await ruleRows(ctx)).map((r) => r.id);
-  await ctx.sql.batch(savePositions(moveInOrder(order, found, direction)));
+  const rows = await ruleRows(ctx);
+  const order = moveInOrder(rows.map((r) => r.id), found, direction);
+  const descriptions = await rewriteDescriptions(ctx, rulesAfter(rows, order), nowIso(ctx));
+  await ctx.sql.batch([...savePositions(order), ...descriptions]);
   return { ok: true, value: null, changed: CHANGED };
 }
 
 /**
- * Runs every rule over the stored lançamentos: tags fill only the empty layers; description
- * replacements are not stored (the bank's text stays), so `described` counts the lançamentos whose
- * description the rules now change, to show those rules at work too.
+ * Runs every rule over the stored lançamentos: tags fill only the empty layers; the stored
+ * descriptions are rewritten, in case (the bank's text stays), and `described` counts the
+ * lançamentos whose description the rules change, to show those rules at work too.
  */
 export async function applyRules(ctx: Context): Promise<CommandResult<{ tagged: number; described: number }>> {
   const [ruleList, transactions, links] = await Promise.all([
     rules(ctx),
-    stored(ctx),
+    ruleSubjects(ctx),
     ctx.sql.all<{ transaction_id: string; layer_id: string; tag_id: string }>('SELECT transaction_id, layer_id, tag_id FROM transaction_tags'),
   ]);
   const current = new Map<string, Record<string, string>>();
@@ -190,7 +182,9 @@ export async function applyRules(ctx: Context): Promise<CommandResult<{ tagged: 
     const tags = tagsFromRules(ruleList, t, current.get(t.id));
     if (Object.keys(tags).length > 0) added.set(t.id, tags);
   }
-  if (added.size > 0) await ctx.sql.batch(ruleTagStatements(added, nowIso(ctx)));
+  const now = nowIso(ctx);
+  const writes = [...ruleTagStatements(added, now), ...(await rewriteDescriptions(ctx, ruleList, now))];
+  if (writes.length > 0) await ctx.sql.batch(writes);
   const described = transactions.filter((t) => describeWithRules(ruleList, t) !== t.description).length;
   return { ok: true, value: { tagged: added.size, described }, changed: ['tags', 'rules'] };
 }
