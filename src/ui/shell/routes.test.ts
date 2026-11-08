@@ -11,6 +11,8 @@ describe('parseRoute', () => {
     expect(parseRoute('/financas/metas/m1')).toEqual({ module: 'financas', tab: 'metas', detailId: 'm1' });
     expect(parseRoute('/financas/caixinhas/c1')).toEqual({ module: 'financas', tab: 'caixinhas', detailId: 'c1' });
     expect(parseRoute('/financas/graficos/categoria')).toEqual({ module: 'financas', tab: 'graficos' });
+    expect(parseRoute('/financas/cartao')).toEqual({ module: 'financas', tab: 'cartao' });
+    expect(parseRoute('/financas/cartao/x')).toEqual({ module: 'not_found' });
     expect(parseRoute('/investimentos')).toEqual({ module: 'investimentos' });
     expect(parseRoute('/patrimonio')).toEqual({ module: 'patrimonio' });
     expect(parseRoute('/categorias')).toEqual({ module: 'categorias' });

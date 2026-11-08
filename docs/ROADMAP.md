@@ -19,7 +19,7 @@ O que ainda não está pronto.
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
 | Bot do Telegram | 3 | `spec/telegram.md` | |
 | Tela do semáforo | 3 | `spec/tela-do-celular.md` | |
-| Faturas e parcelas futuras | 4 | `spec/cartao-de-credito.md` | |
+| Parcelas futuras | 4 | `spec/cartao-de-credito.md` | A tela Cartão já mostra as faturas e os pagamentos; responder o "Em aberto" de `spec/cartao-de-credito.md` |
 | Reembolsos | 4 | `spec/classificacao.md` | |
 | Avisos de renovação e de erro nas conexões | 4 | `spec/cofre-de-dados.md` | |
 | Holerite e conferência do líquido | 4 | `spec/holerite.md` | Responder o "Em aberto" antes de construir |
@@ -40,6 +40,9 @@ O que ainda não está pronto.
 
 ## Revisar as lacunas que o agente decidiu
 
+- [ ] Uma fatura só recebe pagamentos da primeira compra dela até o vencimento da seguinte; a fatura
+  aberta são as compras sem fatura depois da última fechada; o período é da primeira à última
+  compra (`spec/cartao-de-credito.md`).
 - [ ] O app pede a digital quando é aberto e a última vez foi há mais de 1 hora (`spec/acesso.md`).
 - [ ] Num aparelho sem digital cadastrada, o login Google basta (`spec/acesso.md`).
 - [ ] O `/gastei` vale a partir da fase 3, junto com o bot (`spec/gastos-provisorios.md`).

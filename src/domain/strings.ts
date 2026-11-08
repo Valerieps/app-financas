@@ -169,6 +169,7 @@ export const strings = {
     tabs: {
       'visao-geral': 'Visão geral',
       lancamentos: 'Lançamentos',
+      cartao: 'Cartão',
       graficos: 'Gráficos',
       metas: 'Metas',
       caixinhas: 'Caixinhas',
@@ -219,6 +220,26 @@ export const strings = {
     revisar: { title: 'Gastos para revisar', hint: 'Gastos órfãos e sem importância. Cada um abre no painel.', link: 'Ver lançamentos' },
     metas: { title: 'Metas em risco', hint: 'Só as metas amarelas ou vermelhas.', link: 'Todas as metas' },
     caixinhas: { title: 'Caixinhas com prazo perto', hint: 'As caixinhas que vencem logo e quanto falta.', link: 'Todas as caixinhas' },
+  },
+
+  // Finanças › Cartão (docs/spec/cartao-de-credito.md).
+  cartao: {
+    title: 'Faturas do cartão',
+    subtitle: 'A fatura aberta e as dos últimos 12 meses, com os pagamentos que saíram da conta.',
+    empty: 'Ainda não chegou nenhuma fatura do cartão.',
+    openBill: 'Fatura aberta',
+    bill: (month: number, year: number) => `Fatura de ${MONTHS[month - 1]} ${year}`,
+    status: { aberta: 'Aberta', 'a-pagar': 'A pagar', paga: 'Paga', 'nao-bateu': 'Não bateu' },
+    due: (day: string) => `Vence em ${day}`,
+    period: (from: string, to: string) => (from === to ? `Compras em ${from}` : `Compras de ${from} a ${to}`),
+    noPurchases: 'Sem compras',
+    installments: (value: string) => `${value} parcelado`,
+    noValue: 'Sem valor',
+    payments: 'Pagamentos',
+    noPayments: 'Nenhum pagamento ligado a esta fatura.',
+    paid: (value: string) => `Pago: ${value}`,
+    difference: (value: string) => `Diferença: ${value}`,
+    openPayment: (value: string, day: string) => `Abrir o pagamento de ${value} em ${day} em Lançamentos`,
   },
 
   lancamentos: {
