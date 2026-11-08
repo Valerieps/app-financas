@@ -104,12 +104,13 @@ function TagView({
       </label>
       <Answer chart={chart} layerName={layer.name} name={name} />
       {chart.slices.length > 0 && (
-        <div className="charts-pair">
+        <div className="charts-pair charts-pair--fit">
           <section className="tile" aria-label={text.chartLabel(layer.name)}>
             <Donut chart={chart} open={open?.key ?? null} onPick={(slice) => navigate(sliceLink(slice))} title={(s) => text.sliceTitle(name(s))} />
             <p className="text-caption muted">{text.hint}</p>
           </section>
-          <section className="tile" aria-label={text.tableLabel}>
+          <section className="tile tag-table-tile" aria-label={text.tableLabel}>
+            <div className="tag-table-scroll">
             <table className="chart-table">
               <thead>
                 <tr>
@@ -140,6 +141,7 @@ function TagView({
                 </tr>
               </tfoot>
             </table>
+            </div>
           </section>
         </div>
       )}
