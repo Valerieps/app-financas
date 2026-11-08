@@ -5,12 +5,14 @@ import type { LancamentoDetailView, LancamentosView, LancamentoView } from '../.
 import { transactionDay } from '../../src/domain/calendar';
 import { cardPaymentWithChoice, direction, monthDays, totals } from '../../src/domain/lancamentos';
 import { parseMonth } from '../../src/domain/month';
+import { describeWithRules, type RuleDefinition } from '../../src/domain/rules';
 import { categoryOptions, type CategoryOption } from '../../src/domain/pluggy-categories';
 import { MAX_BULK_TAGGING, type TagAssignment, type TagChange } from '../../src/domain/tags';
 import { addDays } from '../../src/domain/vault';
 import { CATEGORY_ID, CHOICE_JOIN } from './category-choice';
 import { failure, nowIso, QueryError, type CommandResult, type Context } from './context';
 import { statement } from './ports';
+import { storedRules } from './rule-store';
 
 interface Row {
   id: string;
@@ -45,21 +47,24 @@ const FROM = `
   LEFT JOIN pluggy_categories c ON c.id = ${CATEGORY_ID}
   LEFT JOIN transaction_card_data cd ON cd.transaction_id = t.id`;
 
-function toView(row: Row, tags: TagAssignment = {}): LancamentoView {
+/** The row as the list shows it; the description is the one my rules leave (docs/spec/regras-automaticas.md). */
+function toView(row: Row, rules: readonly RuleDefinition[], tags: TagAssignment = {}): LancamentoView {
+  const moneyDirection = direction(row.type, row.amount_cents, row.account_type);
+  const cardPayment = cardPaymentWithChoice(row.card_payment === 1, row.chosen_category_id);
   return {
     id: row.id,
     day: transactionDay(row.date),
-    description: row.description,
+    description: describeWithRules(rules, { description: row.description, direction: moneyDirection, categoryId: row.category_id, cardPayment }),
     category: row.category,
     categoryId: row.category_id,
     categoryChosen: row.chosen_category_id !== null,
     amountCents: Math.abs(row.amount_cents),
     currency: row.currency_code,
-    direction: direction(row.type, row.amount_cents, row.account_type),
+    direction: moneyDirection,
     accountName: row.account_name,
     accountType: row.account_type,
     pending: row.status === 'PENDING',
-    cardPayment: cardPaymentWithChoice(row.card_payment === 1, row.chosen_category_id),
+    cardPayment,
     installment:
       row.installment_number !== null && row.total_installments !== null && row.total_installments > 1
         ? { number: row.installment_number, total: row.total_installments }
@@ -91,7 +96,7 @@ export async function lancamentos(ctx: Context, month: unknown): Promise<Lancame
   // A day early on each side: Pluggy's date may be an instant that falls on a neighbouring Brasília day.
   const from = addDays(first, -1);
   const to = addDays(last, 2);
-  const [rows, links] = await Promise.all([
+  const [rows, links, rules] = await Promise.all([
     ctx.sql.all<Row>(
       `${SELECT} ${FROM}
        WHERE t.deleted_at IS NULL AND t.date >= ? AND t.date < ?
@@ -106,24 +111,26 @@ export async function lancamentos(ctx: Context, month: unknown): Promise<Lancame
       from,
       to,
     ),
+    storedRules(ctx),
   ]);
   const tags = tagsById(links);
-  const items = rows.map((row) => toView(row, tags.get(row.id))).filter((item) => item.day >= first && item.day <= last);
+  const items = rows.map((row) => toView(row, rules, tags.get(row.id))).filter((item) => item.day >= first && item.day <= last);
   return { month, items, totals: totals(items) };
 }
 
 /** The list's view of the stored lançamentos `ids`, in that order (the rules' "Testar" button). */
 export async function lancamentoViews(ctx: Context, ids: readonly string[]): Promise<LancamentoView[]> {
   const list = JSON.stringify(ids);
-  const [rows, links] = await Promise.all([
+  const [rows, links, rules] = await Promise.all([
     ctx.sql.all<Row>(`${SELECT} ${FROM} WHERE t.id IN (SELECT value FROM json_each(?))`, list),
     ctx.sql.all<TagLink>('SELECT transaction_id, layer_id, tag_id FROM transaction_tags WHERE transaction_id IN (SELECT value FROM json_each(?))', list),
+    storedRules(ctx),
   ]);
   const tags = tagsById(links);
   const byId = new Map(rows.map((row) => [row.id, row]));
   return ids.flatMap((id) => {
     const row = byId.get(id);
-    return row ? [toView(row, tags.get(id))] : [];
+    return row ? [toView(row, rules, tags.get(id))] : [];
   });
 }
 
@@ -151,11 +158,15 @@ export async function lancamento(ctx: Context, id: unknown): Promise<LancamentoD
     id,
   );
   if (!row) return new QueryError('not_found');
-  const links = await ctx.sql.all<TagLink>('SELECT transaction_id, layer_id, tag_id FROM transaction_tags WHERE transaction_id = ?', id);
-  const view = toView(row, tagsById(links).get(id));
+  const [links, rules] = await Promise.all([
+    ctx.sql.all<TagLink>('SELECT transaction_id, layer_id, tag_id FROM transaction_tags WHERE transaction_id = ?', id),
+    storedRules(ctx),
+  ]);
+  const view = toView(row, rules, tagsById(links).get(id));
   return {
     ...view,
     date: row.date,
+    descriptionOriginal: view.description !== row.description ? row.description : null,
     descriptionRaw: row.description_raw && row.description_raw !== row.description ? row.description_raw : null,
     operationType: row.operation_type,
     paymentMethod: row.payment_method,

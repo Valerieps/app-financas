@@ -1,8 +1,7 @@
 // Automatic rules, "if this then that" (docs/spec/regras-automaticas.md): each rule has conditions,
 // all of which must hold, and actions. The conditions are "the description contains a text" (with
-// "|" for or and "&" for and) and
-// "the lançamento is of this type"; the only action is "add these tags". New kinds join the unions
-// below (ADR-009).
+// "|" for or and "&" for and) and "the lançamento is of this type"; the actions are "add these tags"
+// and "replace this text in the description". New kinds join the unions below (ADR-009).
 import type { Direction } from './lancamentos';
 import { assignTag, cleanName, type TagAssignment } from './tags';
 
@@ -22,7 +21,9 @@ export const LANCAMENTO_TYPES: readonly LancamentoType[] = ['out', 'in', 'transf
 export type RuleCondition =
   | { readonly kind: 'descriptionContains'; readonly text: string }
   | { readonly kind: 'type'; readonly type: LancamentoType };
-export type RuleAction = { readonly kind: 'addTags'; readonly tags: TagAssignment };
+export type RuleAction =
+  | { readonly kind: 'addTags'; readonly tags: TagAssignment }
+  | { readonly kind: 'replaceInDescription'; readonly find: string; readonly replace: string };
 
 export interface RuleDefinition {
   readonly conditions: readonly RuleCondition[];
@@ -106,6 +107,56 @@ export function tagsFromRules(rules: readonly RuleDefinition[], subject: RuleSub
   return result;
 }
 
+/** One character as `textKey` compares it: no case, no accents, any space a plain one. */
+function foldChar(char: string): string {
+  return /\s/u.test(char) ? ' ' : char.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('pt-BR');
+}
+
+/**
+ * `text` with every occurrence of `find` replaced by `replacement`, found as rules compare text (no
+ * case, no accents, repeated spaces as one), with the result's spaces tidied. Null when nothing is left.
+ */
+export function replaceText(text: string, find: string, replacement: string): string | null {
+  const needle = textKey(find);
+  const chars = [...text];
+  let folded = '';
+  // The character of `text` behind each code unit of `folded`.
+  const owner: number[] = [];
+  chars.forEach((char, index) => {
+    const key = foldChar(char);
+    if (key === ' ' && (folded === '' || folded.endsWith(' '))) return;
+    folded += key;
+    for (let i = 0; i < key.length; i++) owner.push(index);
+  });
+  let result = '';
+  let next = 0;
+  for (let at = needle ? folded.indexOf(needle) : -1; at !== -1; at = folded.indexOf(needle, at + needle.length)) {
+    const from = owner[at];
+    const to = owner[at + needle.length - 1] + 1;
+    if (from < next) continue;
+    result += chars.slice(next, from).join('') + replacement;
+    next = to;
+  }
+  result += chars.slice(next).join('');
+  return cleanName(result) || null;
+}
+
+/** `description` after a rule's "replace in the description" actions, in order. */
+export function applyReplacements(actions: readonly RuleAction[], description: string | null): string | null {
+  return actions.reduce<string | null>(
+    (text, action) => (action.kind === 'replaceInDescription' && text !== null ? replaceText(text, action.find, action.replace) : text),
+    description,
+  );
+}
+
+/**
+ * A lançamento's description as the rules leave it: each rule that matches, in order, replaces its
+ * texts in what the rules before it left. The conditions always look at the bank's description.
+ */
+export function describeWithRules(rules: readonly RuleDefinition[], subject: RuleSubject): string | null {
+  return rules.reduce((description, rule) => (ruleMatches(rule, subject) ? applyReplacements(rule.actions, description) : description), subject.description);
+}
+
 /** The rule without the tags that no longer exist (a tag or a layer deleted after the rule was saved). */
 export function withExistingTags(rule: RuleDefinition, exists: (layerId: string, tagId: string) => boolean): RuleDefinition {
   return {
@@ -140,6 +191,12 @@ function parseAction(raw: unknown): RuleAction | null {
     if (entries.length === 0 || !entries.every(([layerId, tagId]) => layerId && typeof tagId === 'string' && tagId)) return null;
     return { kind: 'addTags', tags: Object.fromEntries(entries) as Record<string, string> };
   }
+  if (raw.kind === 'replaceInDescription' && typeof raw.find === 'string' && typeof raw.replace === 'string') {
+    const find = cleanName(raw.find);
+    const { replace } = raw;
+    if (!find || [...find].length > MAX_RULE_TEXT_LENGTH || [...replace].length > MAX_RULE_TEXT_LENGTH) return null;
+    return { kind: 'replaceInDescription', find, replace };
+  }
   return null;
 }
 
@@ -154,10 +211,15 @@ export function parseConditions(raw: unknown): RuleCondition[] | null {
   return parseList(raw, parseCondition);
 }
 
+/** Reads a rule's actions as the API receives them, cleaned; null when malformed. */
+export function parseActions(raw: unknown): RuleAction[] | null {
+  return parseList(raw, parseAction);
+}
+
 /** Reads a rule as the API receives it, cleaned; null when malformed. */
 export function parseRule(raw: unknown): RuleDefinition | null {
   if (!isRecord(raw)) return null;
   const conditions = parseConditions(raw.conditions);
-  const actions = parseList(raw.actions, parseAction);
+  const actions = parseActions(raw.actions);
   return conditions && actions ? { conditions, actions } : null;
 }
