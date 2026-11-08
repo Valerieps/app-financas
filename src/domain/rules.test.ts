@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { applyReplacements, containsExpression, describeWithRules, lancamentoType, parseConditions, parseRule, replaceText, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
+import { applyReplacements, categoryFromRules, containsExpression, describeWithRules, lancamentoType, parseConditions, parseRule, replaceText, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
 
 const contains = (text: string) => ({ kind: 'descriptionContains', text }) as const;
-const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, ...more });
+const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, payer: null, ...more });
 const rule = (text: string, tags: Record<string, string>): RuleDefinition => ({ conditions: [contains(text)], actions: [{ kind: 'addTags', tags }] });
 
 describe('textKey', () => {
@@ -162,5 +162,46 @@ describe('replacing text in the description', () => {
     expect(parseRule({ conditions: [contains('ifood')], actions: [replace('ifood', '')] })?.actions).toEqual([replace('ifood', '')]);
     expect(parseRule({ conditions: [contains('x')], actions: [replace(' ', 'y')] })).toBeNull();
     expect(parseRule({ conditions: [contains('x')], actions: [replace('x', 'y'.repeat(101))] })).toBeNull();
+  });
+});
+
+describe('"quem pagou" condition', () => {
+  const payer = (text: string) => ({ kind: 'payerContains', text }) as const;
+  const entrada = (name: string | null) => subject('PIX RECEBIDO', { direction: 'in', payer: name });
+
+  it('matches who paid an entrada, like the description text', () => {
+    expect(ruleMatches({ conditions: [payer('acme | globex')] }, entrada('ACME Ltda'))).toBe(true);
+    expect(ruleMatches({ conditions: [payer('joão & silva')] }, entrada('Joao da Silva'))).toBe(true);
+    expect(ruleMatches({ conditions: [payer('acme')] }, entrada('Globex'))).toBe(false);
+  });
+
+  it('never matches a saída, a transferência or an entrada without payer', () => {
+    expect(ruleMatches({ conditions: [payer('acme')] }, subject('x', { direction: 'out', payer: 'ACME' }))).toBe(false);
+    expect(ruleMatches({ conditions: [payer('acme')] }, subject('x', { direction: 'in', payer: 'ACME', categoryId: '04000000' }))).toBe(false);
+    expect(ruleMatches({ conditions: [payer('acme')] }, entrada(null))).toBe(false);
+  });
+
+  it('is read and cleaned like the description text', () => {
+    expect(parseConditions([{ kind: 'payerContains', text: '  ACME  ' }])).toEqual([payer('ACME')]);
+    expect(parseConditions([{ kind: 'payerContains', text: 'a |' }])).toBeNull();
+  });
+});
+
+describe('categoryFromRules', () => {
+  const setCategory = (text: string, categoryId: string): RuleDefinition => ({ conditions: [contains(text)], actions: [{ kind: 'setCategory', categoryId }] });
+  const rules = [rule('ifood', { a: 't' }), setCategory('ifood', '01000000'), setCategory('ifood', '02000000')];
+
+  it('gives the category of the first matching rule that sets one', () => {
+    expect(categoryFromRules(rules, subject('IFOOD'), false)).toBe('01000000');
+    expect(categoryFromRules(rules, subject('Uber'), false)).toBeNull();
+  });
+
+  it('leaves the category I chose', () => {
+    expect(categoryFromRules(rules, subject('IFOOD'), true)).toBeNull();
+  });
+
+  it('is read like the other actions', () => {
+    expect(parseRule({ conditions: [contains('x')], actions: [{ kind: 'setCategory', categoryId: '01000000' }] })?.actions).toEqual([{ kind: 'setCategory', categoryId: '01000000' }]);
+    expect(parseRule({ conditions: [contains('x')], actions: [{ kind: 'setCategory', categoryId: '' }] })).toBeNull();
   });
 });
