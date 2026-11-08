@@ -1152,3 +1152,73 @@ a.lanc-row[aria-current='true'] {
 .tags-danger {
   color: var(--color-danger);
 }
+
+/* Finanças › Cartão */
+.bill-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bill {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.bill-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.bill-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.bill-status--paga {
+  background: var(--color-ok-bg);
+  border-color: var(--color-ok-bg);
+  color: var(--color-ok);
+}
+
+.bill-status--a-pagar {
+  background: var(--color-warn-bg);
+  border-color: var(--color-warn-bg);
+  color: var(--color-warn);
+}
+
+.bill-status--nao-bateu {
+  background: var(--color-risk-bg);
+  border-color: var(--color-risk-bg);
+  color: var(--color-risk);
+}
+
+.bill-payments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bill-payment {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.bill-payment:hover .num {
+  text-decoration: underline;
+}
+
+.bill-difference {
+  color: var(--color-risk);
+}

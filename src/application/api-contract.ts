@@ -1,5 +1,6 @@
 // The contract between the app and the server: query and command names, inputs and outputs.
 // Types only. The server imports it with `import type`, so nothing here runs on either side.
+import type { BillStatus } from '../domain/faturas';
 import type { CategoryChart, Comparison, MonthlyChart } from '../domain/spending';
 import type { TagAssignment, TagChange } from '../domain/tags';
 
@@ -132,6 +133,42 @@ export interface LancamentoDetailView extends LancamentoView {
   readonly firstSeenAt: string;
 }
 
+/** A payment from the bank account linked to a card bill. */
+export interface BillPaymentView {
+  /** The lançamento's id, to open it in Lançamentos. */
+  readonly id: string;
+  readonly day: string;
+  /** Always positive. */
+  readonly amountCents: number;
+  readonly accountName: string | null;
+}
+
+/** One card bill on Finanças › Cartão (docs/spec/cartao-de-credito.md). */
+export interface BillView {
+  readonly id: string;
+  /** The card's name. */
+  readonly accountName: string | null;
+  readonly status: BillStatus;
+  /** Null for the open bill. */
+  readonly dueDay: string | null;
+  /** The first and last purchase's day; null when it has none. */
+  readonly firstDay: string | null;
+  readonly lastDay: string | null;
+  /** The bill's value as the bank sent it; for the open bill, its purchases so far. */
+  readonly totalCents: number | null;
+  /** How much of it is installment purchases. */
+  readonly installmentCents: number;
+  readonly paidCents: number;
+  /** Payments minus the value: negative when short. */
+  readonly differenceCents: number | null;
+  readonly payments: readonly BillPaymentView[];
+}
+
+/** The open bill first, then the last 12 months' bills, newest first. */
+export interface CartaoView {
+  readonly bills: readonly BillView[];
+}
+
 /** One tag of a layer (docs/spec/categorias.md). */
 export interface TagView {
   readonly id: string;
@@ -200,6 +237,8 @@ export interface Queries {
   /** The month's transactions (yyyy-mm), newest first. */
   lancamentos: { input: { month: string }; output: LancamentosView };
   lancamento: { input: { id: string }; output: LancamentoDetailView };
+  /** Finanças › Cartão: the card bills and the payments linked to each (docs/spec/cartao-de-credito.md). */
+  cartao: { input: Record<string, never>; output: CartaoView };
   /** The category layers and their tags (docs/spec/categorias.md). */
   tagLayers: { input: Record<string, never>; output: TagLayerView[] };
 }

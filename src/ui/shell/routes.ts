@@ -2,11 +2,11 @@
 // URL, and the detail panel opens over a list at /financas/<list>/:id.
 
 export type ModuleId = 'inicio' | 'financas' | 'investimentos' | 'patrimonio' | 'categorias' | 'cofre' | 'ajustes';
-export type FinancasTab = 'visao-geral' | 'lancamentos' | 'graficos' | 'metas' | 'caixinhas';
+export type FinancasTab = 'visao-geral' | 'lancamentos' | 'cartao' | 'graficos' | 'metas' | 'caixinhas';
 
 export const MODULES: readonly ModuleId[] = ['inicio', 'financas', 'investimentos', 'patrimonio'];
 export const SYSTEM_MODULES: readonly ModuleId[] = ['categorias', 'cofre', 'ajustes'];
-export const FINANCAS_TABS: readonly FinancasTab[] = ['visao-geral', 'lancamentos', 'graficos', 'metas', 'caixinhas'];
+export const FINANCAS_TABS: readonly FinancasTab[] = ['visao-geral', 'lancamentos', 'cartao', 'graficos', 'metas', 'caixinhas'];
 
 export type Route =
   | { readonly module: Exclude<ModuleId, 'financas'> }
