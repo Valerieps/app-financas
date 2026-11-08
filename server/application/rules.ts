@@ -1,11 +1,12 @@
 // Automatic rules (docs/spec/regras-automaticas.md, ADR-009): reading, editing and testing them,
 // and running them over the stored lançamentos. The collection runs them on each new lançamento
-// (collect/transactions.ts) through `rules` and `ruleTagStatements`.
+// (collect/transactions.ts) through `rules`, `ruleTagStatements` and `ruleCategoryStatements`.
 import type { RulePreviewView, RuleView } from '../../src/application/api-contract';
-import { applyReplacements, describeWithRules, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition } from '../../src/domain/rules';
+import { cardPaymentWithChoice } from '../../src/domain/lancamentos';
+import { applyReplacements, categoryFromRules, describeWithRules, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition } from '../../src/domain/rules';
 import { MAX_BULK_TAGGING, moveInOrder, type TagAssignment } from '../../src/domain/tags';
 import { failure, nowIso, QueryError, type CommandResult, type Context } from './context';
-import { rewriteDescriptions, ruleSubjects } from './descriptions';
+import { descriptionStatements, rewriteDescriptions, ruleSubjects, storedDescriptions, type Subject } from './descriptions';
 import { lancamentoViews } from './lancamentos';
 import { statement, type Statement } from './ports';
 import { definition, ruleRows, type RuleRow } from './rule-store';
@@ -68,6 +69,35 @@ export function ruleTagStatements(byTransaction: ReadonlyMap<string, TagAssignme
 }
 
 /**
+ * Gives each lançamento the category a rule set, as if I had chosen it (docs/spec/regras-automaticas.md):
+ * only where no category was chosen yet, and only a category still in Pluggy's tree.
+ */
+export function ruleCategoryStatements(byTransaction: ReadonlyMap<string, string>, now: string): Statement[] {
+  const pairs = [...byTransaction];
+  const statements: Statement[] = [];
+  for (let i = 0; i < pairs.length; i += MAX_BULK_TAGGING) {
+    statements.push(
+      statement(
+        `INSERT INTO transaction_categories (transaction_id, pluggy_category_id, chosen_at)
+         SELECT json_extract(value, '$[0]'), json_extract(value, '$[1]'), ? FROM json_each(?)
+         WHERE json_extract(value, '$[1]') IN (SELECT id FROM pluggy_categories)
+         ON CONFLICT (transaction_id) DO NOTHING`,
+        now,
+        JSON.stringify(pairs.slice(i, i + MAX_BULK_TAGGING)),
+      ),
+    );
+  }
+  return statements;
+}
+
+/** The subject as it is once a rule sets `categoryId` on it. */
+export function withRuleCategory<T extends Subject>(subject: T, categoryId: string): T {
+  return { ...subject, categoryId, categoryChosen: true, cardPayment: cardPaymentWithChoice(subject.cardPayment, categoryId) };
+}
+
+const categoryExists = async (ctx: Context, id: string) => (await ctx.sql.all('SELECT 1 FROM pluggy_categories WHERE id = ?', id)).length > 0;
+
+/**
  * The stored lançamentos the conditions match, newest first. With `actions`, each one's description
  * shows what this rule would make of it, after the saved rules.
  */
@@ -80,13 +110,17 @@ export async function rulePreview(ctx: Context, input: Record<string, unknown>):
   return { total: matched.length, items: items.map((item) => ({ ...item, description: applyReplacements(actions, item.description) })) };
 }
 
-/** `invalid` for a malformed rule or one whose tags do not exist. */
+/** `invalid` for a malformed rule or one whose tags or category do not exist. */
 async function checkedRule(ctx: Context, input: Record<string, unknown>): Promise<RuleDefinition | 'invalid'> {
   const rule = parseRule(input);
   if (!rule) return 'invalid';
   const exists = await tagExists(ctx);
   const allExist = rule.actions.every((a) => a.kind !== 'addTags' || Object.entries(a.tags).every(([layerId, tagId]) => exists(layerId, tagId)));
-  return allExist ? rule : 'invalid';
+  if (!allExist) return 'invalid';
+  for (const action of rule.actions) {
+    if (action.kind === 'setCategory' && !(await categoryExists(ctx, action.categoryId))) return 'invalid';
+  }
+  return rule;
 }
 
 export async function createRule(ctx: Context, input: Record<string, unknown>): Promise<CommandResult<{ id: string }>> {
@@ -165,26 +199,35 @@ export async function moveRule(ctx: Context, input: Record<string, unknown>): Pr
 }
 
 /**
- * Runs every rule over the stored lançamentos: tags fill only the empty layers; the stored
- * descriptions are rewritten, in case (the bank's text stays), and `described` counts the
- * lançamentos whose description the rules change, to show those rules at work too.
+ * Runs every rule over the stored lançamentos: a category goes only where none was chosen, tags fill
+ * only the empty layers, and the stored descriptions are rewritten, in case (the bank's text stays).
+ * `described` counts the lançamentos whose description the rules change, to show those rules at work too.
  */
-export async function applyRules(ctx: Context): Promise<CommandResult<{ tagged: number; described: number }>> {
-  const [ruleList, transactions, links] = await Promise.all([
+export async function applyRules(ctx: Context): Promise<CommandResult<{ tagged: number; described: number; categorized: number }>> {
+  const [ruleList, stored, links, current] = await Promise.all([
     rules(ctx),
     ruleSubjects(ctx),
     ctx.sql.all<{ transaction_id: string; layer_id: string; tag_id: string }>('SELECT transaction_id, layer_id, tag_id FROM transaction_tags'),
+    storedDescriptions(ctx),
   ]);
-  const current = new Map<string, Record<string, string>>();
-  for (const link of links) current.set(link.transaction_id, { ...current.get(link.transaction_id), [link.layer_id]: link.tag_id });
+  const categories = new Map<string, string>();
+  const transactions = stored.map((t) => {
+    const categoryId = categoryFromRules(ruleList, t, t.categoryChosen);
+    if (categoryId === null) return t;
+    categories.set(t.id, categoryId);
+    return withRuleCategory(t, categoryId);
+  });
+  const tagsNow = new Map<string, Record<string, string>>();
+  for (const link of links) tagsNow.set(link.transaction_id, { ...tagsNow.get(link.transaction_id), [link.layer_id]: link.tag_id });
   const added = new Map<string, TagAssignment>();
   for (const t of transactions) {
-    const tags = tagsFromRules(ruleList, t, current.get(t.id));
+    const tags = tagsFromRules(ruleList, t, tagsNow.get(t.id));
     if (Object.keys(tags).length > 0) added.set(t.id, tags);
   }
   const now = nowIso(ctx);
-  const writes = [...ruleTagStatements(added, now), ...(await rewriteDescriptions(ctx, ruleList, now))];
+  // A row left from a lançamento since deleted stays: it comes back if the lançamento does.
+  const writes = [...ruleCategoryStatements(categories, now), ...ruleTagStatements(added, now), ...descriptionStatements(ruleList, transactions, current, now)];
   if (writes.length > 0) await ctx.sql.batch(writes);
   const described = transactions.filter((t) => describeWithRules(ruleList, t) !== t.description).length;
-  return { ok: true, value: { tagged: added.size, described }, changed: ['tags', 'rules'] };
+  return { ok: true, value: { tagged: added.size, described, categorized: categories.size }, changed: ['tags', 'rules', 'categories'] };
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LancamentoDetailView, LancamentosView, RulePreviewView, RuleView } from '../../src/application/api-contract';
 import { fakePluggy, testContext } from '../testing/node-sql';
-import { ITEM_ID, routes } from '../testing/pluggy-fixtures';
+import { CHECKING_ID, ITEM_ID, page, routes, transaction } from '../testing/pluggy-fixtures';
 import { AppService } from './app-service';
 import { rewriteDescriptionsJob } from './descriptions';
 import { NO_CALLER } from './lock';
@@ -151,7 +151,7 @@ describe('automatic rules', () => {
     await command('lancamentos.tag', { ids: ['b'], changes: [{ layerId: tipo, tagId: mercado }] });
     await create('rule.create', rule('ifood', { [tipo]: restaurante, [origem]: impulso }));
     await create('rule.create', rule('loja', { [tipo]: mercado }));
-    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 2, described: 0 }, changed: ['tags', 'rules'] });
+    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 2, described: 0, categorized: 0 }, changed: ['tags', 'rules', 'categories'] });
     expect(await sql.all('SELECT transaction_id, layer_id, tag_id FROM transaction_tags ORDER BY transaction_id, layer_id')).toEqual(
       [
         { transaction_id: 'a', layer_id: tipo, tag_id: restaurante },
@@ -160,7 +160,7 @@ describe('automatic rules', () => {
         { transaction_id: 'b', layer_id: origem, tag_id: impulso },
       ].sort((x, y) => x.transaction_id.localeCompare(y.transaction_id) || x.layer_id.localeCompare(y.layer_id)),
     );
-    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 0, described: 0 }, changed: ['tags', 'rules'] });
+    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 0, described: 0, categorized: 0 }, changed: ['tags', 'rules', 'categories'] });
   });
 
   it('count the lançamentos whose description the replace rules change when applied', async () => {
@@ -170,7 +170,7 @@ describe('automatic rules', () => {
       ['uber', '2026-10-11T12:00:00.000Z', 'Uber Trip'],
     ]);
     await create('rule.create', { conditions: [{ kind: 'descriptionContains', text: 'ifood' }], actions: [{ kind: 'replaceInDescription', find: 'ifood *', replace: 'iFood ' }] });
-    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 0, described: 1 }, changed: ['tags', 'rules'] });
+    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 0, described: 1, categorized: 0 }, changed: ['tags', 'rules', 'categories'] });
   });
 
   it('tag each new lançamento the collection stores', async () => {
@@ -183,6 +183,80 @@ describe('automatic rules', () => {
         'SELECT t.pluggy_id, tt.tag_id FROM transaction_tags tt JOIN transactions t ON t.id = tt.transaction_id ORDER BY t.pluggy_id',
       ),
     ).toEqual([{ pluggy_id: 't1', tag_id: test.mercado }]);
+  });
+});
+
+describe('"quem pagou" rules that set the category', () => {
+  const SALARIO = '01010000';
+  const OUTRA = '01020000';
+  const payerRule = (text: string, categoryId: string) => ({
+    conditions: [{ kind: 'payerContains', text }],
+    actions: [{ kind: 'setCategory', categoryId }],
+  });
+  async function seedCategories(sql: { batch: (s: ReturnType<typeof statement>[]) => Promise<void> }) {
+    await sql.batch(
+      [SALARIO, OUTRA].map((id) => statement('INSERT INTO pluggy_categories (id, raw_json, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?)', id, '{}', NOW, NOW)),
+    );
+  }
+  async function seedEntradas(sql: { batch: (s: ReturnType<typeof statement>[]) => Promise<void> }) {
+    await seedTransactions(sql, [
+      ['acme', '2026-10-10T12:00:00.000Z', 'PIX RECEBIDO'],
+      ['outro', '2026-10-11T12:00:00.000Z', 'PIX RECEBIDO'],
+      ['saida', '2026-10-12T12:00:00.000Z', 'PIX ENVIADO'],
+      ['minha', '2026-10-13T12:00:00.000Z', 'PIX RECEBIDO'],
+    ]);
+    await sql.batch([
+      statement("UPDATE transactions SET type = 'CREDIT', amount_cents = 1000 WHERE id IN ('acme', 'outro', 'minha')"),
+      ...[
+        ['acme', 'ACME Ltda'],
+        ['outro', 'Globex'],
+        ['saida', 'ACME Ltda'],
+        ['minha', 'Acme Ltda'],
+      ].map(([id, name]) => statement('INSERT INTO transaction_payment_data (transaction_id, payer_name) VALUES (?, ?)', id, name)),
+    ]);
+  }
+
+  it("refuse a category that is not in Pluggy's tree", async () => {
+    const { sql, command } = await setup();
+    await seedCategories(sql);
+    expect(await command('rule.create', payerRule('acme', '99999999'))).toEqual({ ok: false, error: 'invalid' });
+    expect((await command('rule.create', payerRule('acme', SALARIO))).ok).toBe(true);
+  });
+
+  it('are tested against who paid the entradas only', async () => {
+    const { sql, query } = await setup();
+    await seedEntradas(sql);
+    const preview = await query<RulePreviewView>('rulePreview', { conditions: [{ kind: 'payerContains', text: 'acme' }] });
+    expect(preview.items.map((i) => i.id)).toEqual(['minha', 'acme']);
+  });
+
+  it('give the category to the stored entradas when applied, keeping the one I chose', async () => {
+    const { sql, command, create, query } = await setup();
+    await seedCategories(sql);
+    await seedEntradas(sql);
+    expect((await command('lancamentos.categorize', { ids: ['minha'], categoryId: OUTRA })).ok).toBe(true);
+    await create('rule.create', payerRule('acme', SALARIO));
+    await create('rule.create', payerRule('acme | globex', OUTRA));
+    expect(await command('rules.apply', {})).toEqual({ ok: true, value: { tagged: 0, described: 0, categorized: 2 }, changed: ['tags', 'rules', 'categories'] });
+    expect(await sql.all('SELECT transaction_id, pluggy_category_id FROM transaction_categories ORDER BY transaction_id')).toEqual([
+      { transaction_id: 'acme', pluggy_category_id: SALARIO },
+      { transaction_id: 'minha', pluggy_category_id: OUTRA },
+      { transaction_id: 'outro', pluggy_category_id: OUTRA },
+    ]);
+    expect(await query<LancamentoDetailView>('lancamento', { id: 'acme' })).toMatchObject({ categoryId: SALARIO, categoryChosen: true });
+    expect(await command('rules.apply', {})).toMatchObject({ value: { categorized: 0 } });
+  });
+
+  it('give the category to each new entrada the collection stores', async () => {
+    const entrada = transaction('t3', { type: 'CREDIT', amount: 1000, description: 'PIX RECEBIDO', paymentData: { payer: { name: 'ACME LTDA' } } });
+    const test = await setup(fakePluggy(routes({ [`/v2/transactions?accountId=${CHECKING_ID}`]: page([transaction('t1'), entrada]) })));
+    await seedCategories(test.sql);
+    await test.create('rule.create', payerRule('acme', SALARIO));
+    expect((await test.command('connection.add', { itemId: ITEM_ID })).ok).toBe(true);
+    await Promise.all(test.tasks);
+    expect(
+      await test.sql.all('SELECT t.pluggy_id, tc.pluggy_category_id FROM transaction_categories tc JOIN transactions t ON t.id = tc.transaction_id'),
+    ).toEqual([{ pluggy_id: 't3', pluggy_category_id: SALARIO }]);
   });
 });
 
