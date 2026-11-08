@@ -9,6 +9,7 @@ import { Link, navigate } from '../router';
 import { EmConstrucao } from '../shell/EmConstrucao';
 import { GRAFICOS_CHARTS, graficosPath, tabPath, withQuery, type GraficosChart } from '../shell/routes';
 import { useQuery } from '../use-query';
+import { PorTag } from './GraficosTag';
 
 const text = strings.graficos;
 
@@ -20,15 +21,15 @@ export function Graficos({
   chart,
   month,
   monthParam,
-  compareParam,
+  search,
 }: {
   chart: GraficosChart;
   /** The selected month, yyyy-mm. */
   month: string;
   monthParam: string | null;
-  compareParam: string | null;
+  search: URLSearchParams;
 }) {
-  const compare: Comparison = compareParam === PREVIOUS ? 'previous' : 'average';
+  const compare: Comparison = search.get('comparar') === PREVIOUS ? 'previous' : 'average';
   const link = (to: GraficosChart, over: { mes?: string | null; comparar?: string | null } = {}) =>
     withQuery(graficosPath(to), NO_PARAMS, { mes: monthParam, comparar: compare === 'previous' ? PREVIOUS : null, ...over });
 
@@ -56,6 +57,7 @@ export function Graficos({
         )}
       </div>
       {chart === 'categoria' && <PorCategoria month={month} monthParam={monthParam} compare={compare} />}
+      {chart === 'tag' && <PorTag month={month} search={search} />}
       {chart === 'importancia' && <EmConstrucao title={text.importancia.title} hint={text.importancia.hint} tall />}
       {chart === 'tempo' && <AoLongoDoTempo month={month} link={(mes) => link('categoria', { mes })} />}
     </div>

@@ -418,7 +418,7 @@ export const strings = {
 
   // Finanças › Gráficos (docs/spec/graficos.md).
   graficos: {
-    charts: { categoria: 'Por categoria', importancia: 'Por importância', tempo: 'Ao longo do tempo' },
+    charts: { categoria: 'Por categoria', tag: 'Por tag', importancia: 'Por importância', tempo: 'Ao longo do tempo' },
     chartsLabel: 'Tipo de gráfico',
     compareLabel: 'Comparar com',
     compare: { average: 'Média dos últimos 3 meses', previous: 'Mês anterior' },
@@ -460,6 +460,26 @@ export const strings = {
       none: '—',
       total: 'Total',
       createGoal: (category: string) => `Criar meta para ${category}`,
+    },
+    tag: {
+      layerLabel: 'Camada',
+      noLayers: 'Ainda não tenho camadas de tags.',
+      createLayers: 'Criar camadas em Categorias',
+      empty: 'Nenhum gasto neste mês ainda.',
+      top: (tag: string, value: string, share: string) => `${tag} leva a maior parte: ${value}, ${share} do mês.`,
+      allUntagged: (layer: string) => `Nenhum gasto do mês tem tag em ${layer} ainda.`,
+      untagged: (value: string, share: string) => `${value} (${share}) ainda estão sem tag nesta camada.`,
+      hint: 'Clique numa fatia para ver os lançamentos dela e marcar tags ali mesmo.',
+      noTag: 'Sem tag',
+      total: 'Total',
+      center: 'gasto do mês',
+      chartLabel: (layer: string) => `Gastos por tag de ${layer}, gráfico de rosca`,
+      tableLabel: 'Os mesmos números em tabela',
+      columns: { tag: 'Tag', value: 'Valor', share: '% do mês' },
+      sliceTitle: (tag: string) => `Ver os lançamentos de ${tag}`,
+      listLabel: (tag: string) => `Lançamentos de ${tag}`,
+      listTitle: (tag: string, count: number) => `${tag} · ${count} ${count === 1 ? 'lançamento' : 'lançamentos'}`,
+      close: 'Fechar a lista',
     },
     tempo: {
       title: (average: string) => `Você gasta em média ${average} por mês.`,

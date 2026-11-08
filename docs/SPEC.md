@@ -56,7 +56,7 @@ do Pluggy apaga.
 | [spec/tela-do-celular.md](spec/tela-do-celular.md) | A tela do semáforo e as configurações |
 | [spec/cartao-de-credito.md](spec/cartao-de-credito.md) | Faturas e parcelas futuras |
 | [spec/exportacao-e-api.md](spec/exportacao-e-api.md) | Exportação e a API de dados para outros apps |
-| [spec/graficos.md](spec/graficos.md) | Para onde foi o dinheiro: gastos por categoria, por importância e ao longo do tempo, comparados com os meses anteriores |
+| [spec/graficos.md](spec/graficos.md) | Para onde foi o dinheiro: gastos por categoria, por importância, por tag e ao longo do tempo, comparados com os meses anteriores |
 | [spec/holerite.md](spec/holerite.md) | Envio do holerite, leitura dos lançamentos e conferência do líquido |
 | [spec/_modelo.md](spec/_modelo.md) | Modelo para um arquivo de feature novo |
 

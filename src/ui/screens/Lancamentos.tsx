@@ -4,11 +4,8 @@
 // on many lançamentos at once. My tags (docs/spec/categorias.md) show in their own column, filter the
 // list, and go on many lançamentos at once from the checkboxes.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { LancamentoView, TagLayerView } from '../../application/api-contract';
-import type { CategoryOption } from '../../domain/pluggy-categories';
 import { isBareDay } from '../../domain/calendar';
 import {
-  clickSelection,
   dayCell,
   dayLabel,
   matchesAccounts,
@@ -26,25 +23,16 @@ import {
 } from '../../domain/lancamentos';
 import { monthKey, type Month } from '../../domain/month';
 import { strings } from '../../domain/strings';
-import { commonTags, emptyTagKey, matchesTags, MAX_BULK_TAGGING, tagChanges, toggleTag, type TagAssignment } from '../../domain/tags';
+import { emptyTagKey, matchesTags } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
 import { useServices } from '../backend-context';
 import { Link } from '../router';
-import { Icon } from '../shell/Icon';
-import { modulePath, tabPath, withQuery } from '../shell/routes';
+import { tabPath, withQuery } from '../shell/routes';
 import { useQuery } from '../use-query';
+import { account, money, optionLabel, PLUGGY, SelectionActions, signed, TagCell, useSelection } from './LancamentoBatch';
 
 const text = strings.lancamentos;
 const FILTERS: readonly DirectionFilter[] = ['todos', 'saidas', 'entradas', 'cartao'];
-
-const money = (cents: number, currency: string) => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency });
-const signed = (item: { amountCents: number; currency: string; direction: 'in' | 'out' }) =>
-  `${item.direction === 'in' ? '+ ' : ''}${money(item.amountCents, item.currency)}`;
-
-function account(item: LancamentoView): string {
-  const type = item.accountType ? text.accountTypes[item.accountType] : undefined;
-  return [item.accountName, type].filter(Boolean).join(' ') || '—';
-}
 
 /** The list path with the filter `key` set to `chosen` (`?conta=a&conta=b`, `?tag=x&tag=y`). */
 function withList(path: string, search: URLSearchParams, key: 'conta' | 'tag', chosen: readonly string[]): string {
@@ -93,23 +81,7 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
     sort,
   );
   const filtering = filter !== 'todos' || chosenAccounts.length > 0 || chosenTags.length > 0;
-  const [selection, setSelection] = useState<readonly string[]>([]);
-  const [tagging, setTagging] = useState(false);
-  const [categorizing, setCategorizing] = useState(false);
-  const monthId = monthKey(month);
-  useEffect(() => setSelection([]), [monthId]);
-  // Only what the list shows counts: a filter that hides a lançamento takes it out of the batch.
-  const selected = items.filter((item) => selection.includes(item.id));
-  const allSelected = items.length > 0 && selected.length === items.length;
-  // The last box clicked: a shift-click selects everything between it and the box clicked.
-  const anchor = useRef<string | null>(null);
-  const clickBox = (id: string, shift: boolean) => {
-    const order = items.map((i) => i.id);
-    // Read the anchor now: React may run the updater after the line below has moved it to `id`.
-    const from = anchor.current;
-    setSelection((s) => clickSelection(s, order, from, id, shift));
-    anchor.current = id;
-  };
+  const { selection, setSelection, selected, allSelected, clickBox, toggleAll } = useSelection(items, monthKey(month));
   // The totals follow the filters: they add up only what the list shows.
   const monthTotals = filtering ? totals(items) : (view?.totals ?? []);
   // What left the accounts to pay the card, per currency: out of the totals, but said so.
@@ -154,18 +126,7 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
         </div>
 
         {selected.length > 0 ? (
-          <div className="lanc-toolbar lanc-toolbar--selection" role="group" aria-label={text.selectionActions}>
-            <span className="text-strong">{text.selected(selected.length)}</span>
-            <button type="button" className="lanc-small" onClick={() => setTagging(true)}>
-              {text.addTags}
-            </button>
-            <button type="button" className="lanc-small" onClick={() => setCategorizing(true)}>
-              {text.changeCategory}
-            </button>
-            <button type="button" className="secondary lanc-small" onClick={() => setSelection([])}>
-              {text.clearSelection}
-            </button>
-          </div>
+          <SelectionActions selected={selected} layers={layers} onClear={() => setSelection([])} />
         ) : (
           <div className="lanc-toolbar" role="group" aria-label={text.filters}>
             <div className="lanc-segmented" role="group" aria-label={text.directionFilter}>
@@ -235,7 +196,7 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
               ref={(box) => {
                 if (box) box.indeterminate = selected.length > 0 && !allSelected;
               }}
-              onChange={() => setSelection(allSelected ? [] : items.map((i) => i.id))}
+              onChange={toggleAll}
             />
             <div className="lanc-row lanc-row--head text-over muted">
               <SortHeader column="data" sort={sort} path={listPath} search={search} />
@@ -292,27 +253,6 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
         )}
       </section>
 
-      {tagging && selected.length > 0 && (
-        <TagDialog
-          layers={layers}
-          items={selected}
-          onClose={() => setTagging(false)}
-          onSaved={() => {
-            setTagging(false);
-            setSelection([]);
-          }}
-        />
-      )}
-      {categorizing && selected.length > 0 && (
-        <CategoryDialog
-          ids={selected.map((i) => i.id)}
-          onClose={() => setCategorizing(false)}
-          onSaved={() => {
-            setCategorizing(false);
-            setSelection([]);
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -410,211 +350,6 @@ function FilterMenu({ label, chosen, options, clearTo }: { label: string; chosen
     </div>
   );
 }
-
-/** The lançamento's tag names, in the layers' order. */
-function tagNames(layers: readonly TagLayerView[], tags: TagAssignment): string[] {
-  return layers.flatMap((layer) => layer.tags.filter((t) => t.id === tags[layer.id]).map((t) => t.name));
-}
-
-function TagCell({ layers, tags }: { layers: readonly TagLayerView[]; tags: TagAssignment }) {
-  const names = tagNames(layers, tags);
-  if (names.length === 0) return <span className="muted">{text.noTags}</span>;
-  return (
-    <span className="lanc-tags" title={names.join(', ')}>
-      {names.map((name, index) => (
-        <span key={index} className="chip lanc-tag">
-          {name}
-        </span>
-      ))}
-    </span>
-  );
-}
-
-/**
- * "Adicionar tags": every layer with its tags; I tap the tags and save. It starts with the tags
- * the chosen lançamentos share, and saving changes only the layers I touched.
- */
-function TagDialog({
-  layers,
-  items,
-  onClose,
-  onSaved,
-}: {
-  layers: readonly TagLayerView[];
-  items: readonly LancamentoView[];
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const t = text.tagging;
-  const { backend } = useServices();
-  // Fixed when the form opens, so a refetch behind it does not reset what I marked.
-  const [initial] = useState(() => commonTags(items.map((i) => i.tags)));
-  const [ids] = useState(() => items.map((i) => i.id));
-  const [chosen, setChosen] = useState<TagAssignment>(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const first = useRef<HTMLButtonElement>(null);
-  const changes = tagChanges(initial, chosen);
-  const tooMany = ids.length > MAX_BULK_TAGGING;
-
-  useEffect(() => first.current?.focus(), []);
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  async function save() {
-    setBusy(true);
-    setError(null);
-    const result = await backend.command('lancamentos.tag', { ids, changes });
-    setBusy(false);
-    if (result.ok) onSaved();
-    else setError(strings.genericError);
-  }
-
-  return (
-    <div className="scrim" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={t.title(ids.length)} className="search-dialog lanc-tagging" onClick={(e) => e.stopPropagation()}>
-        <div className="tile-head">
-          <h2 className="text-title">{t.title(ids.length)}</h2>
-          <button ref={first} type="button" className="icon-button" aria-label={t.close} onClick={onClose}>
-            <Icon name="close" />
-          </button>
-        </div>
-        {layers.length === 0 ? (
-          <p className="muted">
-            {t.noLayers} <Link to={modulePath('categorias')}>{t.createLayers}</Link>
-          </p>
-        ) : (
-          <>
-            <p className="text-label muted">{t.hint}</p>
-            <div className="lanc-tagging-layers">
-              {layers.map((layer) => (
-                <fieldset key={layer.id} className="lanc-tagging-layer">
-                  <legend className="text-strong">{layer.name}</legend>
-                  {layer.tags.length === 0 ? (
-                    <p className="text-label muted">{t.emptyLayer}</p>
-                  ) : (
-                    <div className="tags-chips">
-                      {layer.tags.map((tag) => (
-                        <button
-                          key={tag.id}
-                          type="button"
-                          className="chip tags-chip"
-                          aria-pressed={chosen[layer.id] === tag.id}
-                          onClick={() => setChosen((c) => toggleTag(c, { id: tag.id, layerId: layer.id }))}
-                        >
-                          {tag.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </fieldset>
-              ))}
-            </div>
-          </>
-        )}
-        {tooMany && <p className="notice">{t.tooMany(MAX_BULK_TAGGING)}</p>}
-        {error && (
-          <p className="notice" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="lanc-tagging-actions">
-          <button type="button" className="secondary" onClick={onClose}>
-            {t.cancel}
-          </button>
-          <button type="button" disabled={busy || tooMany || changes.length === 0} onClick={() => void save()}>
-            {busy ? t.saving : t.save}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** A category's label in the list, indented by its depth in Pluggy's tree. */
-const optionLabel = (option: CategoryOption) => `${'\u00a0\u00a0\u00a0'.repeat(option.depth)}${option.name}`;
-
-/** "Mudar categoria": one category from Pluggy's tree for every chosen lançamento, or Pluggy's back. */
-function CategoryDialog({ ids, onClose, onSaved }: { ids: readonly string[]; onClose: () => void; onSaved: () => void }) {
-  const t = text.categorizing;
-  const { backend } = useServices();
-  const options = useQuery('pluggyCategories', {}, ['vault']).data ?? [];
-  // Fixed when the form opens, so a refetch behind it does not change what I am saving.
-  const [chosenIds] = useState(() => [...ids]);
-  const [choice, setChoice] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const first = useRef<HTMLButtonElement>(null);
-  const tooMany = chosenIds.length > MAX_BULK_TAGGING;
-
-  useEffect(() => first.current?.focus(), []);
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  async function save() {
-    setBusy(true);
-    setError(null);
-    const result = await backend.command('lancamentos.categorize', { ids: chosenIds, categoryId: choice === PLUGGY ? null : choice });
-    setBusy(false);
-    if (result.ok) onSaved();
-    else setError(strings.genericError);
-  }
-
-  return (
-    <div className="scrim" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={t.title(chosenIds.length)} className="search-dialog lanc-tagging" onClick={(e) => e.stopPropagation()}>
-        <div className="tile-head">
-          <h2 className="text-title">{t.title(chosenIds.length)}</h2>
-          <button ref={first} type="button" className="icon-button" aria-label={t.close} onClick={onClose}>
-            <Icon name="close" />
-          </button>
-        </div>
-        <p className="text-label muted">{t.hint}</p>
-        <label className="lanc-category-field">
-          <span className="text-label muted">{t.label}</span>
-          <select value={choice} onChange={(e) => setChoice(e.target.value)}>
-            <option value="" disabled>
-              {t.choose}
-            </option>
-            <option value={PLUGGY}>{t.backToPluggy}</option>
-            {options.map((o) => (
-              <option key={o.id} value={o.id}>
-                {optionLabel(o)}
-              </option>
-            ))}
-          </select>
-        </label>
-        {tooMany && <p className="notice">{t.tooMany(MAX_BULK_TAGGING)}</p>}
-        {error && (
-          <p className="notice" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="lanc-tagging-actions">
-          <button type="button" className="secondary" onClick={onClose}>
-            {t.cancel}
-          </button>
-          <button type="button" disabled={busy || tooMany || choice === ''} onClick={() => void save()}>
-            {busy ? t.saving : t.save}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** The select's value for "Pluggy's category": no category of my own. */
-const PLUGGY = 'pluggy';
 
 /** The category in the detail panel: a list that saves as soon as I pick, with Pluggy's on top. */
 function CategoryPicker({ id, chosen, categoryId, pluggyCategory }: { id: string; chosen: boolean; categoryId: string | null; pluggyCategory: string | null }) {
