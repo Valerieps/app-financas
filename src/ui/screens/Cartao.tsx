@@ -13,7 +13,7 @@ const text = strings.cartao;
 const short = (day: string) => `${day.slice(8, 10)}/${day.slice(5, 7)}`;
 
 export function Cartao() {
-  const query = useQuery('cartao', {}, ['vault']);
+  const query = useQuery('cartao', {}, ['vault', 'categories']);
   const bills = query.data?.bills ?? [];
 
   return (

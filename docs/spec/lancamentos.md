@@ -18,7 +18,8 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 - A aba se chama **Lançamentos**, não Gastos, porque mostra também o que entra (créditos). *(1)*
 - Eu vejo todos os lançamentos do mês escolhido no cabeçalho, de todas as contas e cartões, numa
   tabela só, do dia mais novo para o mais antigo, sem total por dia. *(1)*
-- Cada linha mostra uma caixinha para selecionar, a data, a descrição, a categoria do Pluggy, as
+- Cada linha mostra uma caixinha para selecionar, a data, a descrição, a categoria (a que eu
+  escolhi ou, sem ela, a do Pluggy), as
   minhas tags (na ordem das camadas) e o valor; a data diz "Hoje" ou
   "Ontem" quando for o caso, senão o dia da semana e o dia ("qui, 5 nov"). As entradas aparecem em
   verde, com "+". Um lançamento que o banco ainda não fechou aparece como **pendente**, e uma compra
@@ -35,6 +36,7 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
   reconhece cada um quando o dado chega, sempre: pela categoria do Pluggy de pagamento de cartão
   ou, sem ela, pela descrição que começa com "Pagamento de fatura", "Pagamento da fatura" ou
   "Pagamento fatura" (saindo da conta) ou com essas ou "Pagamento recebido" (entrando no cartão). *(1)*
+  A categoria que eu escolher para um lançamento vale por cima disso (`classificacao.md`). *(2)*
 - Eu posso ordenar a tabela clicando no título da data, da descrição, da categoria ou do valor; um
   segundo clique inverte. A data e o valor começam do maior, os textos de A a Z. A ordem fica na URL
   (`?ordem=valor`) e continua quando eu troco de mês. *(1)*
@@ -62,6 +64,8 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 - Eu marco um lançamento, seguro Shift e marco outro: todos os que estão entre os dois, na ordem em
   que a lista mostra, ficam marcados. Se o segundo já estava marcado, Shift desmarca o intervalo. *(2)*
 - Com lançamentos selecionados, eu ponho ou tiro tags de todos de uma vez (`categorias.md`). *(2)*
+- Com lançamentos selecionados, eu mudo a categoria de todos de uma vez, ou volto à do Pluggy
+  (`classificacao.md`). *(2)*
 - Enquanto há lançamentos selecionados, a barra de filtros dá lugar às ações com eles; limpar a
   seleção traz os filtros de volta. *(2)*
 
@@ -71,4 +75,5 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
   conta, a categoria, se está pendente, quem pagou (numa entrada) ou quem recebeu (numa saída), o tipo
   de operação, a parcela, o final do cartão, o texto original do banco e quando o app o viu pela
   primeira vez. *(1)*
-- Por enquanto o painel só mostra; mudar categoria e importância vem com a fase 2. *(2)*
+- No painel, eu mudo a categoria numa lista com a árvore do Pluggy; a primeira opção mostra a
+  categoria do Pluggy e volta a ela (`classificacao.md`). Mudar a importância vem com a fase 2. *(2)*

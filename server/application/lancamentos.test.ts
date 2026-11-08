@@ -57,6 +57,13 @@ async function seed(withCardPayment = false) {
       NOW,
       NOW,
     ),
+    statement(
+      `INSERT INTO pluggy_categories (id, description, description_translated, parent_id, raw_json, first_seen_at, last_seen_at) VALUES
+         ('11000000', 'Food and drinks', 'Alimentação', NULL, '{}', ?, ?),
+         ('11010000', 'Restaurants', 'Restaurantes', '11000000', '{}', ?, ?),
+         ('05100000', 'Credit card payment', 'Pagamento de cartão de crédito', NULL, '{}', ?, ?)`,
+      NOW, NOW, NOW, NOW, NOW, NOW,
+    ),
     account('bank', 'BANK', 'Conta'),
     account('card', 'CREDIT', 'Cartão'),
     transaction('salario', 'bank', '2026-11-05T00:00:00.000Z', 500000, { type: 'CREDIT' }),
@@ -194,5 +201,66 @@ describe('lancamentos.tag', () => {
     expect(await command({ ids: ['mercado', 'apagada'], changes: [{ layerId: tipo, tagId: mercado }] })).toEqual({ ok: false, error: 'not_found' });
     expect(await command({ ids: ['mercado'], changes: [{ layerId: origem, tagId: mercado }] })).toEqual({ ok: false, error: 'not_found' });
     expect(await command({ ids: ['mercado'], changes: [{ layerId: 'nada', tagId: null }] })).toEqual({ ok: false, error: 'not_found' });
+  });
+});
+
+describe('lancamentos.categorize', () => {
+  async function categorized() {
+    const service = await seed();
+    const command = (input: Record<string, unknown>) => service.command('lancamentos.categorize', input, NO_CALLER);
+    const list = async () => {
+      const result = await service.query('lancamentos', { month: '2026-11' }, NO_CALLER);
+      return (result as { value: LancamentosView }).value;
+    };
+    return { service, command, list };
+  }
+
+  it('gives many lançamentos my category, over Pluggy’s, and takes it off again', async () => {
+    const { service, command, list } = await categorized();
+    expect(await command({ ids: ['mercado', 'loja'], categoryId: '11010000' })).toEqual({ ok: true, value: null, changed: ['categories'] });
+    let items = (await list()).items;
+    expect(items.find((i) => i.id === 'mercado')).toMatchObject({ category: 'Restaurantes', categoryId: '11010000', categoryChosen: true });
+    expect(items.find((i) => i.id === 'loja')).toMatchObject({ category: 'Restaurantes', categoryChosen: true });
+    expect(items.find((i) => i.id === 'salario')).toMatchObject({ categoryChosen: false });
+    const detail = (await service.query('lancamento', { id: 'mercado' }, NO_CALLER)) as { value: LancamentoDetailView };
+    expect(detail.value).toMatchObject({ category: 'Restaurantes', pluggyCategory: 'Supermercado' });
+
+    expect(await command({ ids: ['mercado', 'loja'], categoryId: null })).toMatchObject({ ok: true });
+    items = (await list()).items;
+    expect(items.find((i) => i.id === 'mercado')).toMatchObject({ category: 'Supermercado', categoryId: 'c1', categoryChosen: false });
+    expect(items.find((i) => i.id === 'loja')).toMatchObject({ category: 'Shopping', categoryId: null, categoryChosen: false });
+  });
+
+  it('makes a lançamento a card bill payment, out of the totals, or takes it out of the card payments', async () => {
+    const service = await seed(true);
+    const command = (input: Record<string, unknown>) => service.command('lancamentos.categorize', input, NO_CALLER);
+    await command({ ids: ['mercado'], categoryId: '05100000' });
+    await command({ ids: ['fatura'], categoryId: 'c1' });
+    const view = ((await service.query('lancamentos', { month: '2026-11' }, NO_CALLER)) as { value: LancamentosView }).value;
+    expect(view.items.filter((i) => i.cardPayment).map((i) => i.id)).toEqual(['mercado', 'recebido']);
+    expect(view.totals).toEqual([{ currency: 'BRL', inCents: 500000, outCents: 90000 + 4590 + 100 }]);
+  });
+
+  it('lists Pluggy’s tree as the choices', async () => {
+    const { service } = await categorized();
+    const result = await service.query('pluggyCategories', {}, NO_CALLER);
+    expect(result).toEqual({
+      ok: true,
+      value: [
+        { id: '05100000', name: 'Pagamento de cartão de crédito', depth: 0 },
+        { id: '11000000', name: 'Alimentação', depth: 0 },
+        { id: '11010000', name: 'Restaurantes', depth: 1 },
+        { id: 'c1', name: 'Supermercado', depth: 0 },
+      ],
+    });
+  });
+
+  it('refuses malformed input, unknown lançamentos and unknown categories', async () => {
+    const { command } = await categorized();
+    expect(await command({ ids: [], categoryId: 'c1' })).toEqual({ ok: false, error: 'invalid' });
+    expect(await command({ ids: ['mercado'] })).toEqual({ ok: false, error: 'invalid' });
+    expect(await command({ ids: ['mercado'], categoryId: '' })).toEqual({ ok: false, error: 'invalid' });
+    expect(await command({ ids: ['mercado', 'apagada'], categoryId: 'c1' })).toEqual({ ok: false, error: 'not_found' });
+    expect(await command({ ids: ['mercado'], categoryId: 'nada' })).toEqual({ ok: false, error: 'not_found' });
   });
 });

@@ -7,7 +7,7 @@ import { statement } from './ports';
 
 const NOW = '2026-11-07T15:00:00Z';
 
-async function setUp() {
+async function setUp(extra: ReturnType<typeof statement>[] = []) {
   const { ctx, sql } = testContext(NOW);
   const account = (id: string, item: string, type: string, currency = 'BRL') =>
     statement(
@@ -59,6 +59,7 @@ async function setUp() {
     tx('cartao', '2026-10-07', 12000, 'DEBIT', '11020000'),
     tx('cartao', '2026-10-08', 50000, 'DEBIT', '11020000'),
   ]);
+  if (extra.length > 0) await sql.batch(extra);
   return new AppService(ctx);
 }
 
@@ -84,6 +85,19 @@ describe('spendingByCategory', () => {
       totalCents: 57870,
       baselineTotalCents: 12000,
     });
+  });
+
+  it('counts the category I chose over Pluggy’s, including what is not a gasto', async () => {
+    const category = (id: string) =>
+      statement("INSERT INTO pluggy_categories (id, raw_json, first_seen_at, last_seen_at) VALUES (?, '{}', ?, ?)", id, NOW, NOW);
+    const choose = (transactionId: string, categoryId: string) =>
+      statement('INSERT INTO transaction_categories (transaction_id, pluggy_category_id, chosen_at) VALUES (?, ?, ?)', transactionId, categoryId, NOW);
+    const service = await setUp([category('19000000'), category('05100000'), choose('t2', '19000000'), choose('t1', '05100000')]);
+    const chart = await query<CategoryChart>(service, 'spendingByCategory', { month: '2026-11', compare: 'previous' });
+    expect(chart.rows).toEqual([
+      { category: 'transporte', cents: 41230, baselineCents: 0 },
+      { category: 'restaurante', cents: -2000, baselineCents: 12000 },
+    ]);
   });
 
   it('refuses a malformed month or comparison', async () => {

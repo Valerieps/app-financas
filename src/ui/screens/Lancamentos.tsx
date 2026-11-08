@@ -1,9 +1,11 @@
 // Finanças › Lançamentos (docs/spec/lancamentos.md): every transaction of the month, money out and
-// money in, newest day first; each row opens in the detail panel. Categoria and importância arrive with
-// phase 2; the category shown is Pluggy's. My tags (docs/spec/categorias.md) show in their own
-// column, filter the list, and go on many lançamentos at once from the checkboxes.
+// money in, newest day first; each row opens in the detail panel. The category shown is the one I
+// chose from Pluggy's tree, or else Pluggy's (docs/spec/classificacao.md); I change it in the panel or
+// on many lançamentos at once. My tags (docs/spec/categorias.md) show in their own column, filter the
+// list, and go on many lançamentos at once from the checkboxes.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LancamentoView, TagLayerView } from '../../application/api-contract';
+import type { CategoryOption } from '../../domain/pluggy-categories';
 import { isBareDay } from '../../domain/calendar';
 import {
   clickSelection,
@@ -74,7 +76,7 @@ function LoadError({ error, reload }: { error: string | undefined; reload: () =>
 }
 
 export function Lancamentos({ month, search, selectedId }: { month: Month; search: URLSearchParams; selectedId: string | null }) {
-  const query = useQuery('lancamentos', { month: monthKey(month) }, ['vault', 'tags']);
+  const query = useQuery('lancamentos', { month: monthKey(month) }, ['vault', 'tags', 'categories']);
   const layersQuery = useQuery('tagLayers', {}, ['tags']);
   const layers = useMemo(() => layersQuery.data ?? [], [layersQuery.data]);
   const filter = parseDirectionFilter(search.get('tipo'));
@@ -93,6 +95,7 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
   const filtering = filter !== 'todos' || chosenAccounts.length > 0 || chosenTags.length > 0;
   const [selection, setSelection] = useState<readonly string[]>([]);
   const [tagging, setTagging] = useState(false);
+  const [categorizing, setCategorizing] = useState(false);
   const monthId = monthKey(month);
   useEffect(() => setSelection([]), [monthId]);
   // Only what the list shows counts: a filter that hides a lançamento takes it out of the batch.
@@ -154,6 +157,9 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
             <span className="text-strong">{text.selected(selected.length)}</span>
             <button type="button" className="lanc-small" onClick={() => setTagging(true)}>
               {text.addTags}
+            </button>
+            <button type="button" className="lanc-small" onClick={() => setCategorizing(true)}>
+              {text.changeCategory}
             </button>
             <button type="button" className="secondary lanc-small" onClick={() => setSelection([])}>
               {text.clearSelection}
@@ -288,6 +294,16 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
           onClose={() => setTagging(false)}
           onSaved={() => {
             setTagging(false);
+            setSelection([]);
+          }}
+        />
+      )}
+      {categorizing && selected.length > 0 && (
+        <CategoryDialog
+          ids={selected.map((i) => i.id)}
+          onClose={() => setCategorizing(false)}
+          onSaved={() => {
+            setCategorizing(false);
             setSelection([]);
           }}
         />
@@ -515,12 +531,130 @@ function TagDialog({
   );
 }
 
+/** A category's label in the list, indented by its depth in Pluggy's tree. */
+const optionLabel = (option: CategoryOption) => `${'\u00a0\u00a0\u00a0'.repeat(option.depth)}${option.name}`;
+
+/** "Mudar categoria": one category from Pluggy's tree for every chosen lançamento, or Pluggy's back. */
+function CategoryDialog({ ids, onClose, onSaved }: { ids: readonly string[]; onClose: () => void; onSaved: () => void }) {
+  const t = text.categorizing;
+  const { backend } = useServices();
+  const options = useQuery('pluggyCategories', {}, ['vault']).data ?? [];
+  // Fixed when the form opens, so a refetch behind it does not change what I am saving.
+  const [chosenIds] = useState(() => [...ids]);
+  const [choice, setChoice] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const first = useRef<HTMLButtonElement>(null);
+  const tooMany = chosenIds.length > MAX_BULK_TAGGING;
+
+  useEffect(() => first.current?.focus(), []);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  async function save() {
+    setBusy(true);
+    setError(null);
+    const result = await backend.command('lancamentos.categorize', { ids: chosenIds, categoryId: choice === PLUGGY ? null : choice });
+    setBusy(false);
+    if (result.ok) onSaved();
+    else setError(strings.genericError);
+  }
+
+  return (
+    <div className="scrim" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={t.title(chosenIds.length)} className="search-dialog lanc-tagging" onClick={(e) => e.stopPropagation()}>
+        <div className="tile-head">
+          <h2 className="text-title">{t.title(chosenIds.length)}</h2>
+          <button ref={first} type="button" className="icon-button" aria-label={t.close} onClick={onClose}>
+            <Icon name="close" />
+          </button>
+        </div>
+        <p className="text-label muted">{t.hint}</p>
+        <label className="lanc-category-field">
+          <span className="text-label muted">{t.label}</span>
+          <select value={choice} onChange={(e) => setChoice(e.target.value)}>
+            <option value="" disabled>
+              {t.choose}
+            </option>
+            <option value={PLUGGY}>{t.backToPluggy}</option>
+            {options.map((o) => (
+              <option key={o.id} value={o.id}>
+                {optionLabel(o)}
+              </option>
+            ))}
+          </select>
+        </label>
+        {tooMany && <p className="notice">{t.tooMany(MAX_BULK_TAGGING)}</p>}
+        {error && (
+          <p className="notice" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="lanc-tagging-actions">
+          <button type="button" className="secondary" onClick={onClose}>
+            {t.cancel}
+          </button>
+          <button type="button" disabled={busy || tooMany || choice === ''} onClick={() => void save()}>
+            {busy ? t.saving : t.save}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The select's value for "Pluggy's category": no category of my own. */
+const PLUGGY = 'pluggy';
+
+/** The category in the detail panel: a list that saves as soon as I pick, with Pluggy's on top. */
+function CategoryPicker({ id, chosen, categoryId, pluggyCategory }: { id: string; chosen: boolean; categoryId: string | null; pluggyCategory: string | null }) {
+  const { backend } = useServices();
+  const options = useQuery('pluggyCategories', {}, ['vault']).data ?? [];
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const value = chosen && categoryId ? categoryId : PLUGGY;
+
+  async function pick(next: string) {
+    if (next === value) return;
+    setBusy(true);
+    setError(null);
+    const result = await backend.command('lancamentos.categorize', { ids: [id], categoryId: next === PLUGGY ? null : next });
+    setBusy(false);
+    if (!result.ok) setError(strings.genericError);
+  }
+
+  return (
+    <>
+      <select aria-label={text.detail.category} value={value} disabled={busy} onChange={(e) => void pick(e.target.value)}>
+        <option value={PLUGGY}>{text.detail.fromPluggy(pluggyCategory)}</option>
+        {/* The chosen category shows even before the list arrives. */}
+        {chosen && categoryId && !options.some((o) => o.id === categoryId) && <option value={categoryId}>{categoryId}</option>}
+        {options.map((o) => (
+          <option key={o.id} value={o.id}>
+            {optionLabel(o)}
+          </option>
+        ))}
+      </select>
+      {error && (
+        <span className="notice" role="alert">
+          {error}
+        </span>
+      )}
+    </>
+  );
+}
+
 const dateTime = (iso: string) =>
   new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'medium', timeStyle: 'short' });
 
-/** The detail panel of one lançamento: what the bank told about it. Nothing is edited yet. */
+/** The detail panel of one lançamento: what the bank told about it, and the category, which I can change. */
 export function LancamentoDetail({ id }: { id: string }) {
-  const query = useQuery('lancamento', { id }, ['vault']);
+  const query = useQuery('lancamento', { id }, ['vault', 'categories']);
   const item = query.data?.id === id ? query.data : undefined;
   const d = text.detail;
 
@@ -530,7 +664,6 @@ export function LancamentoDetail({ id }: { id: string }) {
   const rows: [string, string | null][] = [
     [d.when, isBareDay(item.date) ? dayLabel(item.day, saoPauloDate(new Date()), text) : dateTime(item.date)],
     [d.account, account(item)],
-    [d.category, item.category],
     [d.status, item.pending ? d.pending : d.posted],
     [item.direction === 'in' ? d.counterpartIn : d.counterpartOut, item.counterpart],
     [d.operation, [item.operationType, item.paymentMethod].filter(Boolean).join(' · ') || null],
@@ -548,6 +681,12 @@ export function LancamentoDetail({ id }: { id: string }) {
         <p className="text-strong">{item.description ?? text.noDescription}</p>
       </div>
       <dl className="lanc-facts">
+        <div>
+          <dt className="text-label muted">{d.category}</dt>
+          <dd>
+            <CategoryPicker id={item.id} chosen={item.categoryChosen} categoryId={item.categoryId} pluggyCategory={item.pluggyCategory} />
+          </dd>
+        </div>
         {rows
           .filter((row): row is [string, string] => Boolean(row[1]))
           .map(([label, value]) => (

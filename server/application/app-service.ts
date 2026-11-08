@@ -8,7 +8,7 @@ import { runSweeps } from './collect/sync';
 import { vault } from './collect/vault';
 import { processPendingEvents } from './collect/webhooks';
 import { cartao } from './faturas';
-import { lancamento, lancamentos, tagLancamentos } from './lancamentos';
+import { categorizeLancamentos, lancamento, lancamentos, pluggyCategories, tagLancamentos } from './lancamentos';
 import { cleanUpLock, type Caller } from './lock';
 import { provisionalExpenses } from './notifications';
 import { statement } from './ports';
@@ -56,6 +56,7 @@ const QUERIES: { [N in QueryName]: Handler<Queries[N]['output'] | QueryError> } 
   lancamentos: async (ctx, input) => lancamentos(ctx, input.month),
   lancamento: async (ctx, input) => lancamento(ctx, input.id),
   tagLayers: async (ctx) => tagLayers(ctx),
+  pluggyCategories: async (ctx) => pluggyCategories(ctx),
   cartao: async (ctx) => cartao(ctx),
   passkeys: async (ctx, _input, caller) => {
     const rows = await ctx.sql.all<Omit<PasskeyView, 'thisDevice'> & { device: string }>(
@@ -83,4 +84,5 @@ const COMMANDS: { [N in CommandName]: Handler<CommandResult<Commands[N]['output'
   'tag.rename': async (ctx, input) => renameTag(ctx, input),
   'tag.delete': async (ctx, input) => deleteTag(ctx, input),
   'lancamentos.tag': async (ctx, input) => tagLancamentos(ctx, input),
+  'lancamentos.categorize': async (ctx, input) => categorizeLancamentos(ctx, input),
 };

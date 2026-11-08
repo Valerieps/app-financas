@@ -24,6 +24,13 @@ Todo gasto ganha uma categoria (o que ele é) e uma importância (como eu o julg
 - Cada categoria aponta para uma importância padrão. Quando eu mudo esse mapa, o mês corrente é
   recalculado e os meses fechados ficam como estavam. *(2)*
 - Eu posso abrir exceções por estabelecimento ou por transação. *(2)*
+- Eu posso mudar a categoria de um lançamento, escolhendo da árvore do Pluggy, no painel de detalhe
+  de Lançamentos ou em vários lançamentos selecionados de uma vez; e posso voltar à categoria do
+  Pluggy. *(2)*
+- A categoria que eu escolho vale por cima da do Pluggy em tudo: na lista, nos gráficos, no que conta
+  como gasto e no que é pagamento de cartão. Se eu escolho "Pagamento de cartão de crédito", o
+  lançamento sai dos totais como um pagamento de fatura; se tiro essa categoria, ele volta. *(2)*
+  Por quê: quando o Pluggy erra, o erro não pode continuar contando em lugar nenhum.
 
 ## Ordem de decisão
 

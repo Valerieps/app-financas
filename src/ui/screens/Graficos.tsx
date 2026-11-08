@@ -80,7 +80,7 @@ const monthNumber = (key: string) => parseMonth(key)?.month ?? 1;
 const percent = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : '');
 
 function PorCategoria({ month, monthParam, compare }: { month: string; monthParam: string | null; compare: Comparison }) {
-  const query = useQuery('spendingByCategory', { month, compare }, ['vault']);
+  const query = useQuery('spendingByCategory', { month, compare }, ['vault', 'categories']);
   const data = query.data;
   if (query.error && !data) return <Failure error={query.error} reload={query.reload} />;
   if (!data) return <p className="muted">{text.loading}</p>;
@@ -202,7 +202,7 @@ function DiffCell({ cents, baseline, warn = false }: { cents: number; baseline: 
 }
 
 function AoLongoDoTempo({ month, link }: { month: string; link: (mes: string) => string }) {
-  const query = useQuery('spendingByMonth', { month }, ['vault']);
+  const query = useQuery('spendingByMonth', { month }, ['vault', 'categories']);
   const data = query.data;
   if (query.error && !data) return <Failure error={query.error} reload={query.reload} />;
   if (!data) return <p className="muted">{text.loading}</p>;

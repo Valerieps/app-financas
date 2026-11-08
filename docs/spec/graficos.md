@@ -28,7 +28,8 @@ Para onde foi o meu dinheiro no mês, comparado comigo mesma, sem eu ter que mon
   nomes em português: Moradia, Mercado, Restaurante, Transporte, Saúde, Assinaturas, Serviços,
   Educação, Compras, Lazer, Viagem, Seguros, Impostos, Tarifas do banco, Empréstimos,
   Transferências, Doações, Apostas e Outros. O que o Pluggy não categoriza vai para Outros. *(2)*
-- Quando a classificação chegar, a categoria que eu escolher vale por cima da do Pluggy. *(2)*
+- A categoria que eu escolher para um lançamento vale por cima da do Pluggy, agrupada da mesma
+  forma (`classificacao.md`). *(2)*
 
 ## Comparação
 
