@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import type { RulePreviewView, RuleView, TagLayerView } from '../../application/api-contract';
 import { dayLabel } from '../../domain/lancamentos';
+import type { CategoryOption } from '../../domain/pluggy-categories';
 import { containsExpression, LANCAMENTO_TYPES, MAX_RULE_PARTS, MAX_RULE_TEXT_LENGTH, MAX_RULES, type RuleAction, type RuleCondition, type RuleDefinition } from '../../domain/rules';
 import { strings } from '../../domain/strings';
 import { cleanName, type TagAssignment } from '../../domain/tags';
@@ -17,27 +18,37 @@ const amount = (item: { amountCents: number; currency: string; direction: 'in' |
 type ConditionField = keyof typeof text.conditionFields;
 type ActionField = keyof typeof text.actionFields;
 
-const conditionField = (c: RuleCondition): ConditionField => (c.kind === 'descriptionContains' ? 'description' : 'type');
-const actionField = (a: RuleAction): ActionField => (a.kind === 'addTags' ? 'tags' : 'description');
+const conditionField = (c: RuleCondition): ConditionField => (c.kind === 'descriptionContains' ? 'description' : c.kind === 'payerContains' ? 'payer' : 'type');
+const actionField = (a: RuleAction): ActionField => (a.kind === 'addTags' ? 'tags' : a.kind === 'setCategory' ? 'category' : 'description');
 
-const newCondition = (field: ConditionField): RuleCondition => (field === 'description' ? { kind: 'descriptionContains', text: '' } : { kind: 'type', type: 'out' });
+function newCondition(field: ConditionField): RuleCondition {
+  if (field === 'description') return { kind: 'descriptionContains', text: '' };
+  if (field === 'payer') return { kind: 'payerContains', text: '' };
+  return { kind: 'type', type: 'out' };
+}
+
+/** The conditions that compare a text, with "|" and "&". */
+const isTextCondition = (c: RuleCondition): c is Extract<RuleCondition, { text: string }> => c.kind === 'descriptionContains' || c.kind === 'payerContains';
 
 /** A new action; "substitua" starts with the first "descrição contém" text, when it is a plain one. */
 function newAction(field: ActionField, conditions: readonly RuleCondition[]): RuleAction {
   if (field === 'tags') return { kind: 'addTags', tags: {} };
+  if (field === 'category') return { kind: 'setCategory', categoryId: '' };
   const contains = conditions.find((c) => c.kind === 'descriptionContains');
   const find = contains && !/[|&]/.test(contains.text) ? cleanName(contains.text) : '';
   return { kind: 'replaceInDescription', find, replace: '' };
 }
 
 function conditionSummary(c: RuleCondition): string {
-  return c.kind === 'descriptionContains' ? text.containsSummary(c.text) : text.typeLine(text.typeSummary[c.type]);
+  if (c.kind === 'descriptionContains') return text.containsSummary(c.text);
+  if (c.kind === 'payerContains') return text.payerSummary(c.text);
+  return text.typeLine(text.typeSummary[c.type]);
 }
 
-/** Why the description text of a "contém" condition cannot be saved; null when it can. */
-function containsProblem(raw: string): string | null {
+/** Why the text of a "contém" condition cannot be saved; null when it can. */
+function containsProblem(raw: string, empty: string): string | null {
   const cleaned = cleanName(raw);
-  if (!cleaned) return text.needText;
+  if (!cleaned) return empty;
   if ([...cleaned].length > MAX_RULE_TEXT_LENGTH) return text.textTooLong;
   if (!containsExpression(cleaned)) return text.loneOperator;
   return null;
@@ -45,7 +56,7 @@ function containsProblem(raw: string): string | null {
 
 function conditionsProblem(conditions: readonly RuleCondition[]): string | null {
   for (const c of conditions) {
-    const problem = c.kind === 'descriptionContains' ? containsProblem(c.text) : null;
+    const problem = isTextCondition(c) ? containsProblem(c.text, c.kind === 'payerContains' ? text.needPayer : text.needText) : null;
     if (problem) return problem;
   }
   return null;
@@ -54,6 +65,7 @@ function conditionsProblem(conditions: readonly RuleCondition[]): string | null 
 function actionsProblem(actions: readonly RuleAction[]): string | null {
   for (const a of actions) {
     if (a.kind === 'addTags' && Object.keys(a.tags).length === 0) return text.needTag;
+    if (a.kind === 'setCategory' && !a.categoryId) return text.needCategory;
     if (a.kind === 'replaceInDescription') {
       if (!cleanName(a.find)) return text.needFind;
       if ([...cleanName(a.find)].length > MAX_RULE_TEXT_LENGTH || [...a.replace].length > MAX_RULE_TEXT_LENGTH) return text.textTooLong;
@@ -63,9 +75,11 @@ function actionsProblem(actions: readonly RuleAction[]): string | null {
 }
 
 const cleanConditions = (conditions: readonly RuleCondition[]): RuleCondition[] =>
-  conditions.map((c) => (c.kind === 'descriptionContains' ? { kind: c.kind, text: cleanName(c.text) } : c));
+  conditions.map((c) => (isTextCondition(c) ? { kind: c.kind, text: cleanName(c.text) } : c));
 const cleanActions = (actions: readonly RuleAction[]): RuleAction[] =>
   actions.map((a) => (a.kind === 'replaceInDescription' ? { kind: a.kind, find: cleanName(a.find), replace: a.replace } : a));
+
+const optionLabel = (option: CategoryOption) => `${'\u00a0\u00a0\u00a0'.repeat(option.depth)}${option.name}`;
 
 /** "Tipo: Restaurante, Origem: Impulso", in the layers' order. */
 function tagNames(tags: TagAssignment, layers: readonly TagLayerView[]): string {
@@ -82,10 +96,12 @@ function tagNames(tags: TagAssignment, layers: readonly TagLayerView[]): string 
 export function Regras() {
   const rulesQuery = useQuery('rules', {}, ['rules', 'tags']);
   const layersQuery = useQuery('tagLayers', {}, ['tags']);
+  const categoriesQuery = useQuery('pluggyCategories', {}, ['vault']);
   const rules = rulesQuery.data ?? [];
   const layers = layersQuery.data ?? [];
-  const error = rulesQuery.error ?? layersQuery.error;
-  const loaded = rulesQuery.data && layersQuery.data;
+  const categories = categoriesQuery.data ?? [];
+  const error = rulesQuery.error ?? layersQuery.error ?? categoriesQuery.error;
+  const loaded = rulesQuery.data && layersQuery.data && categoriesQuery.data;
 
   return (
     <section className="page tags">
@@ -99,6 +115,7 @@ export function Regras() {
             onClick={() => {
               rulesQuery.reload();
               layersQuery.reload();
+              categoriesQuery.reload();
             }}
           >
             {strings.retry}
@@ -112,18 +129,34 @@ export function Regras() {
         ) : (
           <article className="tile">
             <h2 className="text-title">{text.newRule}</h2>
-            <RuleForm layers={layers} submit={text.create} />
+            <RuleForm layers={layers} categories={categories} submit={text.create} />
           </article>
         ))}
       {loaded && rules.length === 0 && <p className="muted">{text.empty}</p>}
       {rules.map((rule, index) => (
-        <Rule key={rule.id} rule={rule} layers={layers} first={index === 0} last={index === rules.length - 1} />
+        <Rule key={rule.id} rule={rule} layers={layers} categories={categories} first={index === 0} last={index === rules.length - 1} />
       ))}
     </section>
   );
 }
 
-function Rule({ rule, layers, first, last }: { rule: RuleView; layers: readonly TagLayerView[]; first: boolean; last: boolean }) {
+interface Choices {
+  readonly layers: readonly TagLayerView[];
+  readonly categories: readonly CategoryOption[];
+}
+
+/** A rule's consequence in one sentence. */
+function ActionSummary({ action, layers, categories }: { action: RuleAction } & Choices) {
+  if (action.kind === 'replaceInDescription') return <>{text.replaceSummary(action.find, action.replace.trim())}</>;
+  if (action.kind === 'setCategory') {
+    const category = categories.find((c) => c.id === action.categoryId);
+    return category ? <>{text.categorySummary(category.name)}</> : <span className="tags-danger">{text.deletedCategory}</span>;
+  }
+  const tags = tagNames(action.tags, layers);
+  return tags ? <>{text.tagsSummary(tags)}</> : <span className="tags-danger">{text.deletedTags}</span>;
+}
+
+function Rule({ rule, layers, categories, first, last }: { rule: RuleView; first: boolean; last: boolean } & Choices) {
   const { backend } = useServices();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -136,7 +169,7 @@ function Rule({ rule, layers, first, last }: { rule: RuleView; layers: readonly 
   if (editing) {
     return (
       <article className="tile">
-        <RuleForm layers={layers} initial={rule} submit={text.save} onDone={() => setEditing(false)} />
+        <RuleForm layers={layers} categories={categories} initial={rule} submit={text.save} onDone={() => setEditing(false)} />
       </article>
     );
   }
@@ -145,14 +178,11 @@ function Rule({ rule, layers, first, last }: { rule: RuleView; layers: readonly 
     <article className="tile">
       <div className="tile-head">
         <div className="rules-summary">
-          {rule.actions.map((action, index) => {
-            const tags = action.kind === 'addTags' ? tagNames(action.tags, layers) : '';
-            return (
-              <p key={index} className="rules-summary-main">
-                {action.kind === 'replaceInDescription' ? text.replaceSummary(action.find, action.replace.trim()) : tags ? text.tagsSummary(tags) : <span className="tags-danger">{text.deletedTags}</span>}
-              </p>
-            );
-          })}
+          {rule.actions.map((action, index) => (
+            <p key={index} className="rules-summary-main">
+              <ActionSummary action={action} layers={layers} categories={categories} />
+            </p>
+          ))}
           {rule.conditions.map((condition, index) => (
             <p key={index}>{text.whenLine(conditionSummary(condition), index === 0)}</p>
           ))}
@@ -191,7 +221,7 @@ function Rule({ rule, layers, first, last }: { rule: RuleView; layers: readonly 
  * "Sempre que <campo> <condição> (e ...), faça <campo> <consequência> (e ...)", with a test button.
  * Each condition and each consequence is a row: the field it looks at or changes, then what.
  */
-function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLayerView[]; initial?: RuleView; submit: string; onDone?: () => void }) {
+function RuleForm({ layers, categories, initial, submit, onDone }: { initial?: RuleView; submit: string; onDone?: () => void } & Choices) {
   const { backend } = useServices();
   const hasTags = layers.some((layer) => layer.tags.length > 0);
   const actionFields = (Object.keys(text.actionFields) as ActionField[]).filter((field) => field !== 'tags' || hasTags);
@@ -272,16 +302,16 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
             <label className="lanc-category-field">
               <span className="text-caption muted">{text.condition}</span>
               <select defaultValue={condition.kind}>
-                <option value={condition.kind}>{condition.kind === 'descriptionContains' ? text.operators.contains : text.operators.is}</option>
+                <option value={condition.kind}>{isTextCondition(condition) ? text.operators.contains : text.operators.is}</option>
               </select>
             </label>
-            {condition.kind === 'descriptionContains' ? (
+            {isTextCondition(condition) ? (
               <label className="grow">
                 <span className="text-caption muted">&nbsp;</span>
                 <input
                   value={condition.text}
-                  placeholder={text.whenPlaceholder}
-                  onChange={(e) => changeCondition(index, { kind: 'descriptionContains', text: e.target.value })}
+                  placeholder={condition.kind === 'payerContains' ? text.payerPlaceholder : text.whenPlaceholder}
+                  onChange={(e) => changeCondition(index, { kind: condition.kind, text: e.target.value })}
                   autoComplete="off"
                   autoFocus={Boolean(initial) && index === 0}
                 />
@@ -301,7 +331,7 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
             {removeButton(() => setConditions(conditions.filter((_, i) => i !== index)), conditions.length === 1)}
           </div>
         ))}
-        {conditions.some((c) => c.kind === 'descriptionContains') && <p className="text-caption muted">{text.whenHint}</p>}
+        {conditions.some(isTextCondition) && <p className="text-caption muted">{text.whenHint}</p>}
         <div className="tags-actions">
           {conditions.length < MAX_RULE_PARTS && (
             <button type="button" className="button-outline" onClick={() => setConditions([...conditions, newCondition('description')])}>
@@ -330,7 +360,7 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
             <label className="lanc-category-field">
               <span className="text-caption muted">{text.consequence}</span>
               <select defaultValue={action.kind}>
-                <option value={action.kind}>{action.kind === 'addTags' ? text.operators.addTags : text.operators.replace}</option>
+                <option value={action.kind}>{text.operators[action.kind === 'addTags' ? 'addTags' : action.kind === 'setCategory' ? 'setCategory' : 'replace']}</option>
               </select>
             </label>
             {action.kind === 'addTags' ? (
@@ -357,6 +387,18 @@ function RuleForm({ layers, initial, submit, onDone }: { layers: readonly TagLay
                     </label>
                   ))}
               </div>
+            ) : action.kind === 'setCategory' ? (
+              <label className="lanc-category-field grow">
+                <span className="text-caption muted">&nbsp;</span>
+                <select value={action.categoryId} onChange={(e) => changeAction(index, { kind: 'setCategory', categoryId: e.target.value })}>
+                  <option value="">{text.chooseCategory}</option>
+                  {categories.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {optionLabel(option)}
+                    </option>
+                  ))}
+                </select>
+              </label>
             ) : (
               <>
                 <label className="grow">
@@ -431,7 +473,7 @@ function ApplyRules() {
     setMessage(null);
     const result = await backend.command('rules.apply', {});
     setRunning(false);
-    setMessage(result.ok ? text.apply.done(result.value.tagged, result.value.described) : strings.genericError);
+    setMessage(result.ok ? text.apply.done(result.value.tagged, result.value.described, result.value.categorized) : strings.genericError);
   }
 
   return (

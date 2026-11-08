@@ -153,7 +153,7 @@ export const strings = {
   // Automatic rules, "se isso, então aquilo" (docs/spec/regras-automaticas.md).
   regras: {
     title: 'Regras automáticas',
-    subtitle: 'Cada regra põe tags ou ajeita a descrição dos lançamentos sozinha. Nas tags, ela só preenche camadas vazias, e a de cima vence.',
+    subtitle: 'Cada regra põe tags, muda a categoria ou ajeita a descrição dos lançamentos sozinha. Ela só preenche o que está vazio (a categoria que eu escolhi fica), e a de cima vence.',
     empty: 'Nenhuma regra ainda. Crie a primeira abaixo.',
     newRule: 'Nova regra',
     when: 'Sempre que',
@@ -161,10 +161,12 @@ export const strings = {
     field: 'Campo',
     condition: 'Condição',
     consequence: 'Consequência',
-    conditionFields: { description: 'Descrição', type: 'Tipo do lançamento' },
-    actionFields: { tags: 'Tags', description: 'Descrição' },
-    operators: { contains: 'contém', is: 'é', addTags: 'aplique as tags', replace: 'substitua' },
+    conditionFields: { description: 'Descrição', type: 'Tipo do lançamento', payer: 'Quem pagou (entrada)' },
+    actionFields: { tags: 'Tags', category: 'Categoria', description: 'Descrição' },
+    operators: { contains: 'contém', is: 'é', addTags: 'aplique as tags', setCategory: 'mude para', replace: 'substitua' },
     whenPlaceholder: 'Ex.: ifood | rappi',
+    payerPlaceholder: 'Ex.: empresa x | joão',
+    chooseCategory: 'Escolha a categoria',
     whenHint: 'Use | para "ou" e & para "e": "ifood | uber & eats" casa com ifood, ou com uber e eats juntos.',
     findPlaceholder: 'Texto a trocar',
     replaceBy: 'por',
@@ -187,14 +189,19 @@ export const strings = {
     down: 'Descer a regra',
     needText: 'Escreva o texto que a descrição deve conter.',
     needFind: 'Escreva o texto a trocar na descrição.',
+    needPayer: 'Escreva o texto que o nome de quem pagou deve conter.',
+    needCategory: 'Escolha a categoria.',
     textTooLong: 'O texto pode ter até 100 caracteres.',
     loneOperator: 'Cada | ou & precisa de texto dos dois lados.',
     needTag: 'Escolha ao menos uma tag.',
     limit: 'Já tenho 200 regras, o máximo.',
-    confirmDelete: 'Excluir esta regra? As tags que ela já pôs continuam nos lançamentos.',
+    confirmDelete: 'Excluir esta regra? As tags e as categorias que ela já pôs continuam nos lançamentos.',
     whenLine: (condition: string, first: boolean) => `${first ? 'Sempre que' : 'e'} ${condition}`,
     containsSummary: (text: string) => `a descrição contiver "${text}"`,
     typeLine: (type: string) => `o lançamento for ${type}`,
+    payerSummary: (text: string) => `quem pagou a entrada contiver "${text}"`,
+    categorySummary: (category: string) => `Mude a categoria para ${category}`,
+    deletedCategory: 'Mude a categoria: a categoria desta regra não existe mais',
     tagsSummary: (tags: string) => `Aplique ${tags}`,
     replaceSummary: (find: string, replace: string) => (replace ? `Troque "${find}" por "${replace}" na descrição` : `Apague "${find}" da descrição`),
     deletedTags: 'Aplique: as tags desta regra foram excluídas',
@@ -206,13 +213,14 @@ export const strings = {
     },
     apply: {
       title: 'Lançamentos que já estão guardados',
-      hint: 'As trocas na descrição já valem para todos os lançamentos, e as tags entram sozinhas nos novos. Para pôr tags nos que já estão guardados, rode aqui; só as camadas vazias recebem tag.',
+      hint: 'As trocas na descrição já valem para todos os lançamentos, e as tags e as categorias entram sozinhas nos novos. Para pô-las nos que já estão guardados, rode aqui; só as camadas vazias recebem tag, e só muda a categoria de quem ainda não tem uma escolhida.',
       button: 'Aplicar as regras aos lançamentos guardados',
       running: 'Aplicando…',
-      done: (tagged: number, described: number) => {
+      done: (tagged: number, described: number, categorized: number) => {
         const tags = tagged === 0 ? 'Nenhum lançamento recebeu tag' : tagged === 1 ? '1 lançamento recebeu tags' : `${tagged} lançamentos receberam tags`;
+        const categories = categorized === 0 ? 'nenhum mudou de categoria' : categorized === 1 ? '1 mudou de categoria' : `${categorized} mudaram de categoria`;
         const texts = described === 0 ? 'nenhuma descrição é trocada pelas regras' : described === 1 ? '1 descrição é trocada pelas regras' : `${described} descrições são trocadas pelas regras`;
-        return `${tags}; ${texts}.`;
+        return `${tags}; ${categories}; ${texts}.`;
       },
     },
   },

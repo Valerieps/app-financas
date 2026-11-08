@@ -1,7 +1,8 @@
 // Automatic rules, "if this then that" (docs/spec/regras-automaticas.md): each rule has conditions,
 // all of which must hold, and actions. The conditions are "the description contains a text" (with
-// "|" for or and "&" for and) and "the lançamento is of this type"; the actions are "add these tags"
-// and "replace this text in the description". New kinds join the unions below (ADR-009).
+// "|" for or and "&" for and), "the lançamento is of this type" and "who paid an entrada contains a
+// text"; the actions are "add these tags", "replace this text in the description" and "set the
+// category". New kinds join the unions below (ADR-009).
 import type { Direction } from './lancamentos';
 import { assignTag, cleanName, type TagAssignment } from './tags';
 
@@ -13,6 +14,8 @@ export const MAX_RULE_TEXT_LENGTH = 100;
 export const MAX_RULE_PARTS = 5;
 /** The "Testar" button shows at most this many lançamentos. */
 export const RULE_PREVIEW_LIMIT = 10;
+/** A category id (Pluggy's, like "05100000") has at most this many characters. */
+const MAX_CATEGORY_ID_LENGTH = 64;
 
 /** Entrada, saída or transferência. */
 export type LancamentoType = 'in' | 'out' | 'transfer';
@@ -20,10 +23,12 @@ export const LANCAMENTO_TYPES: readonly LancamentoType[] = ['out', 'in', 'transf
 
 export type RuleCondition =
   | { readonly kind: 'descriptionContains'; readonly text: string }
-  | { readonly kind: 'type'; readonly type: LancamentoType };
+  | { readonly kind: 'type'; readonly type: LancamentoType }
+  | { readonly kind: 'payerContains'; readonly text: string };
 export type RuleAction =
   | { readonly kind: 'addTags'; readonly tags: TagAssignment }
-  | { readonly kind: 'replaceInDescription'; readonly find: string; readonly replace: string };
+  | { readonly kind: 'replaceInDescription'; readonly find: string; readonly replace: string }
+  | { readonly kind: 'setCategory'; readonly categoryId: string };
 
 export interface RuleDefinition {
   readonly conditions: readonly RuleCondition[];
@@ -37,6 +42,8 @@ export interface RuleSubject {
   /** The category that counts: the one I chose, or else Pluggy's. */
   readonly categoryId: string | null;
   readonly cardPayment: boolean;
+  /** Who paid, as the bank names them; null when the bank sent no name. */
+  readonly payer: string | null;
 }
 
 /** Pluggy's top categories for money moved between accounts: "Same person transfer" and "Transfers". */
@@ -80,6 +87,8 @@ export function conditionHolds(condition: RuleCondition, subject: RuleSubject): 
       return subject.description !== null && descriptionContains(subject.description, condition.text);
     case 'type':
       return lancamentoType(subject) === condition.type;
+    case 'payerContains':
+      return lancamentoType(subject) === 'in' && subject.payer !== null && descriptionContains(subject.payer, condition.text);
   }
 }
 
@@ -105,6 +114,20 @@ export function tagsFromRules(rules: readonly RuleDefinition[], subject: RuleSub
     }
   }
   return result;
+}
+
+/**
+ * The category the rules give a lançamento whose category I have not chosen (`chosen` false): the
+ * first rule that matches and sets a category wins. Null when no rule sets one, or I chose already.
+ */
+export function categoryFromRules(rules: readonly RuleDefinition[], subject: RuleSubject, chosen: boolean): string | null {
+  if (chosen) return null;
+  for (const rule of rules) {
+    if (!ruleMatches(rule, subject)) continue;
+    const action = rule.actions.find((a) => a.kind === 'setCategory');
+    if (action) return action.categoryId;
+  }
+  return null;
 }
 
 /** One character as `textKey` compares it: no case, no accents, any space a plain one. */
@@ -173,10 +196,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> => Boolean(v
 
 function parseCondition(raw: unknown): RuleCondition | null {
   if (!isRecord(raw)) return null;
-  if (raw.kind === 'descriptionContains' && typeof raw.text === 'string') {
+  if ((raw.kind === 'descriptionContains' || raw.kind === 'payerContains') && typeof raw.text === 'string') {
     const text = cleanName(raw.text);
     if (!text || [...text].length > MAX_RULE_TEXT_LENGTH || !containsExpression(text)) return null;
-    return { kind: 'descriptionContains', text };
+    return { kind: raw.kind, text };
   }
   if (raw.kind === 'type' && (LANCAMENTO_TYPES as readonly unknown[]).includes(raw.type)) {
     return { kind: 'type', type: raw.type as LancamentoType };
@@ -196,6 +219,11 @@ function parseAction(raw: unknown): RuleAction | null {
     const { replace } = raw;
     if (!find || [...find].length > MAX_RULE_TEXT_LENGTH || [...replace].length > MAX_RULE_TEXT_LENGTH) return null;
     return { kind: 'replaceInDescription', find, replace };
+  }
+  if (raw.kind === 'setCategory' && typeof raw.categoryId === 'string') {
+    const { categoryId } = raw;
+    if (!categoryId || categoryId.length > MAX_CATEGORY_ID_LENGTH) return null;
+    return { kind: 'setCategory', categoryId };
   }
   return null;
 }

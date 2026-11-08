@@ -10,9 +10,9 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
 
 ## Em aberto
 
-- [ ] **Próximas condições e ações.** Quais vêm depois de "a descrição contém", "o tipo é",
-  "aplique as tags" e "substitua na descrição": valor, data, conta, quem pagou ou recebeu; mudar a
-  categoria, a importância?
+- [ ] **Próximas condições e ações.** Quais vêm depois de "a descrição contém", "o tipo é", "quem
+  pagou contém", "aplique as tags", "substitua na descrição" e "mude a categoria": valor, data,
+  conta, quem recebeu; mudar a importância?
 
 ## Regras
 
@@ -21,10 +21,16 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
   depende do campo (um texto para a descrição; uma data pediria outra coisa). Cada ação também tem
   duas partes: o **campo** que ela muda e a **consequência** em si. *(2)*
   Por quê: outras condições e ações entram depois sem refazer as regras nem a tela.
-- Hoje existem duas condições, **a descrição contém um texto** e **o lançamento é de um tipo**
-  (entrada, saída ou transferência), e duas ações, **aplique as tags** (no máximo uma por camada) e
-  **substitua, na descrição, um texto por outro**. *(2)*
+- Hoje existem três condições, **a descrição contém um texto**, **o lançamento é de um tipo**
+  (entrada, saída ou transferência) e **quem pagou contém um texto**, e três ações, **aplique as
+  tags** (no máximo uma por camada), **substitua, na descrição, um texto por outro** e **mude a
+  categoria** (para uma da árvore do Pluggy). *(2)*
   Por quê: começo pelo que mais uso.
+- **Quem pagou** só vale para entradas: olha o nome de quem pagou, como o banco manda, e nunca casa
+  com uma saída, uma transferência ou uma entrada sem esse nome. O texto funciona como o da
+  descrição, com `|` e `&`. *(2)*
+  Por quê: numa entrada, quem pagou diz o que ela é (salário, aluguel, reembolso) melhor que a
+  descrição.
 - O texto é comparado sem diferença entre maiúsculas e minúsculas nem acentos: "ifood" casa com
   "IFOOD *Restaurante" e "padaria" com "Padaría". *(2)*
 - No texto, `|` quer dizer "ou" e `&` quer dizer "e": "ifood | rappi" casa com qualquer um dos dois,
@@ -50,13 +56,19 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
   pagamento de fatura; senão, é uma **entrada** ou uma **saída**, pelo sentido do dinheiro. *(2)*
 - Uma regra de tags só preenche camadas vazias: a tag que eu pus à mão, ou que outra regra já pôs, fica. *(2)*
   Por quê: a minha decisão vale mais que a automática.
+- **Mudar a categoria** põe a categoria como se eu a tivesse escolhido, e só num lançamento que ainda
+  não tem categoria escolhida: a que eu escolhi, ou que outra regra já pôs, fica. Quando várias
+  regras mudam a categoria, vence a de cima. Depois disso, ela vale como a minha escolha em tudo
+  (`classificacao.md`), e eu posso trocá-la ou voltar à do Pluggy. *(2)*
 - Quando duas regras querem a mesma camada, vence a de cima na lista. Eu posso subir e descer as
   regras. *(2)*
 - As regras rodam sozinhas em cada lançamento novo que chega do Pluggy. *(2)*
 - Para os lançamentos que já estão guardados, eu rodo as regras com um botão; também ali só as
-  camadas vazias recebem tag. *(2)*
-- Excluir uma regra não tira as tags que ela já pôs. Se eu excluo uma tag ou uma camada, ela sai das
-  regras. *(2)*
+  camadas vazias recebem tag, e só os lançamentos sem categoria escolhida mudam de categoria. O
+  botão diz quantos receberam tags, quantos mudaram de categoria e quantas descrições as regras
+  trocam. *(2)*
+- Excluir uma regra não tira as tags nem as categorias que ela já pôs. Se eu excluo uma tag ou uma
+  camada, ela sai das regras. *(2)*
 - No máximo 200 regras. *(2)*
 
 ## Tela Regras automáticas
@@ -65,11 +77,13 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
 - Mostra as regras em ordem, cada uma numa frase ("Sempre que a descrição contiver "ifood" e o
   lançamento for uma saída, aplique Tipo: Restaurante"), com subir, descer, editar e excluir. *(2)*
 - Mostra as substituições numa frase também: "Troque "IFOOD *" por "iFood " na descrição", ou
-  "Apague "*" da descrição" quando o novo texto é vazio. *(2)*
+  "Apague "*" da descrição" quando o novo texto é vazio. A mudança de categoria aparece como "Mude a
+  categoria para Salário", e quem pagou como "quem pagou a entrada contiver "acme"". *(2)*
 - Para criar uma regra, eu monto uma lista de condições e uma lista de consequências, até 5 de
-  cada. Em cada linha eu escolho o campo (Descrição ou Tipo do lançamento nas condições; Tags ou
-  Descrição nas consequências), depois a condição ou a consequência que esse campo oferece, e
-  preencho o resto: o texto, o tipo, as tags (uma por camada) ou o texto a trocar e o novo. A regra
+  cada. Em cada linha eu escolho o campo (Descrição, Tipo do lançamento ou Quem pagou (entrada) nas
+  condições; Tags, Categoria ou Descrição nas consequências), depois a condição ou a consequência
+  que esse campo oferece, e preencho o resto: o texto, o tipo, as tags (uma por camada), a categoria
+  (da árvore do Pluggy) ou o texto a trocar e o novo. A regra
   nova começa com "Descrição contém" e, se já existem tags, "Tags: aplique". Ao trocar uma
   consequência para "Descrição: substitua", o texto a trocar já vem com o texto da primeira
   condição de descrição, quando ele não tem `|` nem `&`. *(2)*

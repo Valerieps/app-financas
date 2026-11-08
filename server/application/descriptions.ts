@@ -8,7 +8,11 @@ import { nowIso, type Context } from './context';
 import { statement, type Statement } from './ports';
 import { storedRules } from './rule-store';
 
-export type Subject = RuleSubject & { readonly id: string };
+export type Subject = RuleSubject & {
+  readonly id: string;
+  /** I chose the category (or a rule did), over Pluggy's. */
+  readonly categoryChosen: boolean;
+};
 
 /** Rows per statement: each row is one element of a JSON parameter, far below D1's limits. */
 const CHUNK = 500;
@@ -27,12 +31,14 @@ export async function ruleSubjects(ctx: Context, options: { ids?: readonly strin
     pluggy_category_id: string | null;
     chosen_category_id: string | null;
     card_payment: number;
+    payer_name: string | null;
   }>(
     `SELECT t.id, t.description, t.type, t.amount_cents, a.type AS account_type, t.pluggy_category_id,
-            tc.pluggy_category_id AS chosen_category_id, t.card_payment
+            tc.pluggy_category_id AS chosen_category_id, t.card_payment, p.payer_name
      FROM transactions t
      JOIN accounts a ON a.id = t.account_id
      LEFT JOIN transaction_categories tc ON tc.transaction_id = t.id
+     LEFT JOIN transaction_payment_data p ON p.transaction_id = t.id
      WHERE t.deleted_at IS NULL ${options.ids ? 'AND t.id IN (SELECT value FROM json_each(?))' : ''}
      ORDER BY t.date DESC, t.first_seen_at DESC, t.id`,
     ...(options.ids ? [JSON.stringify(options.ids)] : []),
@@ -45,6 +51,8 @@ export async function ruleSubjects(ctx: Context, options: { ids?: readonly strin
       direction: direction(row.type, row.amount_cents, row.account_type),
       categoryId: chosen ?? row.pluggy_category_id,
       cardPayment: cardPaymentWithChoice(row.card_payment === 1, chosen),
+      payer: row.payer_name,
+      categoryChosen: chosen !== null,
     };
   });
 }
@@ -66,7 +74,7 @@ export async function storedDescriptions(ctx: Context, ids?: readonly string[]):
  */
 export function descriptionStatements(
   rules: readonly RuleDefinition[],
-  subjects: readonly Subject[],
+  subjects: readonly (RuleSubject & { readonly id: string })[],
   current: ReadonlyMap<string, string | null>,
   now: string,
 ): Statement[] {
