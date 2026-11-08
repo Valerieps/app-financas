@@ -431,32 +431,27 @@ kbd {
   background: var(--color-surface);
 }
 
+.lanc-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-6);
+  min-height: var(--size-control-small);
+}
+
+/* One quiet line: how many lançamentos, then the saldo in reais and in dollars */
 .lanc-summary {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  column-gap: var(--space-8);
-  row-gap: var(--space-2);
-}
-
-.lanc-figures {
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: var(--space-6);
-  row-gap: var(--space-2);
-  margin: 0;
-}
-
-.lanc-figures dd {
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
   margin: 0;
 }
 
 .lanc-figure {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
   font-variant-numeric: tabular-nums;
-}
-
-.lanc-count {
-  margin-left: auto;
 }
 
 .lanc-in {
@@ -464,6 +459,7 @@ kbd {
 }
 
 .lanc-toolbar {
+  margin-left: auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -523,18 +519,41 @@ kbd {
   text-decoration: none;
 }
 
-button.lanc-menu-item {
+/* Undo the global button look (brand fill, white text, centered): a menu row is plain text */
+button.lanc-menu-item,
+button.lanc-menu-item[aria-pressed='true'] {
+  justify-content: flex-start;
   width: 100%;
+  min-height: 0;
   border: 0;
   background: none;
+  color: var(--color-text);
   font-family: inherit;
+  font-weight: var(--font-weight-regular);
   text-align: left;
   cursor: pointer;
 }
 
-button.lanc-menu-item:disabled {
+/* Descrição and Valor always show: a lock, not a checkbox */
+.lanc-menu-item--fixed {
+  margin: 0;
   color: var(--color-text-muted);
   cursor: default;
+}
+
+.lanc-menu-item--fixed:hover {
+  background: none;
+}
+
+.lanc-menu-item--fixed + .lanc-menu-group {
+  margin-top: var(--space-1);
+  padding-top: var(--space-1);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.lanc-menu-check .icon {
+  width: var(--space-3);
+  height: var(--space-3);
 }
 
 .lanc-menu--end {
@@ -629,6 +648,21 @@ button.lanc-menu-item:disabled {
   height: var(--space-4);
 }
 
+/* The sort and filter icons show on hover, or when they are in use */
+@media (hover: hover) {
+  .lanc-head .lanc-filter-button:not([aria-current='true']),
+  .lanc-head .lanc-sort:not([aria-current='true']) .icon {
+    opacity: 0;
+  }
+
+  .lanc-head:hover .lanc-filter-button,
+  .lanc-head:focus-within .lanc-filter-button,
+  .lanc-head:hover .lanc-sort .icon,
+  .lanc-head:focus-within .lanc-sort .icon {
+    opacity: 1;
+  }
+}
+
 .lanc-head-label {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -688,7 +722,17 @@ button.lanc-menu-item:disabled {
 }
 
 .lanc-tag {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* More tags than the one chip: "+2"; the cell's title lists them all */
+.lanc-tag-more {
   flex-shrink: 0;
+  font-size: var(--font-size-label);
 }
 
 .lanc-tagging {
@@ -765,6 +809,7 @@ button.lanc-menu-item:disabled {
 }
 
 .lanc-row--head {
+  font-weight: var(--font-weight-medium);
   padding-bottom: var(--space-2);
   border-bottom: var(--border-width) solid var(--color-border);
 }
@@ -783,7 +828,7 @@ a.lanc-row[aria-current='true'] {
   gap: var(--space-2);
 }
 
-.lanc-description > .text-strong {
+.lanc-description-text {
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -795,6 +840,7 @@ a.lanc-row[aria-current='true'] {
 }
 
 .lanc-amount {
+  font-weight: var(--font-weight-medium);
   text-align: right;
   font-variant-numeric: tabular-nums;
 }

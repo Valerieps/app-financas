@@ -108,11 +108,8 @@ export function TagCell({ layers, tags }: { layers: readonly TagLayerView[]; tag
   if (names.length === 0) return <span className="muted">{text.noTags}</span>;
   return (
     <span className="lanc-tags" title={names.join(', ')}>
-      {names.map((name, index) => (
-        <span key={index} className="chip lanc-tag">
-          {name}
-        </span>
-      ))}
+      <span className="chip lanc-tag">{names[0]}</span>
+      {names.length > 1 && <span className="lanc-tag-more muted">+{names.length - 1}</span>}
     </span>
   );
 }

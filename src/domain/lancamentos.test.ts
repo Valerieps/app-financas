@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_COLUMNS, DEFAULT_SORT, EMPTY_CHOICE, cardPaymentWithChoice, columnTemplate, lancamentoKind, parseColumns, toggleColumn, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesChoice, matchesDirections, monthDays, nextSort, parseDirectionFilters, parseSort, sortByDay, sortLancamentos, sortParams, toggleChoice, totals } from './lancamentos';
+import { DEFAULT_COLUMNS, DEFAULT_SORT, EMPTY_CHOICE, cardPaymentWithChoice, columnTemplate, lancamentoKind, parseColumns, toggleColumn, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesChoice, matchesDirections, monthDays, nextSort, parseDirectionFilters, parseSort, sortByDay, sortLancamentos, sortParams, toggleChoice, totals, balances } from './lancamentos';
 
 describe('direction', () => {
   it("follows Pluggy's type", () => {
@@ -35,6 +35,22 @@ describe('totals', () => {
     ).toEqual([
       { currency: 'BRL', inCents: 300, outCents: 1050 },
       { currency: 'USD', inCents: 0, outCents: 500 },
+    ]);
+  });
+});
+
+describe('balances', () => {
+  it('gives the saldo of reais and dollars, zero when a currency has nothing', () => {
+    expect(balances([{ currency: 'BRL', inCents: 300, outCents: 1050 }])).toEqual([
+      { currency: 'BRL', cents: -750 },
+      { currency: 'USD', cents: 0 },
+    ]);
+  });
+
+  it('leaves out any other currency', () => {
+    expect(balances([{ currency: 'EUR', inCents: 0, outCents: 100 }, { currency: 'USD', inCents: 0, outCents: 726 }])).toEqual([
+      { currency: 'BRL', cents: 0 },
+      { currency: 'USD', cents: -726 },
     ]);
   });
 });

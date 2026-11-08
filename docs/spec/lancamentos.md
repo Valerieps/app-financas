@@ -31,11 +31,13 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
   valor ficam sempre. A escolha fica guardada neste aparelho, não na URL, e continua quando eu troco
   de mês ou volto à tela. Na primeira vez, aparecem as colunas de sempre, sem as três novas. *(2)*
   Por quê: é uma preferência de como eu leio a tabela, não um filtro que eu queira mandar num link.
-- No topo, eu vejo o total de saídas, de entradas e o saldo do mês, separados por moeda. *(1)*
+- No topo, numa linha discreta, eu vejo quantos lançamentos há e o saldo (entradas menos saídas)
+  em reais e em dólar, os dois sempre, mesmo zerados; não vejo o total de saídas e de entradas. *(1)*
+  Por quê: o topo não é o principal da tela; a lista é. Um número só por moeda basta.
 - Com algum filtro ligado, o topo diz quantos lançamentos a lista mostra de quantos há no mês
-  ("12 de 106"), e os totais (e o pagamento de cartão à parte) passam a somar só o que a lista
+  ("12 de 106"), e o saldo (e o pagamento de cartão à parte) passa a somar só o que a lista
   mostra. *(1)*
-- O **pagamento de cartão** fica fora das saídas, das entradas e do saldo do topo, que diz à parte
+- O **pagamento de cartão** fica fora do saldo do topo, que diz à parte
   quanto saiu das contas para pagar o cartão no mês. *(1)*
   Por quê: as compras no cartão já são saídas; contar o pagamento da fatura somaria o mesmo gasto
   duas vezes, e o crédito no cartão inflaria as entradas.
