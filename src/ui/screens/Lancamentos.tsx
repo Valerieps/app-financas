@@ -2,8 +2,9 @@
 // money in, newest day first; each row opens in the detail panel. The category shown is the one I
 // chose from Pluggy's tree, or else Pluggy's (docs/spec/classificacao.md); I change it in the panel or
 // on many lançamentos at once. My tags (docs/spec/categorias.md) show in their own column. Each column
-// title sorts the list and carries its filter; every filter takes several choices. The Colunas menu
-// shows or hides the table's columns, remembered on this device.
+// title sorts the list and carries its filter; the Filtros menu holds every filter, hidden columns
+// and each tag layer included, and the filters on show as chips above the table. Every filter takes
+// several choices. The Colunas menu shows or hides the table's columns, remembered on this device.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isBareDay } from '../../domain/calendar';
 import {
@@ -28,6 +29,7 @@ import {
   toggleColumn,
   totals,
   balances,
+  choiceSummary,
   type ListColumn,
   type Sort,
   type SortColumn,
@@ -137,6 +139,20 @@ interface FilterGroup {
   readonly options: readonly FilterOption[];
 }
 
+/** One filter in the Filtros menu, whether or not its column shows; each tag layer is one. */
+interface FilterField {
+  readonly id: string;
+  /** Its name in the menu. */
+  readonly label: string;
+  /** Its name on the chip above the table. */
+  readonly chip: string;
+  /** Tag layers sit under "Tags" in the menu. */
+  readonly tagLayer: boolean;
+  readonly group: FilterGroup;
+}
+
+const checkedLabels = (group: FilterGroup) => group.options.filter((o) => o.checked).map((o) => o.label);
+
 export function Lancamentos({ month, search, selectedId }: { month: Month; search: URLSearchParams; selectedId: string | null }) {
   const query = useQuery('lancamentos', { month: monthKey(month) }, ['vault', 'tags', 'categories', 'rules']);
   const layersQuery = useQuery('tagLayers', {}, ['tags']);
@@ -203,12 +219,21 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
   const withEmpty = (title: string, key: ListKey, chosen: readonly string[], values: readonly string[]) =>
     group(title, key, chosen, [{ key: EMPTY_CHOICE, label: text.emptyChoice }, ...values.map((v) => ({ key: v, label: v }))]);
 
+  // Every filter, in the order of the Filtros menu; each tag layer is its own, under "Tags".
+  const directionGroup = group(text.kinds, 'tipo', chosenDirections, DIRECTION_FILTERS.map((f) => ({ key: f, label: text.filter[f] })));
+  const accountGroup = group(text.accounts, 'conta', chosenAccounts, accounts.map((a) => ({ key: a, label: a })));
+  const categoryGroup = group(text.categories, 'categoria', chosenCategories, [
+    { key: EMPTY_CHOICE, label: text.emptyChoice },
+    ...categories.map(([id, name]) => ({ key: id, label: name })),
+  ]);
+  const operationGroup = withEmpty(text.columns.operation, 'operacao', chosenOperations, valuesOf(all, (i) => i.operation, chosenOperations));
+  const payerGroup = withEmpty(text.columns.payer, 'pagador', chosenPayers, valuesOf(all, (i) => i.payer, chosenPayers));
   // One group per layer; "Todos" in a layer clears only that layer's choices.
-  const tagFilter: FilterGroup[] = layers
+  const tagGroups = layers
     .filter((layer) => layer.tags.length > 0)
     .map((layer) => {
       const inLayer = (id: string) => id === emptyTagKey(layer.id) || layerOf.get(id) === layer.id;
-      return {
+      const layerGroup: FilterGroup = {
         title: layer.name,
         allTo: withList(listPath, search, 'tag', chosenTags.filter((id) => !inLayer(id))),
         options: [{ id: emptyTagKey(layer.id), name: text.emptyChoice }, ...layer.tags].map((tag) => ({
@@ -218,23 +243,29 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
           to: withList(listPath, search, 'tag', toggleChoice(chosenTags, tag.id)),
         })),
       };
+      return { layer, group: layerGroup };
     });
-  const directionFilter = [group(text.kinds, 'tipo', chosenDirections, DIRECTION_FILTERS.map((f) => ({ key: f, label: text.filter[f] })))];
+  const field = (id: string, label: string, g: FilterGroup): FilterField => ({ id, label, chip: label, tagLayer: false, group: g });
+  const fields: FilterField[] = [
+    field('tipo', text.columns.kind, directionGroup),
+    // An account is never missing, so with a single one the filter would have nothing to do.
+    ...(accounts.length > 1 ? [field('conta', text.account, accountGroup)] : []),
+    field('categoria', text.columns.category, categoryGroup),
+    field('operacao', text.columns.operation, operationGroup),
+    field('pagador', text.columns.payer, payerGroup),
+    ...tagGroups.map(({ layer, group: g }) => ({ id: `tag:${layer.id}`, label: layer.name, chip: text.tagLayerFilter(layer.name), tagLayer: true, group: g })),
+  ];
+  const fieldsOn = fields.filter((f) => f.group.options.some((o) => o.checked));
   // Each column's filter. The kind filter sits on Tipo, or on Valor while Tipo is hidden.
   const FILTERS: Record<ListColumn, readonly FilterGroup[]> = {
     data: [],
-    descricao: accounts.length > 1 ? [group(text.accounts, 'conta', chosenAccounts, accounts.map((a) => ({ key: a, label: a })))] : [],
-    tipo: directionFilter,
-    categoria: [
-      group(text.categories, 'categoria', chosenCategories, [
-        { key: EMPTY_CHOICE, label: text.emptyChoice },
-        ...categories.map(([id, name]) => ({ key: id, label: name })),
-      ]),
-    ],
-    tags: tagFilter,
-    operacao: [withEmpty(text.columns.operation, 'operacao', chosenOperations, valuesOf(all, (i) => i.operation, chosenOperations))],
-    pagador: [withEmpty(text.columns.payer, 'pagador', chosenPayers, valuesOf(all, (i) => i.payer, chosenPayers))],
-    valor: columns.includes('tipo') ? [] : directionFilter,
+    descricao: accounts.length > 1 ? [accountGroup] : [],
+    tipo: [directionGroup],
+    categoria: [categoryGroup],
+    tags: tagGroups.map((t) => t.group),
+    operacao: [operationGroup],
+    pagador: [payerGroup],
+    valor: columns.includes('tipo') ? [] : [directionGroup],
   };
 
   return (
@@ -262,15 +293,31 @@ export function Lancamentos({ month, search, selectedId }: { month: Month; searc
           </p>
           {selected.length === 0 && (
             <div className="lanc-toolbar" role="group" aria-label={text.filters}>
-              {filtering && (
-                <Link to={withoutFilters(listPath, search)} className="lanc-clear text-label">
-                  {text.clearFilters}
-                </Link>
-              )}
+              <FiltersMenu fields={fields} on={fieldsOn.length} />
               <ColumnsMenu columns={columns} onFlip={flipColumn} />
             </div>
           )}
         </div>
+
+        {filtering && (
+          <div className="lanc-active" role="group" aria-label={text.filtersOn}>
+            {fieldsOn.map((f) => {
+              const labels = checkedLabels(f.group);
+              return (
+                <span key={f.id} className="chip lanc-active-chip" title={`${f.chip}: ${labels.join(', ')}`}>
+                  <span className="muted">{f.chip}:</span>
+                  <span className="lanc-active-value">{choiceSummary(labels)}</span>
+                  <Link to={f.group.allTo} className="lanc-active-remove" aria-label={text.removeFilter(f.chip)}>
+                    <Icon name="close" />
+                  </Link>
+                </span>
+              );
+            })}
+            <Link to={withoutFilters(listPath, search)} className="lanc-clear text-label">
+              {text.clearFilters}
+            </Link>
+          </div>
+        )}
 
         {selected.length > 0 && <SelectionActions selected={selected} layers={layers} onClear={() => setSelection([])} />}
 
@@ -462,22 +509,87 @@ function FilterMenu({ label, groups, end }: { label: string; groups: readonly Fi
       </button>
       {open && (
         <div className={`lanc-menu-list${end ? ' lanc-menu-list--end' : ''}`} role="group" aria-label={text.filterBy(label)}>
-          {groups.map((g) => {
-            const none = !g.options.some((o) => o.checked);
-            return (
-              <div key={g.title} className="lanc-menu-group" role="group" aria-label={g.title}>
-                <p className="text-over muted lanc-menu-title">{g.title}</p>
-                <Link to={g.allTo} className="lanc-menu-item" aria-current={none ? 'true' : undefined}>
-                  <MenuCheck checked={none} label={text.allChoices} />
-                </Link>
-                {g.options.map((o) => (
-                  <Link key={o.key} to={o.to} className="lanc-menu-item" aria-current={o.checked ? 'true' : undefined} title={o.label}>
-                    <MenuCheck checked={o.checked} label={o.label} />
-                  </Link>
-                ))}
+          {groups.map((g) => (
+            <GroupChoices key={g.title} group={g} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A filter's choices: its title, "Todos", then each option, a link that toggles it. */
+function GroupChoices({ group }: { group: FilterGroup }) {
+  const none = !group.options.some((o) => o.checked);
+  return (
+    <div className="lanc-menu-group" role="group" aria-label={group.title}>
+      <p className="text-over muted lanc-menu-title">{group.title}</p>
+      <Link to={group.allTo} className="lanc-menu-item" aria-current={none ? 'true' : undefined}>
+        <MenuCheck checked={none} label={text.allChoices} />
+      </Link>
+      {group.options.map((o) => (
+        <Link key={o.key} to={o.to} className="lanc-menu-item" aria-current={o.checked ? 'true' : undefined} title={o.label}>
+          <MenuCheck checked={o.checked} label={o.label} />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * "Filtros": every filter of the list, its column showing or not, each tag layer on its own. The
+ * filters are listed on the left (with how many choices are on); the chosen one's choices, on the right.
+ */
+function FiltersMenu({ fields, on }: { fields: readonly FilterField[]; on: number }) {
+  const { open, toggle, root } = useDropdown();
+  const [picked, setPicked] = useState<string | null>(null);
+  const current = fields.find((f) => f.id === picked) ?? fields.find((f) => f.group.options.some((o) => o.checked)) ?? fields[0];
+  const plain = fields.filter((f) => !f.tagLayer);
+  const tagLayers = fields.filter((f) => f.tagLayer);
+  const fieldButton = (f: FilterField) => {
+    const count = f.group.options.filter((o) => o.checked).length;
+    return (
+      <button
+        key={f.id}
+        type="button"
+        className="lanc-menu-item lanc-filters-field"
+        aria-pressed={f.id === current?.id}
+        title={f.chip}
+        onClick={() => setPicked(f.id)}
+      >
+        <span className="lanc-menu-label">{f.label}</span>
+        {count > 0 && <span className="lanc-filters-count">{count}</span>}
+        <Icon name="next" />
+      </button>
+    );
+  };
+  return (
+    <div className="lanc-menu" ref={root}>
+      <button
+        type="button"
+        className="chip lanc-menu-button"
+        aria-expanded={open}
+        aria-label={on > 0 ? `${text.filters}, ${text.filterCount(on)}` : text.filters}
+        onClick={toggle}
+      >
+        <Icon name="filter" />
+        <span>{text.filters}</span>
+        {on > 0 && <span className="lanc-filters-count">{on}</span>}
+      </button>
+      {open && current && (
+        <div className="lanc-menu-list lanc-menu-list--end lanc-filters" role="group" aria-label={text.filtersMenuLabel}>
+          <div className="lanc-filters-fields">
+            {plain.map(fieldButton)}
+            {tagLayers.length > 0 && (
+              <div className="lanc-menu-group" role="group" aria-label={text.tagsSection}>
+                <p className="text-over muted lanc-menu-title">{text.tagsSection}</p>
+                {tagLayers.map(fieldButton)}
               </div>
-            );
-          })}
+            )}
+          </div>
+          <div className="lanc-filters-choices">
+            <GroupChoices group={current.group} />
+          </div>
         </div>
       )}
     </div>
