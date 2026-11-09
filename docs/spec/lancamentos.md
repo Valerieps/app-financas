@@ -54,9 +54,16 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 
 ## Filtros
 
-- Cada filtro fica no título da sua coluna, num funil ao lado do nome; o nome continua ordenando a
-  tabela. O funil fica cheio quando o filtro daquela coluna está ligado. "Limpar filtros", acima da
-  tabela, aparece com algum filtro ligado e desliga todos de uma vez. *(2)*
+- O botão **Filtros**, ao lado de Colunas, tem todos os filtros, mesmo os de colunas ocultas: à
+  esquerda a lista de filtros (Tipo, Conta, Categoria, Operação, Quem pagou e, sob "Tags", cada
+  camada como um filtro próprio), com quantas escolhas estão ligadas em cada um; à direita, as
+  escolhas do filtro que eu clicar. O botão mostra quantos filtros estão ligados. *(2)*
+  Por quê: eu preciso filtrar por uma coluna sem ter de mostrá-la na tabela.
+- Cada filtro também fica no título da sua coluna, num funil ao lado do nome; o nome continua
+  ordenando a tabela. O funil fica cheio quando o filtro daquela coluna está ligado. *(2)*
+- Com algum filtro ligado, uma linha acima da tabela mostra cada filtro ligado como uma etiqueta
+  ("Categoria: Farmácia, Hospedagem +1"; nas camadas, "Tags · Tipo: Mercado"), com um × que desliga
+  só aquele filtro, e "Limpar filtros", que desliga todos de uma vez. *(2)*
 - Todo filtro aceita várias escolhas e começa com "Todos", que desliga as escolhas daquele filtro.
   Onde um lançamento pode não ter valor (categoria, operação, quem pagou e cada camada de tags), há
   também "Vazio". *(2)*
@@ -85,7 +92,7 @@ A tela onde eu vejo tudo o que entrou e saiu das minhas contas e cartões no mê
 - Com lançamentos selecionados, eu mudo a categoria de todos de uma vez, ou volto à do Pluggy
   (`classificacao.md`). *(2)*
 - Enquanto há lançamentos selecionados, as ações com eles aparecem acima da tabela, no lugar de
-  "Limpar filtros" e de Colunas; limpar a seleção os traz de volta. *(2)*
+  Filtros e de Colunas; limpar a seleção os traz de volta. *(2)*
 
 ## Painel de detalhe
 

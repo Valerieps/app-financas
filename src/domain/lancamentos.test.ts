@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_COLUMNS, DEFAULT_SORT, EMPTY_CHOICE, cardPaymentWithChoice, columnTemplate, lancamentoKind, parseColumns, toggleColumn, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesChoice, matchesDirections, monthDays, nextSort, parseDirectionFilters, parseSort, sortByDay, sortLancamentos, sortParams, toggleChoice, totals, balances } from './lancamentos';
+import { DEFAULT_COLUMNS, DEFAULT_SORT, EMPTY_CHOICE, cardPaymentWithChoice, choiceSummary, columnTemplate, lancamentoKind, parseColumns, toggleColumn, clickSelection, isCardPayment, dayCell, dayLabel, direction, matchesAccounts, matchesChoice, matchesDirections, monthDays, nextSort, parseDirectionFilters, parseSort, sortByDay, sortLancamentos, sortParams, toggleChoice, totals, balances } from './lancamentos';
 
 describe('direction', () => {
   it("follows Pluggy's type", () => {
@@ -283,5 +283,20 @@ describe('the list columns', () => {
 
   it('gives each shown column its share of the row', () => {
     expect(columnTemplate(['data', 'descricao', 'valor'])).toBe('minmax(0, 1fr) minmax(0, 3fr) minmax(0, 1fr)');
+  });
+});
+
+describe('choiceSummary', () => {
+  it('names one or two choices', () => {
+    expect(choiceSummary(['Farmácia'])).toBe('Farmácia');
+    expect(choiceSummary(['Farmácia', 'Mercado'])).toBe('Farmácia, Mercado');
+  });
+
+  it('counts the rest after two', () => {
+    expect(choiceSummary(['Farmácia', 'Mercado', 'Viagem', 'Vazio'])).toBe('Farmácia, Mercado +2');
+  });
+
+  it('is empty with no choice', () => {
+    expect(choiceSummary([])).toBe('');
   });
 });

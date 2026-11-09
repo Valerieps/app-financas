@@ -631,6 +631,112 @@ button.lanc-menu-item[aria-pressed='true'] {
   color: var(--color-brand-strong);
 }
 
+/* "Filtros": every filter on the left, the chosen one's choices on the right */
+.lanc-menu-button .icon {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+
+.lanc-filters {
+  flex-direction: row;
+  width: var(--size-filters-panel);
+  max-width: none;
+  max-height: var(--size-filters-panel-height);
+  overflow: hidden;
+  padding: 0;
+}
+
+.lanc-filters-fields,
+.lanc-filters-choices {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: var(--space-1);
+}
+
+.lanc-filters-fields {
+  flex: 0 0 var(--size-filters-fields);
+  border-right: var(--border-width) solid var(--color-border);
+  background: var(--color-sunken);
+}
+
+.lanc-filters-choices {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The filter shown on the right: highlighted like a selected row */
+button.lanc-filters-field[aria-pressed='true'] {
+  background: var(--color-surface);
+  font-weight: var(--font-weight-strong);
+}
+
+.lanc-filters-field .lanc-menu-label {
+  flex: 1;
+}
+
+.lanc-filters-field .icon {
+  flex-shrink: 0;
+  width: var(--space-3);
+  height: var(--space-3);
+  color: var(--color-text-muted);
+}
+
+/* How many choices a filter has on */
+.lanc-filters-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--size-count-badge);
+  height: var(--size-count-badge);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-strong);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The filters on, as chips above the table; the × takes one out */
+.lanc-active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lanc-active-chip {
+  max-width: var(--size-filter-menu-max);
+  padding-right: var(--space-1);
+  background: var(--color-brand-soft);
+  border-color: transparent;
+}
+
+.lanc-active-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lanc-active-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+}
+
+.lanc-active-remove:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.lanc-active-remove .icon {
+  width: var(--space-3);
+  height: var(--space-3);
+}
+
 .lanc-table {
   display: flex;
   flex-direction: column;

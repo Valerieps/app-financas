@@ -138,6 +138,15 @@ export function matchesChoice(chosen: readonly string[], value: string | null): 
   return chosen.length === 0 || chosen.includes(value || EMPTY_CHOICE);
 }
 
+/**
+ * The chosen values of a filter in a few words, for its chip above the table: up to two names, then
+ * "+n" for the rest ("Farmácia, Mercado +2").
+ */
+export function choiceSummary(labels: readonly string[]): string {
+  const shown = labels.slice(0, 2).join(', ');
+  return labels.length > 2 ? `${shown} +${labels.length - 2}` : shown;
+}
+
 /** The choices after a tap on one: adds it, or takes it out when it was chosen. */
 export function toggleChoice(chosen: readonly string[], key: string): string[] {
   return chosen.includes(key) ? chosen.filter((a) => a !== key) : [...chosen, key];
