@@ -1637,7 +1637,8 @@ a.lanc-row[aria-current='true'] {
   cursor: pointer;
 }
 
-.rules-arrow {
+.rules-arrow,
+.rules-joiner {
   color: var(--color-text-muted);
   padding: 0 var(--space-1);
 }

@@ -17,7 +17,11 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
 
 ## Regras
 
-- Uma regra é "sempre que <condições>, faça <ações>". Todas as condições precisam valer. *(2)*
+- Uma regra é "sempre que <condições>, faça <ações>". Cada regra diz como as condições se juntam:
+  com **todas as condições** (e), todas precisam valer; com **qualquer condição** (ou), basta uma.
+  Uma regra nunca mistura "e" com "ou". Toda regra começa com "todas as condições". *(2)*
+  Por quê: "categoria em Delivery ou descrição contém ifood" vira uma regra só, e uma regra sem
+  mistura de "e" e "ou" se lê de uma vez, sem parênteses.
 - Cada condição tem duas partes: o **campo** do lançamento que ela olha e a **condição** em si, que
   depende do campo (um texto para a descrição; uma data pediria outra coisa). Cada ação também tem
   duas partes: o **campo** que ela muda e a **consequência** em si. *(2)*
@@ -110,6 +114,10 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
   ou troque na descrição [texto] por [novo]. As tags escolhidas aparecem como etiquetas que eu tiro
   com ×, e um menu "+ tag" põe outra (uma por camada: a nova troca a da mesma camada). Até 5
   condições e 5 ações. *(2)*
+- Com duas condições ou mais, um menu acima delas diz como elas se juntam: "A regra vale com
+  **todas as condições (e)**" ou "**qualquer condição (ou)**". A palavra antes de cada condição a
+  mais e o link para pôr outra seguem esse menu: "e" e "+ e outra condição", ou "ou" e "+ ou outra
+  condição". Na lista, uma regra com "ou" mostra "ou" entre as etiquetas das condições. *(2)*
 - A regra nova começa com "a descrição contiver" e, se já existem tags, "aplique as tags". Ao trocar
   uma ação para "troque na descrição", o texto a trocar já vem com o texto da primeira condição de
   descrição, quando ele não tem `|` nem `&`. *(2)*

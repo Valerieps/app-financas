@@ -3,7 +3,7 @@
 // (collect/transactions.ts) through `rules`, `ruleTagStatements` and `ruleCategoryStatements`.
 import type { RulePreviewView, RuleView } from '../../src/application/api-contract';
 import { cardPaymentWithChoice } from '../../src/domain/lancamentos';
-import { applyReplacements, categoryFromRules, describeWithRules, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition } from '../../src/domain/rules';
+import { applyReplacements, categoryFromRules, describeWithRules, MAX_RULES, parseActions, parseConditions, parseMatch, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition } from '../../src/domain/rules';
 import { MAX_BULK_TAGGING, moveInOrder, moveToIndex, type TagAssignment } from '../../src/domain/tags';
 import { failure, nowIso, QueryError, type CommandResult, type Context } from './context';
 import { descriptionStatements, rewriteDescriptions, ruleSubjects, storedDescriptions, type Subject } from './descriptions';
@@ -102,10 +102,11 @@ const categoryExists = async (ctx: Context, id: string) => (await ctx.sql.all('S
  * shows what this rule would make of it, after the saved rules.
  */
 export async function rulePreview(ctx: Context, input: Record<string, unknown>): Promise<RulePreviewView | QueryError> {
+  const match = parseMatch(input.match);
   const conditions = parseConditions(input.conditions);
   const actions = input.actions === undefined ? [] : parseActions(input.actions);
-  if (!conditions || !actions) return new QueryError('invalid');
-  const matched = (await ruleSubjects(ctx)).filter((t) => ruleMatches({ conditions }, t));
+  if (!match || !conditions || !actions) return new QueryError('invalid');
+  const matched = (await ruleSubjects(ctx)).filter((t) => ruleMatches({ match, conditions }, t));
   const items = await lancamentoViews(ctx, matched.slice(0, RULE_PREVIEW_LIMIT).map((t) => t.id));
   return { total: matched.length, items: items.map((item) => ({ ...item, description: applyReplacements(actions, item.description) })) };
 }
@@ -135,9 +136,10 @@ export async function createRule(ctx: Context, input: Record<string, unknown>): 
   const descriptions = await rewriteDescriptions(ctx, [...rulesAfter(existing, existing.map((r) => r.id)), rule], now);
   await ctx.sql.batch([
     statement(
-      'INSERT INTO rules (id, position, conditions_json, actions_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO rules (id, position, condition_match, conditions_json, actions_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
       id,
       position,
+      rule.match ?? 'all',
       JSON.stringify(rule.conditions),
       JSON.stringify(rule.actions),
       now,
@@ -163,7 +165,8 @@ export async function updateRule(ctx: Context, input: Record<string, unknown>): 
   const descriptions = await rewriteDescriptions(ctx, rulesAfter(rows, rows.map((r) => r.id), { id: found, rule }), now);
   await ctx.sql.batch([
     statement(
-      'UPDATE rules SET conditions_json = ?, actions_json = ?, updated_at = ? WHERE id = ?',
+      'UPDATE rules SET condition_match = ?, conditions_json = ?, actions_json = ?, updated_at = ? WHERE id = ?',
+      rule.match ?? 'all',
       JSON.stringify(rule.conditions),
       JSON.stringify(rule.actions),
       now,

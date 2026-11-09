@@ -8,13 +8,14 @@ export interface RuleRow {
   position: number;
   conditions_json: string;
   actions_json: string;
+  condition_match: string;
 }
 
-export const ruleRows = (ctx: Context) => ctx.sql.all<RuleRow>('SELECT id, position, conditions_json, actions_json FROM rules ORDER BY position, created_at');
+export const ruleRows = (ctx: Context) => ctx.sql.all<RuleRow>('SELECT id, position, conditions_json, actions_json, condition_match FROM rules ORDER BY position, created_at');
 
 /** A stored rule as the domain reads it; null if the stored JSON no longer parses. */
 export function definition(row: RuleRow): RuleDefinition | null {
-  return parseRule({ conditions: JSON.parse(row.conditions_json), actions: JSON.parse(row.actions_json) });
+  return parseRule({ match: row.condition_match, conditions: JSON.parse(row.conditions_json), actions: JSON.parse(row.actions_json) });
 }
 
 /** The rules in order, as stored (with any deleted tags still in them). */

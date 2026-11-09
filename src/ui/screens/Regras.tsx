@@ -1,8 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { Fragment, useEffect, useState, type FormEvent } from 'react';
 import type { RulePreviewView, RuleView, TagLayerView } from '../../application/api-contract';
 import { dayLabel } from '../../domain/lancamentos';
 import type { CategoryOption } from '../../domain/pluggy-categories';
-import { containsExpression, LANCAMENTO_TYPES, MAX_RULE_PARTS, MAX_RULE_TEXT_LENGTH, MAX_RULES, ruleMatchesSearch, type RuleAction, type RuleCondition, type RuleDefinition } from '../../domain/rules';
+import { containsExpression, LANCAMENTO_TYPES, MAX_RULE_PARTS, MAX_RULE_TEXT_LENGTH, MAX_RULES, RULE_MATCHES, ruleMatchesSearch, type RuleAction, type RuleCondition, type RuleDefinition, type RuleMatch } from '../../domain/rules';
 import { strings } from '../../domain/strings';
 import { cleanName, type TagAssignment } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
@@ -130,7 +130,7 @@ function actionChips(a: RuleAction, { layers, categories }: Choices): { label: s
 
 /** A rule as one sentence, for screen readers and the search. */
 function ruleSentence(rule: RuleDefinition, choices: Choices): string {
-  const when = rule.conditions.map((c, i) => text.whenLine(conditionSummary(c, choices.categories), i === 0)).join(' ');
+  const when = rule.conditions.map((c, i) => text.whenLine(conditionSummary(c, choices.categories), i === 0, rule.match === 'any')).join(' ');
   const then = rule.actions
     .map((a) => {
       if (a.kind === 'replaceInDescription') return text.replaceSummary(a.find, a.replace.trim());
@@ -281,9 +281,14 @@ export function Regras() {
                     {rule.conditions.map((c, i) => {
                       const chip = conditionChip(c, categories);
                       return (
-                        <span key={`c${i}`} className={chip.missing ? 'rules-chip rules-chip--missing' : 'rules-chip rules-chip--when'}>
-                          {chip.label}
-                        </span>
+                        <Fragment key={`c${i}`}>
+                          {i > 0 && rule.match === 'any' && (
+                            <span className="rules-joiner" aria-hidden="true">
+                              {text.or}
+                            </span>
+                          )}
+                          <span className={chip.missing ? 'rules-chip rules-chip--missing' : 'rules-chip rules-chip--when'}>{chip.label}</span>
+                        </Fragment>
                       );
                     })}
                     <span className="rules-arrow" aria-hidden="true">
@@ -334,11 +339,12 @@ function RuleForm({ layers, categories, initial, onDone }: { initial?: RuleView;
   const { backend } = useServices();
   const hasTags = layers.some((layer) => layer.tags.length > 0);
   const actionFields = (Object.keys(text.actionVerbs) as ActionField[]).filter((field) => field !== 'tags' || hasTags);
+  const [match, setMatch] = useState<RuleMatch>(initial?.match ?? 'all');
   const [conditions, setConditions] = useState<RuleCondition[]>(() => (initial ? [...initial.conditions] : [newCondition('description')]));
   const [actions, setActions] = useState<RuleAction[]>(() => (initial ? [...initial.actions] : [newAction(actionFields[0], [])]));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const preview = usePreview(conditions, actions);
+  const preview = usePreview(match, conditions, actions);
 
   const changeCondition = (index: number, c: RuleCondition) => setConditions(conditions.map((old, i) => (i === index ? c : old)));
   const changeAction = (index: number, a: RuleAction) => setActions(actions.map((old, i) => (i === index ? a : old)));
@@ -348,7 +354,7 @@ function RuleForm({ layers, categories, initial, onDone }: { initial?: RuleView;
     const problem = conditionsProblem(conditions) ?? actionsProblem(actions);
     if (problem) return setError(problem);
     setBusy(true);
-    const rule: RuleDefinition = { conditions: cleanConditions(conditions), actions: cleanActions(actions) };
+    const rule: RuleDefinition = { match, conditions: cleanConditions(conditions), actions: cleanActions(actions) };
     const result = initial ? await backend.command('rule.update', { id: initial.id, ...rule }) : await backend.command('rule.create', rule);
     setBusy(false);
     if (!result.ok) return setError(strings.genericError);
@@ -374,9 +380,21 @@ function RuleForm({ layers, categories, initial, onDone }: { initial?: RuleView;
   return (
     <form className="rules-form" onSubmit={(event) => void onSubmit(event)}>
       <div className="rules-sentence">
+        {conditions.length > 1 && (
+          <p className="rules-line">
+            <span>{text.matchLabel}</span>
+            <select className="rules-token rules-token--when" aria-label={text.matchLabel} value={match} onChange={(e) => setMatch(RULE_MATCHES.find((m) => m === e.target.value) ?? 'all')}>
+              {RULE_MATCHES.map((m) => (
+                <option key={m} value={m}>
+                  {text.matches[m]}
+                </option>
+              ))}
+            </select>
+          </p>
+        )}
         {conditions.map((condition, index) => (
           <p key={index} className="rules-line">
-            <span className="rules-lead">{index === 0 ? text.when : text.and}</span>
+            <span className="rules-lead">{index === 0 ? text.when : match === 'any' ? text.or : text.and}</span>
             <select className="rules-token rules-token--when" aria-label={text.when} value={conditionField(condition)} onChange={(e) => changeCondition(index, newCondition(e.target.value as ConditionField))}>
               {(Object.keys(text.conditionSubjects) as ConditionField[]).map((field) => (
                 <option key={field} value={field}>
@@ -418,7 +436,7 @@ function RuleForm({ layers, categories, initial, onDone }: { initial?: RuleView;
         ))}
         {conditions.length < MAX_RULE_PARTS && (
           <button type="button" className="rules-add" onClick={() => setConditions([...conditions, newCondition('description')])}>
-            {text.addCondition}
+            {text.addCondition[match]}
           </button>
         )}
         {conditions.some(isTextCondition) && <p className="text-caption muted">{text.whenHint}</p>}
@@ -541,10 +559,10 @@ function TagPicker({ tags, layers, onChange }: { tags: TagAssignment; layers: re
 type PreviewState = { status: 'waiting' } | { status: 'loading' } | { status: 'failed' } | { status: 'ready'; preview: RulePreviewView };
 
 /** The lançamentos the rule catches, looked up again a moment after each change. */
-function usePreview(conditions: readonly RuleCondition[], actions: readonly RuleAction[]): PreviewState {
+function usePreview(match: RuleMatch, conditions: readonly RuleCondition[], actions: readonly RuleAction[]): PreviewState {
   const { backend } = useServices();
   const [state, setState] = useState<PreviewState>({ status: 'waiting' });
-  const key = JSON.stringify([conditions, actions]);
+  const key = JSON.stringify([match, conditions, actions]);
 
   useEffect(() => {
     if (conditionsProblem(conditions)) {
@@ -554,7 +572,7 @@ function usePreview(conditions: readonly RuleCondition[], actions: readonly Rule
     let current = true;
     setState({ status: 'loading' });
     const timer = window.setTimeout(() => {
-      void backend.query('rulePreview', { conditions: cleanConditions(conditions), ...(actionsProblem(actions) ? {} : { actions: cleanActions(actions) }) }).then((result) => {
+      void backend.query('rulePreview', { match, conditions: cleanConditions(conditions), ...(actionsProblem(actions) ? {} : { actions: cleanActions(actions) }) }).then((result) => {
         if (current) setState(result.ok ? { status: 'ready', preview: result.value } : { status: 'failed' });
       });
     }, PREVIEW_DELAY_MS);
@@ -562,7 +580,7 @@ function usePreview(conditions: readonly RuleCondition[], actions: readonly Rule
       current = false;
       window.clearTimeout(timer);
     };
-    // The key stands for conditions and actions, which are new arrays on every render.
+    // The key stands for match, conditions and actions, which are new arrays on every render.
   }, [key, backend]);
 
   return state;
