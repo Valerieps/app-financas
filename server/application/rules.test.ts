@@ -66,8 +66,8 @@ describe('automatic rules', () => {
     const a = await create('rule.create', rule('  ifood ', { [tipo]: restaurante }));
     const b = await create('rule.create', rule('mercado', { [tipo]: mercado }));
     expect(await query<RuleView[]>('rules')).toEqual([
-      { id: a, ...rule('ifood', { [tipo]: restaurante }) },
-      { id: b, ...rule('mercado', { [tipo]: mercado }) },
+      { id: a, match: 'all', ...rule('ifood', { [tipo]: restaurante }) },
+      { id: b, match: 'all', ...rule('mercado', { [tipo]: mercado }) },
     ]);
     expect(await command('rule.move', { id: b, direction: 'up' })).toEqual({ ok: true, value: null, changed: ['rules'] });
     expect((await query<RuleView[]>('rules')).map((r) => r.id)).toEqual([b, a]);
@@ -79,6 +79,16 @@ describe('automatic rules', () => {
     expect((await query<RuleView[]>('rules'))[1]?.conditions).toEqual([{ kind: 'descriptionContains', text: 'rappi' }]);
     expect((await command('rule.delete', { id: b })).ok).toBe(true);
     expect((await query<RuleView[]>('rules')).map((r) => r.id)).toEqual([a]);
+  });
+
+  it('keep "qualquer condição" (any) and catch a lançamento that meets just one condition', async () => {
+    const { command, query, create, tipo, restaurante } = await setup();
+    const either = { match: 'any', conditions: [{ kind: 'descriptionContains', text: 'ifood' }, { kind: 'descriptionContains', text: 'rappi' }], actions: [{ kind: 'addTags', tags: { [tipo]: restaurante } }] };
+    const id = await create('rule.create', either);
+    expect((await query<RuleView[]>('rules'))[0]?.match).toBe('any');
+    expect((await command('rule.update', { id, ...either, match: 'all' })).ok).toBe(true);
+    expect((await query<RuleView[]>('rules'))[0]?.match).toBe('all');
+    expect(await command('rule.update', { id, ...either, match: 'some' })).toEqual({ ok: false, error: 'invalid' });
   });
 
   it('refuse malformed rules, unknown tags and unknown ids', async () => {
@@ -107,6 +117,18 @@ describe('automatic rules', () => {
     expect(preview.items.map((i) => i.id)).toEqual(['if11', 'if10', 'if9', 'if8', 'if7', 'if6', 'if5', 'if4', 'if3', 'if2']);
     expect(preview.items[0]).toMatchObject({ description: 'IFOOD *Loja 11', day: '2026-10-21', amountCents: 1000 });
     await expect(query('rulePreview', { conditions: [] })).rejects.toThrow('invalid');
+  });
+
+  it('test "qualquer condição" (any) as any one condition', async () => {
+    const { sql, query } = await setup();
+    await seedTransactions(sql, [
+      ['if', '2026-10-10T12:00:00.000Z', 'IFOOD *Loja'],
+      ['ra', '2026-10-11T12:00:00.000Z', 'RAPPI *Pedido'],
+      ['ub', '2026-10-12T12:00:00.000Z', 'Uber Trip'],
+    ]);
+    const conditions = [{ kind: 'descriptionContains', text: 'ifood' }, { kind: 'descriptionContains', text: 'rappi' }];
+    expect((await query<RulePreviewView>('rulePreview', { match: 'any', conditions })).items.map((i) => i.id)).toEqual(['ra', 'if']);
+    expect((await query<RulePreviewView>('rulePreview', { conditions })).total).toBe(0);
   });
 
   it('test the type condition: entrada, saída or transferência', async () => {

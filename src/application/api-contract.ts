@@ -2,7 +2,7 @@
 // Types only. The server imports it with `import type`, so nothing here runs on either side.
 import type { BillStatus } from '../domain/faturas';
 import type { CategoryOption } from '../domain/pluggy-categories';
-import type { RuleAction, RuleCondition, RuleDefinition } from '../domain/rules';
+import type { RuleAction, RuleCondition, RuleDefinition, RuleMatch } from '../domain/rules';
 import type { CategoryChart, Comparison, MonthlyChart } from '../domain/spending';
 import type { TagAssignment, TagChange } from '../domain/tags';
 
@@ -197,6 +197,8 @@ export interface TagLayerView {
 /** One automatic rule, in screen order (docs/spec/regras-automaticas.md). */
 export interface RuleView {
   readonly id: string;
+  /** "todas as condições" (all, e) or "qualquer condição" (any, ou); never mixed in one rule. */
+  readonly match: RuleMatch;
   readonly conditions: readonly RuleCondition[];
   /** Tags deleted after the rule was saved are already gone from them. */
   readonly actions: readonly RuleAction[];
@@ -272,7 +274,7 @@ export interface Queries {
   /** The automatic rules, in order (docs/spec/regras-automaticas.md). */
   rules: { input: Record<string, never>; output: RuleView[] };
   /** The stored lançamentos that `conditions` match, newest first, at most RULE_PREVIEW_LIMIT. */
-  rulePreview: { input: { conditions: readonly RuleCondition[] }; output: RulePreviewView };
+  rulePreview: { input: { match?: RuleMatch; conditions: readonly RuleCondition[]; actions?: readonly RuleAction[] }; output: RulePreviewView };
 }
 
 /** Writes: `POST /api/command/<name>`. Each sends its writes in one atomic batch. */

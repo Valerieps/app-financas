@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyReplacements, categoryFromRules, categoryWithin, containsExpression, describeWithRules, lancamentoType, operationLabel, parseConditions, parseRule, replaceText, ruleMatches, ruleMatchesSearch, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
+import { applyReplacements, categoryFromRules, categoryWithin, containsExpression, describeWithRules, lancamentoType, operationLabel, parseConditions, parseMatch, parseRule, replaceText, ruleMatches, ruleMatchesSearch, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
 
 const contains = (text: string) => ({ kind: 'descriptionContains', text }) as const;
 const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, payer: null, operation: null, ...more });
@@ -27,6 +27,26 @@ describe('ruleMatches', () => {
     const both = { conditions: [contains('uber'), contains('trip')] };
     expect(ruleMatches(both, subject('Uber Trip'))).toBe(true);
     expect(ruleMatches(both, subject('Uber Eats'))).toBe(false);
+    expect(ruleMatches({ match: 'all', ...both }, subject('Uber Eats'))).toBe(false);
+  });
+
+  it('with "qualquer condição" (any), needs just one', () => {
+    const either = { match: 'any', conditions: [contains('ifood'), { kind: 'category', categoryId: '05000000' }] } as const;
+    expect(ruleMatches(either, subject('iFood'))).toBe(true);
+    expect(ruleMatches(either, subject('Mercado', { categoryId: '05070000' }))).toBe(true);
+    expect(ruleMatches(either, subject('iFood', { categoryId: '05070000' }))).toBe(true);
+    expect(ruleMatches(either, subject('Mercado'))).toBe(false);
+  });
+
+  it('with a single condition, "all" and "any" agree', () => {
+    for (const match of ['all', 'any'] as const) {
+      expect(ruleMatches({ match, conditions: [contains('ifood')] }, subject('iFood'))).toBe(true);
+      expect(ruleMatches({ match, conditions: [contains('ifood')] }, subject('Uber'))).toBe(false);
+    }
+  });
+
+  it('never matches a rule without conditions, even with "any"', () => {
+    expect(ruleMatches({ match: 'any', conditions: [] }, subject('x'))).toBe(false);
   });
 });
 
@@ -107,7 +127,17 @@ describe('withExistingTags', () => {
 
 describe('parseRule', () => {
   it('cleans the text and keeps the tags', () => {
-    expect(parseRule({ conditions: [contains('  ifood  ')], actions: [{ kind: 'addTags', tags: { l: 't' } }] })).toEqual(rule('ifood', { l: 't' }));
+    expect(parseRule({ conditions: [contains('  ifood  ')], actions: [{ kind: 'addTags', tags: { l: 't' } }] })).toEqual({ match: 'all', ...rule('ifood', { l: 't' }) });
+  });
+
+  it('reads how the conditions join: "all" when absent, as rules saved before "ou"', () => {
+    const tags = [{ kind: 'addTags', tags: { l: 't' } }];
+    expect(parseRule({ match: 'any', conditions: [contains('x')], actions: tags })?.match).toBe('any');
+    expect(parseRule({ match: 'all', conditions: [contains('x')], actions: tags })?.match).toBe('all');
+    expect(parseRule({ conditions: [contains('x')], actions: tags })?.match).toBe('all');
+    expect(parseRule({ match: 'some', conditions: [contains('x')], actions: tags })).toBeNull();
+    expect(parseMatch(null)).toBe('all');
+    expect(parseMatch(1)).toBeNull();
   });
 
   it('refuses empty, long or unknown parts', () => {
@@ -158,7 +188,7 @@ describe('replacing text in the description', () => {
   });
 
   it('is read and cleaned like the other actions', () => {
-    expect(parseRule({ conditions: [contains('ifood')], actions: [replace(' IFOOD ', '  iFood ')] })).toEqual({ conditions: [contains('ifood')], actions: [replace('IFOOD', '  iFood ')] });
+    expect(parseRule({ conditions: [contains('ifood')], actions: [replace(' IFOOD ', '  iFood ')] })).toEqual({ match: 'all', conditions: [contains('ifood')], actions: [replace('IFOOD', '  iFood ')] });
     expect(parseRule({ conditions: [contains('ifood')], actions: [replace('ifood', '')] })?.actions).toEqual([replace('ifood', '')]);
     expect(parseRule({ conditions: [contains('x')], actions: [replace(' ', 'y')] })).toBeNull();
     expect(parseRule({ conditions: [contains('x')], actions: [replace('x', 'y'.repeat(101))] })).toBeNull();

@@ -1,5 +1,5 @@
 // Automatic rules, "if this then that" (docs/spec/regras-automaticas.md): each rule has conditions,
-// all of which must hold, and actions. The conditions are "the description contains a text" (with
+// all of which must hold (or, when the rule says so, any one of them), and actions. The conditions are "the description contains a text" (with
 // "|" for or and "&" for and), "the lançamento is of this type", "who paid an entrada contains a
 // text", "the operação contains a text" and "the category is (or is under) this one"; the actions are "add these tags", "replace this text in the description" and "set the
 // category". New kinds join the unions below (ADR-009).
@@ -32,7 +32,13 @@ export type RuleAction =
   | { readonly kind: 'replaceInDescription'; readonly find: string; readonly replace: string }
   | { readonly kind: 'setCategory'; readonly categoryId: string };
 
+/** How a rule joins its conditions: every one must hold ("e") or any one is enough ("ou"). Never mixed. */
+export type RuleMatch = 'all' | 'any';
+export const RULE_MATCHES: readonly RuleMatch[] = ['all', 'any'];
+
 export interface RuleDefinition {
+  /** Absent means 'all', as every rule was before "ou" existed. */
+  readonly match?: RuleMatch;
   readonly conditions: readonly RuleCondition[];
   readonly actions: readonly RuleAction[];
 }
@@ -118,9 +124,10 @@ export function conditionHolds(condition: RuleCondition, subject: RuleSubject): 
   }
 }
 
-/** Every condition holds; a rule without conditions matches nothing. */
-export function ruleMatches(rule: Pick<RuleDefinition, 'conditions'>, subject: RuleSubject): boolean {
-  return rule.conditions.length > 0 && rule.conditions.every((c) => conditionHolds(c, subject));
+/** Every condition holds (or, with match 'any', at least one); a rule without conditions matches nothing. */
+export function ruleMatches(rule: Pick<RuleDefinition, 'conditions' | 'match'>, subject: RuleSubject): boolean {
+  const holds = (c: RuleCondition) => conditionHolds(c, subject);
+  return rule.conditions.length > 0 && (rule.match === 'any' ? rule.conditions.some(holds) : rule.conditions.every(holds));
 }
 
 /**
@@ -207,8 +214,9 @@ export function describeWithRules(rules: readonly RuleDefinition[], subject: Rul
 }
 
 /** The rule without the tags that no longer exist (a tag or a layer deleted after the rule was saved). */
-export function withExistingTags(rule: RuleDefinition, exists: (layerId: string, tagId: string) => boolean): RuleDefinition {
+export function withExistingTags(rule: RuleDefinition, exists: (layerId: string, tagId: string) => boolean): RuleDefinition & { readonly match: RuleMatch } {
   return {
+    match: rule.match ?? 'all',
     conditions: rule.conditions,
     actions: rule.actions.map((action) =>
       action.kind === 'addTags'
@@ -275,12 +283,19 @@ export function parseActions(raw: unknown): RuleAction[] | null {
   return parseList(raw, parseAction);
 }
 
+/** Reads how a rule joins its conditions; absent is 'all' (rules saved before "ou"), anything else null. */
+export function parseMatch(raw: unknown): RuleMatch | null {
+  if (raw === undefined || raw === null) return 'all';
+  return (RULE_MATCHES as readonly unknown[]).includes(raw) ? (raw as RuleMatch) : null;
+}
+
 /** Reads a rule as the API receives it, cleaned; null when malformed. */
 export function parseRule(raw: unknown): RuleDefinition | null {
   if (!isRecord(raw)) return null;
+  const match = parseMatch(raw.match);
   const conditions = parseConditions(raw.conditions);
   const actions = parseActions(raw.actions);
-  return conditions && actions ? { conditions, actions } : null;
+  return match && conditions && actions ? { match, conditions, actions } : null;
 }
 
 /** Whether a rule, read as these texts (its sentence, its tags), has every word of the search, without case or accents. */
