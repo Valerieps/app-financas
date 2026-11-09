@@ -45,6 +45,10 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
   escolhida na regra e com todas as que ficam abaixo dela na árvore: "a categoria estiver em
   Compras" pega também "Compras online". Nunca casa com um lançamento sem categoria. *(2)*
   Por quê: uma regra cobre o grupo inteiro sem eu listar cada subcategoria.
+- Numa mesma condição de categoria eu escolho várias categorias de uma vez (até 30). Elas seguem o
+  "e" ou o "ou" que eu escolhi para a regra: com "ou", basta o lançamento estar em uma delas; com
+  "e", ele precisa estar em todas (o que só acontece quando uma fica abaixo da outra). *(2)*
+  Por quê: não preciso de uma condição para cada categoria, nem esbarro no limite de condições.
 - A categoria que uma regra põe já vale para as condições de categoria das regras de tags e de
   troca na descrição. As regras que mudam a categoria olham a categoria de antes de qualquer regra.
   *(2)*

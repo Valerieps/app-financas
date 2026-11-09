@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState, type FormEvent } from 'react';
 import type { RulePreviewView, RuleView, TagLayerView } from '../../application/api-contract';
 import { dayLabel } from '../../domain/lancamentos';
 import type { CategoryOption } from '../../domain/pluggy-categories';
-import { containsExpression, LANCAMENTO_TYPES, MAX_RULE_PARTS, MAX_RULE_TEXT_LENGTH, MAX_RULES, RULE_MATCHES, ruleMatchesSearch, type RuleAction, type RuleCondition, type RuleDefinition, type RuleMatch } from '../../domain/rules';
+import { containsExpression, LANCAMENTO_TYPES, MAX_CONDITION_CATEGORIES, MAX_RULE_PARTS, MAX_RULE_TEXT_LENGTH, MAX_RULES, RULE_MATCHES, ruleMatchesSearch, type RuleAction, type RuleCondition, type RuleDefinition, type RuleMatch } from '../../domain/rules';
 import { strings } from '../../domain/strings';
 import { cleanName, type TagAssignment } from '../../domain/tags';
 import { saoPauloDate } from '../../domain/vault';
@@ -29,7 +29,7 @@ function newCondition(field: ConditionField): RuleCondition {
   if (field === 'description') return { kind: 'descriptionContains', text: '' };
   if (field === 'payer') return { kind: 'payerContains', text: '' };
   if (field === 'operation') return { kind: 'operationContains', text: '' };
-  if (field === 'category') return { kind: 'category', categoryId: '' };
+  if (field === 'category') return { kind: 'category', categoryIds: [] };
   return { kind: 'type', type: 'out' };
 }
 
@@ -45,10 +45,16 @@ function newAction(field: ActionField, conditions: readonly RuleCondition[]): Ru
   return { kind: 'replaceInDescription', find, replace: '' };
 }
 
-function conditionSummary(c: RuleCondition, categories: readonly CategoryOption[]): string {
+/** The names of a condition's categories still in the tree, joined by the rule's "e"/"ou"; null when none is left. */
+function categoryNames(ids: readonly string[], categories: readonly CategoryOption[], match: RuleMatch | undefined): string | null {
+  const names = ids.flatMap((id) => categories.find((option) => option.id === id)?.name ?? []);
+  return names.length > 0 ? names.join(match === 'any' ? text.orJoin : text.andJoin) : null;
+}
+
+function conditionSummary(c: RuleCondition, categories: readonly CategoryOption[], match: RuleMatch | undefined): string {
   if (c.kind === 'category') {
-    const category = categories.find((option) => option.id === c.categoryId);
-    return category ? text.inCategorySummary(category.name) : text.deletedConditionCategory;
+    const names = categoryNames(c.categoryIds, categories, match);
+    return names ? text.inCategorySummary(names) : text.deletedConditionCategory;
   }
   if (c.kind === 'descriptionContains') return text.containsSummary(c.text);
   if (c.kind === 'payerContains') return text.payerSummary(c.text);
@@ -71,7 +77,7 @@ const CHIP_FIELDS = { descriptionContains: text.chips.contains.description, paye
 
 function conditionsProblem(conditions: readonly RuleCondition[]): string | null {
   for (const c of conditions) {
-    const problem = isTextCondition(c) ? containsProblem(c.text, TEXT_NEEDED[c.kind]) : c.kind === 'category' && !c.categoryId ? text.needCategory : null;
+    const problem = isTextCondition(c) ? containsProblem(c.text, TEXT_NEEDED[c.kind]) : c.kind === 'category' && c.categoryIds.length === 0 ? text.needCategory : null;
     if (problem) return problem;
   }
   return null;
@@ -110,11 +116,11 @@ interface Choices {
 }
 
 /** A condition as a short chip: "descrição contém ifood | rappi", "saída"; `missing` when its category was deleted. */
-function conditionChip(c: RuleCondition, categories: readonly CategoryOption[]): { label: string; missing?: boolean } {
+function conditionChip(c: RuleCondition, categories: readonly CategoryOption[], match: RuleMatch | undefined): { label: string; missing?: boolean } {
   if (isTextCondition(c)) return { label: text.chips.containsChip(CHIP_FIELDS[c.kind], c.text) };
   if (c.kind === 'type') return { label: text.types[c.type] };
-  const category = categories.find((option) => option.id === c.categoryId);
-  return category ? { label: text.chips.inCategory(category.name) } : { label: text.chips.deletedCategory, missing: true };
+  const names = categoryNames(c.categoryIds, categories, match);
+  return names ? { label: text.chips.inCategory(names) } : { label: text.chips.deletedCategory, missing: true };
 }
 
 /** An action as chips; `missing` when its tags or its category were deleted. */
@@ -130,7 +136,7 @@ function actionChips(a: RuleAction, { layers, categories }: Choices): { label: s
 
 /** A rule as one sentence, for screen readers and the search. */
 function ruleSentence(rule: RuleDefinition, choices: Choices): string {
-  const when = rule.conditions.map((c, i) => text.whenLine(conditionSummary(c, choices.categories), i === 0, rule.match === 'any')).join(' ');
+  const when = rule.conditions.map((c, i) => text.whenLine(conditionSummary(c, choices.categories, rule.match), i === 0, rule.match === 'any')).join(' ');
   const then = rule.actions
     .map((a) => {
       if (a.kind === 'replaceInDescription') return text.replaceSummary(a.find, a.replace.trim());
@@ -279,7 +285,7 @@ export function Regras() {
                   </span>
                   <button type="button" className="rules-open" onClick={() => setPanel({ mode: 'edit', id: rule.id })} aria-label={`${text.ruleNumber(index + 1)}: ${ruleSentence(rule, choices)}`}>
                     {rule.conditions.map((c, i) => {
-                      const chip = conditionChip(c, categories);
+                      const chip = conditionChip(c, categories, rule.match);
                       return (
                         <Fragment key={`c${i}`}>
                           {i > 0 && rule.match === 'any' && (
@@ -431,10 +437,9 @@ function RuleForm({ layers, categories, initial, onDone }: { initial?: RuleView;
                       autoFocus={index === 0}
                     />
                   ) : condition.kind === 'category' ? (
-                    <select className="rule-control rule-control--grow" aria-label={text.conditionSubjects.category} value={condition.categoryId} onChange={(e) => changeCondition(index, { kind: 'category', categoryId: e.target.value })}>
-                      <option value="">{text.chooseCategory}</option>
-                      {categoryOptions}
-                    </select>
+                    <span className="rule-tags">
+                      <CategoryPicker ids={condition.categoryIds} categories={categories} match={match} onChange={(categoryIds) => changeCondition(index, { kind: 'category', categoryIds })} />
+                    </span>
                   ) : (
                     <select className="rule-control rule-control--grow" aria-label={text.conditionSubjects.type} value={condition.type} onChange={(e) => changeCondition(index, { kind: 'type', type: LANCAMENTO_TYPES.find((t) => t === e.target.value) ?? 'out' })}>
                       {LANCAMENTO_TYPES.map((t) => (
@@ -545,6 +550,41 @@ function BlockHead({ step, id, title, hint }: { step: number; id: string; title:
         <p className="text-caption muted">{hint}</p>
       </div>
     </header>
+  );
+}
+
+/** The chosen categories as chips, joined by the rule's "e"/"ou", and one menu that adds a category. */
+function CategoryPicker({ ids, categories, match, onChange }: { ids: readonly string[]; categories: readonly CategoryOption[]; match: RuleMatch; onChange: (ids: string[]) => void }) {
+  const add = ids.length === 0 ? text.chooseCategory : text.addCategory;
+  return (
+    <>
+      {ids.map((id, index) => {
+        const name = categories.find((option) => option.id === id)?.name ?? text.chips.deletedCategory;
+        return (
+          <Fragment key={id}>
+            {index > 0 && <span className="rule-op">{match === 'any' ? text.or : text.and}</span>}
+            <span className="rules-chip rules-chip--when">
+              {name}
+              <button type="button" className="rules-chip-remove" aria-label={text.removeTag(name)} title={text.removeTag(name)} onClick={() => onChange(ids.filter((other) => other !== id))}>
+                ×
+              </button>
+            </span>
+          </Fragment>
+        );
+      })}
+      {ids.length < MAX_CONDITION_CATEGORIES && (
+        <select className="rule-control rule-control--tag" aria-label={add} value="" onChange={(e) => e.target.value && onChange([...ids, e.target.value])}>
+          <option value="">{add}</option>
+          {categories
+            .filter((option) => !ids.includes(option.id))
+            .map((option) => (
+              <option key={option.id} value={option.id}>
+                {optionLabel(option)}
+              </option>
+            ))}
+        </select>
+      )}
+    </>
   );
 }
 

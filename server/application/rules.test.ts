@@ -312,6 +312,9 @@ describe('"categoria" rules', () => {
     const byCategory = (categoryId: string) => ({ conditions: [{ kind: 'category', categoryId }], actions: [{ kind: 'addTags', tags: { [tipo]: restaurante } }] });
     expect(await command('rule.create', byCategory('99999999'))).toEqual({ ok: false, error: 'invalid' });
     expect((await command('rule.create', byCategory(COMPRAS))).ok).toBe(true);
+    const several = (categoryIds: string[]) => ({ conditions: [{ kind: 'category', categoryIds }], actions: [{ kind: 'addTags', tags: { [tipo]: restaurante } }] });
+    expect(await command('rule.create', several([COMPRAS, '99999999']))).toEqual({ ok: false, error: 'invalid' });
+    expect((await command('rule.create', several([COMPRAS, SALARIO]))).ok).toBe(true);
   });
 
   it('are tested against the category that counts, its subcategories included', async () => {
@@ -320,6 +323,8 @@ describe('"categoria" rules', () => {
     expect((await command('lancamentos.categorize', { ids: ['escolhida'], categoryId: SALARIO })).ok).toBe(true);
     const preview = await query<RulePreviewView>('rulePreview', { conditions: [{ kind: 'category', categoryId: COMPRAS }] });
     expect(preview.items.map((i) => i.id)).toEqual(['site', 'loja']);
+    const either = await query<RulePreviewView>('rulePreview', { match: 'any', conditions: [{ kind: 'category', categoryIds: [COMPRAS, SALARIO] }] });
+    expect(either.items.map((i) => i.id).sort()).toEqual(['escolhida', 'loja', 'site']);
   });
 
   it('tag the stored lançamentos when applied, seeing the category another rule set', async () => {
