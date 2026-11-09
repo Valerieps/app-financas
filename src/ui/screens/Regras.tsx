@@ -21,7 +21,7 @@ const amount = (item: { amountCents: number; currency: string; direction: 'in' |
 type ConditionField = keyof typeof text.conditionSubjects;
 type ActionField = keyof typeof text.actionVerbs;
 
-const CONDITION_FIELDS: Record<RuleCondition['kind'], ConditionField> = { descriptionContains: 'description', type: 'type', payerContains: 'payer', operationContains: 'operation' };
+const CONDITION_FIELDS: Record<RuleCondition['kind'], ConditionField> = { descriptionContains: 'description', type: 'type', payerContains: 'payer', operationContains: 'operation', category: 'category' };
 const conditionField = (c: RuleCondition): ConditionField => CONDITION_FIELDS[c.kind];
 const actionField = (a: RuleAction): ActionField => (a.kind === 'addTags' ? 'tags' : a.kind === 'setCategory' ? 'category' : 'description');
 
@@ -29,6 +29,7 @@ function newCondition(field: ConditionField): RuleCondition {
   if (field === 'description') return { kind: 'descriptionContains', text: '' };
   if (field === 'payer') return { kind: 'payerContains', text: '' };
   if (field === 'operation') return { kind: 'operationContains', text: '' };
+  if (field === 'category') return { kind: 'category', categoryId: '' };
   return { kind: 'type', type: 'out' };
 }
 
@@ -44,7 +45,11 @@ function newAction(field: ActionField, conditions: readonly RuleCondition[]): Ru
   return { kind: 'replaceInDescription', find, replace: '' };
 }
 
-function conditionSummary(c: RuleCondition): string {
+function conditionSummary(c: RuleCondition, categories: readonly CategoryOption[]): string {
+  if (c.kind === 'category') {
+    const category = categories.find((option) => option.id === c.categoryId);
+    return category ? text.inCategorySummary(category.name) : text.deletedConditionCategory;
+  }
   if (c.kind === 'descriptionContains') return text.containsSummary(c.text);
   if (c.kind === 'payerContains') return text.payerSummary(c.text);
   if (c.kind === 'operationContains') return text.operationSummary(c.text);
@@ -66,7 +71,7 @@ const CHIP_FIELDS = { descriptionContains: text.chips.contains.description, paye
 
 function conditionsProblem(conditions: readonly RuleCondition[]): string | null {
   for (const c of conditions) {
-    const problem = isTextCondition(c) ? containsProblem(c.text, TEXT_NEEDED[c.kind]) : null;
+    const problem = isTextCondition(c) ? containsProblem(c.text, TEXT_NEEDED[c.kind]) : c.kind === 'category' && !c.categoryId ? text.needCategory : null;
     if (problem) return problem;
   }
   return null;
@@ -104,9 +109,12 @@ interface Choices {
   readonly categories: readonly CategoryOption[];
 }
 
-/** A condition as a short chip: "descrição contém ifood | rappi", "saída". */
-function conditionChip(c: RuleCondition): string {
-  return isTextCondition(c) ? text.chips.containsChip(CHIP_FIELDS[c.kind], c.text) : text.types[c.type];
+/** A condition as a short chip: "descrição contém ifood | rappi", "saída"; `missing` when its category was deleted. */
+function conditionChip(c: RuleCondition, categories: readonly CategoryOption[]): { label: string; missing?: boolean } {
+  if (isTextCondition(c)) return { label: text.chips.containsChip(CHIP_FIELDS[c.kind], c.text) };
+  if (c.kind === 'type') return { label: text.types[c.type] };
+  const category = categories.find((option) => option.id === c.categoryId);
+  return category ? { label: text.chips.inCategory(category.name) } : { label: text.chips.deletedCategory, missing: true };
 }
 
 /** An action as chips; `missing` when its tags or its category were deleted. */
@@ -122,7 +130,7 @@ function actionChips(a: RuleAction, { layers, categories }: Choices): { label: s
 
 /** A rule as one sentence, for screen readers and the search. */
 function ruleSentence(rule: RuleDefinition, choices: Choices): string {
-  const when = rule.conditions.map((c, i) => text.whenLine(conditionSummary(c), i === 0)).join(' ');
+  const when = rule.conditions.map((c, i) => text.whenLine(conditionSummary(c, choices.categories), i === 0)).join(' ');
   const then = rule.actions
     .map((a) => {
       if (a.kind === 'replaceInDescription') return text.replaceSummary(a.find, a.replace.trim());
@@ -270,11 +278,14 @@ export function Regras() {
                     {index + 1}
                   </span>
                   <button type="button" className="rules-open" onClick={() => setPanel({ mode: 'edit', id: rule.id })} aria-label={`${text.ruleNumber(index + 1)}: ${ruleSentence(rule, choices)}`}>
-                    {rule.conditions.map((c, i) => (
-                      <span key={`c${i}`} className="rules-chip rules-chip--when">
-                        {conditionChip(c)}
-                      </span>
-                    ))}
+                    {rule.conditions.map((c, i) => {
+                      const chip = conditionChip(c, categories);
+                      return (
+                        <span key={`c${i}`} className={chip.missing ? 'rules-chip rules-chip--missing' : 'rules-chip rules-chip--when'}>
+                          {chip.label}
+                        </span>
+                      );
+                    })}
                     <span className="rules-arrow" aria-hidden="true">
                       →
                     </span>
@@ -373,7 +384,7 @@ function RuleForm({ layers, categories, initial, onDone }: { initial?: RuleView;
                 </option>
               ))}
             </select>
-            <span>{isTextCondition(condition) ? text.contains : text.is}</span>
+            <span>{isTextCondition(condition) ? text.contains : condition.kind === 'category' ? text.within : text.is}</span>
             {isTextCondition(condition) ? (
               <input
                 className="rules-input"
@@ -384,6 +395,15 @@ function RuleForm({ layers, categories, initial, onDone }: { initial?: RuleView;
                 autoComplete="off"
                 autoFocus={index === 0}
               />
+            ) : condition.kind === 'category' ? (
+              <select className="rules-token rules-token--when" aria-label={text.conditionSubjects.category} value={condition.categoryId} onChange={(e) => changeCondition(index, { kind: 'category', categoryId: e.target.value })}>
+                <option value="">{text.chooseCategory}</option>
+                {categories.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {optionLabel(option)}
+                  </option>
+                ))}
+              </select>
             ) : (
               <select className="rules-token rules-token--when" aria-label={text.conditionSubjects.type} value={condition.type} onChange={(e) => changeCondition(index, { kind: 'type', type: LANCAMENTO_TYPES.find((t) => t === e.target.value) ?? 'out' })}>
                 {LANCAMENTO_TYPES.map((t) => (
@@ -402,6 +422,7 @@ function RuleForm({ layers, categories, initial, onDone }: { initial?: RuleView;
           </button>
         )}
         {conditions.some(isTextCondition) && <p className="text-caption muted">{text.whenHint}</p>}
+        {conditions.some((c) => c.kind === 'category') && <p className="text-caption muted">{text.categoryHint}</p>}
 
         {actions.map((action, index) => (
           <p key={index} className="rules-line">

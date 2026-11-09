@@ -11,7 +11,8 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
 ## Em aberto
 
 - [ ] **Próximas condições e ações.** Quais vêm depois de "a descrição contém", "o tipo é", "quem
-  pagou contém", "aplique as tags", "substitua na descrição" e "mude a categoria": valor, data,
+  pagou contém", "a operação contém", "a categoria está em", "aplique as tags", "substitua na
+  descrição" e "mude a categoria": valor, data,
   conta, quem recebeu; mudar a importância?
 
 ## Regras
@@ -21,9 +22,9 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
   depende do campo (um texto para a descrição; uma data pediria outra coisa). Cada ação também tem
   duas partes: o **campo** que ela muda e a **consequência** em si. *(2)*
   Por quê: outras condições e ações entram depois sem refazer as regras nem a tela.
-- Hoje existem quatro condições, **a descrição contém um texto**, **o lançamento é de um tipo**
-  (entrada, saída ou transferência), **quem pagou contém um texto** e **a operação contém um
-  texto**, e três ações, **aplique as
+- Hoje existem cinco condições, **a descrição contém um texto**, **o lançamento é de um tipo**
+  (entrada, saída ou transferência), **quem pagou contém um texto**, **a operação contém um
+  texto** e **a categoria está em** uma da árvore do Pluggy, e três ações, **aplique as
   tags** (no máximo uma por camada), **substitua, na descrição, um texto por outro** e **mude a
   categoria** (para uma da árvore do Pluggy). *(2)*
   Por quê: começo pelo que mais uso.
@@ -36,6 +37,15 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
 - **Operação** vale para qualquer lançamento: olha a operação como o detalhe do lançamento mostra
   (o tipo da operação e o meio de pagamento que o banco manda, como "PIX · PIX"), e nunca casa com
   um lançamento sem operação. O texto funciona como o da descrição, com `|` e `&`. *(2)*
+- **Categoria** olha a categoria que vale (a minha, ou a do Pluggy) e casa com a categoria
+  escolhida na regra e com todas as que ficam abaixo dela na árvore: "a categoria estiver em
+  Compras" pega também "Compras online". Nunca casa com um lançamento sem categoria. *(2)*
+  Por quê: uma regra cobre o grupo inteiro sem eu listar cada subcategoria.
+- A categoria que uma regra põe já vale para as condições de categoria das regras de tags e de
+  troca na descrição. As regras que mudam a categoria olham a categoria de antes de qualquer regra.
+  *(2)*
+  Por quê: assim "mude a categoria" e depois "categoria em X, aplique a tag" funcionam juntas, sem
+  uma regra de categoria depender da outra.
 - O texto é comparado sem diferença entre maiúsculas e minúsculas nem acentos: "ifood" casa com
   "IFOOD *Restaurante" e "padaria" com "Padaría". *(2)*
 - No texto, `|` quer dizer "ou" e `&` quer dizer "e": "ifood | rappi" casa com qualquer um dos dois,
@@ -96,7 +106,7 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
 - No painel, a regra é escrita como uma frase: "Sempre que **a descrição** contiver [ifood | rappi]
   e **o lançamento** for **uma saída**, então **aplique as tags** [Tipo de Gasto: Restaurante]". Cada
   palavra sublinhada é um menu: nas condições, a descrição, o lançamento (o tipo), quem pagou
-  (entrada) ou a operação; nas ações, aplique as tags, mude a categoria para (da árvore do Pluggy)
+  (entrada), a operação ou a categoria (da árvore do Pluggy); nas ações, aplique as tags, mude a categoria para (da árvore do Pluggy)
   ou troque na descrição [texto] por [novo]. As tags escolhidas aparecem como etiquetas que eu tiro
   com ×, e um menu "+ tag" põe outra (uma por camada: a nova troca a da mesma camada). Até 5
   condições e 5 ações. *(2)*

@@ -1,7 +1,7 @@
 // Automatic rules, "if this then that" (docs/spec/regras-automaticas.md): each rule has conditions,
 // all of which must hold, and actions. The conditions are "the description contains a text" (with
 // "|" for or and "&" for and), "the lançamento is of this type", "who paid an entrada contains a
-// text" and "the operação contains a text"; the actions are "add these tags", "replace this text in the description" and "set the
+// text", "the operação contains a text" and "the category is (or is under) this one"; the actions are "add these tags", "replace this text in the description" and "set the
 // category". New kinds join the unions below (ADR-009).
 import type { Direction } from './lancamentos';
 import { assignTag, cleanName, type TagAssignment } from './tags';
@@ -25,7 +25,8 @@ export type RuleCondition =
   | { readonly kind: 'descriptionContains'; readonly text: string }
   | { readonly kind: 'type'; readonly type: LancamentoType }
   | { readonly kind: 'payerContains'; readonly text: string }
-  | { readonly kind: 'operationContains'; readonly text: string };
+  | { readonly kind: 'operationContains'; readonly text: string }
+  | { readonly kind: 'category'; readonly categoryId: string };
 export type RuleAction =
   | { readonly kind: 'addTags'; readonly tags: TagAssignment }
   | { readonly kind: 'replaceInDescription'; readonly find: string; readonly replace: string }
@@ -66,6 +67,18 @@ export function lancamentoType(subject: Pick<RuleSubject, 'direction' | 'categor
   return subject.direction;
 }
 
+/**
+ * Whether `categoryId` is `ancestorId` or sits under it in Pluggy's tree. Pluggy's ids follow the
+ * tree: a child keeps its parent's digits and fills the parent's trailing "00" pairs ("05000000"
+ * holds "05070000", which holds "05070100").
+ */
+export function categoryWithin(categoryId: string | null, ancestorId: string): boolean {
+  if (categoryId === null) return false;
+  if (categoryId === ancestorId) return true;
+  const prefix = ancestorId.replace(/(00)+$/, '');
+  return prefix !== ancestorId && prefix.length > 0 && categoryId.length === ancestorId.length && categoryId.startsWith(prefix);
+}
+
 /** Text as rules compare it: no case, no accents, single spaces. */
 export function textKey(text: string): string {
   return cleanName(text)
@@ -100,6 +113,8 @@ export function conditionHolds(condition: RuleCondition, subject: RuleSubject): 
       return subject.direction === 'in' && !subject.cardPayment && subject.payer !== null && descriptionContains(subject.payer, condition.text);
     case 'operationContains':
       return subject.operation !== null && descriptionContains(subject.operation, condition.text);
+    case 'category':
+      return categoryWithin(subject.categoryId, condition.categoryId);
   }
 }
 
@@ -211,6 +226,11 @@ function parseCondition(raw: unknown): RuleCondition | null {
     const text = cleanName(raw.text);
     if (!text || [...text].length > MAX_RULE_TEXT_LENGTH || !containsExpression(text)) return null;
     return { kind: raw.kind, text };
+  }
+  if (raw.kind === 'category' && typeof raw.categoryId === 'string') {
+    const { categoryId } = raw;
+    if (!categoryId || categoryId.length > MAX_CATEGORY_ID_LENGTH) return null;
+    return { kind: 'category', categoryId };
   }
   if (raw.kind === 'type' && (LANCAMENTO_TYPES as readonly unknown[]).includes(raw.type)) {
     return { kind: 'type', type: raw.type as LancamentoType };
