@@ -79,20 +79,29 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
 ## Tela Regras automáticas
 
 - Fica no menu da esquerda, logo acima de Categorias. *(2)*
-- Mostra as regras em ordem, cada uma numa frase ("Sempre que a descrição contiver "ifood" e o
-  lançamento for uma saída, aplique Tipo: Restaurante"), com subir, descer, editar e excluir. *(2)*
-- Mostra as substituições numa frase também: "Troque "IFOOD *" por "iFood " na descrição", ou
-  "Apague "*" da descrição" quando o novo texto é vazio. A mudança de categoria aparece como "Mude a
-  categoria para Salário", quem pagou como "quem pagou a entrada contiver "acme"" e a operação como "a operação contiver
-  "pix"". *(2)*
-- Para criar uma regra, eu monto uma lista de condições e uma lista de consequências, até 5 de
-  cada. Em cada linha eu escolho o campo (Descrição, Tipo do lançamento, Quem pagou (entrada) ou
-  Operação nas condições; Tags, Categoria ou Descrição nas consequências), depois a condição ou a consequência
-  que esse campo oferece, e preencho o resto: o texto, o tipo, as tags (uma por camada), a categoria
-  (da árvore do Pluggy) ou o texto a trocar e o novo. A regra
-  nova começa com "Descrição contém" e, se já existem tags, "Tags: aplique". Ao trocar uma
-  consequência para "Descrição: substitua", o texto a trocar já vem com o texto da primeira
-  condição de descrição, quando ele não tem `|` nem `&`. *(2)*
-- O botão **Testar** mostra até 10 lançamentos guardados que a regra pega, os mais recentes
-  primeiro, e quantos ela pega ao todo, antes de eu salvar; quando a regra substitui, cada
-  lançamento aparece com a descrição já trocada. *(2)*
+- Mostra as regras numa lista compacta, uma por linha, numeradas na ordem em que valem. Cada
+  linha mostra as condições e, depois de uma seta, o que a regra faz, em etiquetas curtas
+  ("descrição contém ifood", "saída" → "Tipo de Gasto: Restaurante", ""IFOOD *" → "iFood"",
+  "Categoria: Salário"), com subir e descer ao lado. *(2)*
+  Por quê: com dezenas de regras, eu preciso ver todas de uma vez e achar a regra pelo gatilho.
+- Uma busca no topo filtra as regras por qualquer palavra delas (o texto, a tag, a categoria), sem
+  diferença entre maiúsculas e minúsculas nem acentos; os números continuam os da ordem. *(2)*
+- No topo também ficam quantas regras eu tenho, o botão **Aplicar aos guardados** e o botão **Nova
+  regra**. *(2)*
+- Ao clicar numa regra, ou em Nova regra, ela abre num painel ao lado da lista (numa tela estreita,
+  por cima dela), que fecha com Esc. Lá eu salvo, cancelo ou excluo a regra. *(2)*
+  Por quê: a lista não some nem pula enquanto eu edito.
+- No painel, a regra é escrita como uma frase: "Sempre que **a descrição** contiver [ifood | rappi]
+  e **o lançamento** for **uma saída**, então **aplique as tags** [Tipo de Gasto: Restaurante]". Cada
+  palavra sublinhada é um menu: nas condições, a descrição, o lançamento (o tipo), quem pagou
+  (entrada) ou a operação; nas ações, aplique as tags, mude a categoria para (da árvore do Pluggy)
+  ou troque na descrição [texto] por [novo]. As tags escolhidas aparecem como etiquetas que eu tiro
+  com ×, e um menu "+ tag" põe outra (uma por camada: a nova troca a da mesma camada). Até 5
+  condições e 5 ações. *(2)*
+- A regra nova começa com "a descrição contiver" e, se já existem tags, "aplique as tags". Ao trocar
+  uma ação para "troque na descrição", o texto a trocar já vem com o texto da primeira condição de
+  descrição, quando ele não tem `|` nem `&`. *(2)*
+- Enquanto eu escrevo, o painel mostra sozinho até 10 lançamentos guardados que a regra pega, os
+  mais recentes primeiro, e quantos ela pega ao todo; quando a regra substitui, cada lançamento
+  aparece com a descrição já trocada. *(2)*
+  Por quê: ver o resultado sem apertar Testar evita salvar uma regra que pega demais.

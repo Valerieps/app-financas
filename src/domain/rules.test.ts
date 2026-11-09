@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyReplacements, categoryFromRules, containsExpression, describeWithRules, lancamentoType, operationLabel, parseConditions, parseRule, replaceText, ruleMatches, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
+import { applyReplacements, categoryFromRules, containsExpression, describeWithRules, lancamentoType, operationLabel, parseConditions, parseRule, replaceText, ruleMatches, ruleMatchesSearch, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
 
 const contains = (text: string) => ({ kind: 'descriptionContains', text }) as const;
 const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, payer: null, operation: null, ...more });
@@ -229,5 +229,22 @@ describe('categoryFromRules', () => {
   it('is read like the other actions', () => {
     expect(parseRule({ conditions: [contains('x')], actions: [{ kind: 'setCategory', categoryId: '01000000' }] })?.actions).toEqual([{ kind: 'setCategory', categoryId: '01000000' }]);
     expect(parseRule({ conditions: [contains('x')], actions: [{ kind: 'setCategory', categoryId: '' }] })).toBeNull();
+  });
+});
+
+describe('ruleMatchesSearch', () => {
+  const texts = ['Sempre que a descrição contiver "ifood"', 'Tipo de Gasto: Restaurante'];
+
+  it('finds every word anywhere in the rule, without case or accents', () => {
+    expect(ruleMatchesSearch(texts, 'RESTAURANTE ifood')).toBe(true);
+    expect(ruleMatchesSearch(texts, 'descricao')).toBe(true);
+  });
+
+  it('misses when one word is absent', () => {
+    expect(ruleMatchesSearch(texts, 'ifood farmácia')).toBe(false);
+  });
+
+  it('keeps every rule for an empty search', () => {
+    expect(ruleMatchesSearch(texts, '   ')).toBe(true);
   });
 });

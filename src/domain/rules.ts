@@ -262,3 +262,12 @@ export function parseRule(raw: unknown): RuleDefinition | null {
   const actions = parseActions(raw.actions);
   return conditions && actions ? { conditions, actions } : null;
 }
+
+/** Whether a rule, read as these texts (its sentence, its tags), has every word of the search, without case or accents. */
+export function ruleMatchesSearch(texts: readonly string[], search: string): boolean {
+  const haystack = textKey(texts.join(' '));
+  return textKey(search)
+    .split(' ')
+    .filter(Boolean)
+    .every((word) => haystack.includes(word));
+}
