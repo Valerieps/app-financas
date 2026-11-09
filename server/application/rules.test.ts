@@ -264,6 +264,54 @@ describe('"quem pagou" rules that set the category', () => {
   });
 });
 
+describe('"categoria" rules', () => {
+  const COMPRAS = '08000000';
+  const ONLINE = '08010000';
+  const SALARIO = '01010000';
+  async function seed(sql: { batch: (s: ReturnType<typeof statement>[]) => Promise<void> }) {
+    await sql.batch(
+      [COMPRAS, ONLINE, SALARIO].map((id) => statement('INSERT INTO pluggy_categories (id, raw_json, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?)', id, '{}', NOW, NOW)),
+    );
+    await seedTransactions(sql, [
+      ['loja', '2026-10-10T12:00:00.000Z', 'LOJA'],
+      ['site', '2026-10-11T12:00:00.000Z', 'SITE'],
+      ['outra', '2026-10-12T12:00:00.000Z', 'OUTRA'],
+      ['escolhida', '2026-10-13T12:00:00.000Z', 'ESCOLHIDA'],
+    ]);
+    await sql.batch([
+      statement("UPDATE transactions SET pluggy_category_id = ? WHERE id = 'loja'", COMPRAS),
+      statement("UPDATE transactions SET pluggy_category_id = ? WHERE id IN ('site', 'escolhida')", ONLINE),
+    ]);
+  }
+
+  it("refuse a category that is not in Pluggy's tree", async () => {
+    const { sql, command, restaurante, tipo } = await setup();
+    await seed(sql);
+    const byCategory = (categoryId: string) => ({ conditions: [{ kind: 'category', categoryId }], actions: [{ kind: 'addTags', tags: { [tipo]: restaurante } }] });
+    expect(await command('rule.create', byCategory('99999999'))).toEqual({ ok: false, error: 'invalid' });
+    expect((await command('rule.create', byCategory(COMPRAS))).ok).toBe(true);
+  });
+
+  it('are tested against the category that counts, its subcategories included', async () => {
+    const { sql, command, query } = await setup();
+    await seed(sql);
+    expect((await command('lancamentos.categorize', { ids: ['escolhida'], categoryId: SALARIO })).ok).toBe(true);
+    const preview = await query<RulePreviewView>('rulePreview', { conditions: [{ kind: 'category', categoryId: COMPRAS }] });
+    expect(preview.items.map((i) => i.id)).toEqual(['site', 'loja']);
+  });
+
+  it('tag the stored lançamentos when applied, seeing the category another rule set', async () => {
+    const { sql, command, create, tipo, mercado } = await setup();
+    await seed(sql);
+    await create('rule.create', { conditions: [{ kind: 'descriptionContains', text: 'outra' }], actions: [{ kind: 'setCategory', categoryId: ONLINE }] });
+    await create('rule.create', { conditions: [{ kind: 'category', categoryId: COMPRAS }], actions: [{ kind: 'addTags', tags: { [tipo]: mercado } }] });
+    expect(await command('rules.apply', {})).toMatchObject({ ok: true, value: { tagged: 4, categorized: 1 } });
+    expect(await sql.all('SELECT transaction_id FROM transaction_tags ORDER BY transaction_id')).toEqual(
+      ['escolhida', 'loja', 'outra', 'site'].map((transaction_id) => ({ transaction_id })),
+    );
+  });
+});
+
 describe('"operação" rules', () => {
   const pixRule = { conditions: [{ kind: 'operationContains', text: 'pix' }] };
 

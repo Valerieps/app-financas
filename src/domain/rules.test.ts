@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyReplacements, categoryFromRules, containsExpression, describeWithRules, lancamentoType, operationLabel, parseConditions, parseRule, replaceText, ruleMatches, ruleMatchesSearch, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
+import { applyReplacements, categoryFromRules, categoryWithin, containsExpression, describeWithRules, lancamentoType, operationLabel, parseConditions, parseRule, replaceText, ruleMatches, ruleMatchesSearch, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
 
 const contains = (text: string) => ({ kind: 'descriptionContains', text }) as const;
 const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, payer: null, operation: null, ...more });
@@ -246,5 +246,32 @@ describe('ruleMatchesSearch', () => {
 
   it('keeps every rule for an empty search', () => {
     expect(ruleMatchesSearch(texts, '   ')).toBe(true);
+  });
+});
+
+describe('"categoria" condition', () => {
+  const byCategory = (categoryId: string): RuleDefinition => ({ conditions: [{ kind: 'category', categoryId }], actions: [{ kind: 'addTags', tags: { a: 't' } }] });
+
+  it('matches the category or any category under it in the tree', () => {
+    expect(categoryWithin('05070000', '05070000')).toBe(true);
+    expect(categoryWithin('05070000', '05000000')).toBe(true);
+    expect(categoryWithin('05070100', '05000000')).toBe(true);
+    expect(categoryWithin('05070100', '05070000')).toBe(true);
+    expect(categoryWithin('05000000', '05070000')).toBe(false);
+    expect(categoryWithin('06000000', '05000000')).toBe(false);
+    expect(categoryWithin('050700', '05000000')).toBe(false);
+    expect(categoryWithin(null, '05000000')).toBe(false);
+  });
+
+  it('looks at the category that counts, and never at a lançamento without one', () => {
+    expect(ruleMatches(byCategory('05000000'), subject('x', { categoryId: '05070000' }))).toBe(true);
+    expect(ruleMatches(byCategory('05000000'), subject('x', { categoryId: '06000000' }))).toBe(false);
+    expect(ruleMatches(byCategory('05000000'), subject('x'))).toBe(false);
+  });
+
+  it('is read from the API only with a category id', () => {
+    expect(parseConditions([{ kind: 'category', categoryId: '05000000' }])).toEqual([{ kind: 'category', categoryId: '05000000' }]);
+    expect(parseConditions([{ kind: 'category', categoryId: '' }])).toBeNull();
+    expect(parseConditions([{ kind: 'category' }])).toBeNull();
   });
 });

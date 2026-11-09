@@ -15,7 +15,7 @@ O que ainda não está pronto.
 | Lançamentos: filtros por importância, caixinha, valor e texto; outras ações em lote; novo lançamento manual | 2 | `spec/lancamentos.md`, `rascunhos/arquitetura-desktop.md` | Responder o "Em aberto" de `spec/lancamentos.md` |
 | Tags no painel de detalhe | 2 | `spec/categorias.md` | Marcar em lote, filtrar, a coluna Tags e o gráfico por tag já existem; responder o "Em aberto" de `spec/categorias.md` |
 | Categoria, importância, regras e Gemini | 2 | `spec/classificacao.md` | Mudar a categoria de um lançamento (da árvore do Pluggy), à mão ou por regra, já existe; falta a lista própria de categorias, a importância, regras que mudam a importância, a oferta de criar regra e o Gemini |
-| Regras automáticas: outras condições e ações | 2 | `spec/regras-automaticas.md` | "Descrição contém", "o tipo é", "quem pagou contém" e "a operação contém" → "aplique as tags", "substitua na descrição" e "mude a categoria" já existem; responder o "Em aberto". A prévia da regra ainda não mostra a categoria que a regra poria || Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
+| Regras automáticas: outras condições e ações | 2 | `spec/regras-automaticas.md` | "Descrição contém", "o tipo é", "quem pagou contém", "a operação contém" e "a categoria está em" → "aplique as tags", "substitua na descrição" e "mude a categoria" já existem; responder o "Em aberto". A prévia da regra ainda não mostra a categoria que a regra poria || Gráficos por importância | 2 | `spec/graficos.md` | Depende da importância; a aba mostra "Em construção" |
 | Livre do dia, semáforo e termômetro | 3 | `spec/livre-do-dia.md` | |
 | Bot do Telegram | 3 | `spec/telegram.md` | |
 | Tela do semáforo | 3 | `spec/tela-do-celular.md` | |
@@ -62,6 +62,9 @@ O que ainda não está pronto.
 - [ ] Uma regra que muda a categoria grava como se eu a tivesse escolhido, só onde não há escolha,
   a de cima vence, e excluir a regra não desfaz; "quem pagou" só casa com entradas
   (`spec/regras-automaticas.md`).
+- [ ] A condição de categoria casa também com as subcategorias e olha a categoria que vale; a que
+  uma regra põe já vale para as regras de tags e de descrição, não para as outras regras de
+  categoria (`spec/regras-automaticas.md`).
 - [ ] O nome de uma camada ou tag tem até 40 caracteres, e maiúsculas e acentos não distinguem nomes (`spec/categorias.md`).
 - [ ] As tags aparecem em ordem alfabética, e as camadas sobem e descem uma posição por vez (`spec/categorias.md`).
 - [ ] Excluir uma tag ou camada tira as tags dos lançamentos, depois de uma confirmação (`spec/categorias.md`).
