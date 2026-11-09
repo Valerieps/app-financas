@@ -112,6 +112,8 @@
   /* Desktop layout */
   --size-sidebar: 240px;
   --size-detail-panel: 400px;
+  /* Regras automáticas: the editor beside the list, wide enough for a rule written as a sentence */
+  --size-rules-panel: 480px;
   --size-content-max: 1200px;
   /* Below 1024px wide the sidebar shows only icons; below 1280px the detail panel opens over the
      content. CSS cannot read variables in media queries, so desktop.css repeats these two widths. */
