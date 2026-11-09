@@ -82,7 +82,9 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
 - Mostra as regras numa lista compacta, uma por linha, numeradas na ordem em que valem. Cada
   linha mostra as condições e, depois de uma seta, o que a regra faz, em etiquetas curtas
   ("descrição contém ifood", "saída" → "Tipo de Gasto: Restaurante", ""IFOOD *" → "iFood"",
-  "Categoria: Salário"), com subir e descer ao lado. *(2)*
+  "Categoria: Salário"), alinhadas à esquerda. Uma alça à esquerda de cada linha muda a ordem:
+  eu arrasto a regra para onde quero, ou, com a alça em foco, uso as setas ↑ ↓ do teclado. Numa tela
+  de toque, onde não dá para arrastar, a linha mostra subir e descer. *(2)*
   Por quê: com dezenas de regras, eu preciso ver todas de uma vez e achar a regra pelo gatilho.
 - Uma busca no topo filtra as regras por qualquer palavra delas (o texto, a tag, a categoria), sem
   diferença entre maiúsculas e minúsculas nem acentos; os números continuam os da ordem. *(2)*

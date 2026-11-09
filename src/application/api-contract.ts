@@ -308,7 +308,8 @@ export interface Commands {
   'rule.create': { input: RuleDefinition; output: { id: string } };
   'rule.update': { input: RuleDefinition & { id: string }; output: null };
   'rule.delete': { input: { id: string }; output: null };
-  'rule.move': { input: { id: string; direction: 'up' | 'down' }; output: null };
+  /** Up or down one step, or (dragged) to position `to` of the list, from 0. */
+  'rule.move': { input: { id: string; direction: 'up' | 'down' } | { id: string; to: number }; output: null };
   /** Runs every rule, in order, over the stored lançamentos; returns how many got a tag. */
   'rules.apply': { input: Record<string, never>; output: { tagged: number; described: number; categorized: number } };
 }

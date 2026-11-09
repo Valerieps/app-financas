@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assignTag, canAddLayer, cleanName, clearLayer, commonTags, emptyTagKey, matchesTags, MAX_LAYERS, moveInOrder, nameKey, nameProblem, tagChanges, toggleTag } from './tags';
+import { assignTag, canAddLayer, cleanName, clearLayer, commonTags, emptyTagKey, matchesTags, MAX_LAYERS, moveInOrder, moveToIndex, nameKey, nameProblem, tagChanges, toggleTag } from './tags';
 
 describe('names', () => {
   it('trims and collapses spaces', () => {
@@ -97,5 +97,18 @@ describe('tagging many lançamentos', () => {
     expect(matchesTags([vazio, 'a'], layerOf, { tipo: 'a' })).toBe(true);
     expect(matchesTags([vazio, 'x'], layerOf, { origem: 'x' })).toBe(true);
     expect(matchesTags([vazio, 'x'], layerOf, {})).toBe(false);
+  });
+});
+
+describe('moveToIndex', () => {
+  it('puts the id at the new position, shifting the others', () => {
+    expect(moveToIndex(['a', 'b', 'c', 'd'], 'a', 2)).toEqual(['b', 'c', 'a', 'd']);
+    expect(moveToIndex(['a', 'b', 'c', 'd'], 'd', 0)).toEqual(['d', 'a', 'b', 'c']);
+  });
+
+  it('keeps the order for an unknown id or a position out of range', () => {
+    expect(moveToIndex(['a', 'b'], 'x', 0)).toEqual(['a', 'b']);
+    expect(moveToIndex(['a', 'b'], 'a', 2)).toEqual(['a', 'b']);
+    expect(moveToIndex(['a', 'b'], 'a', 0.5)).toEqual(['a', 'b']);
   });
 });

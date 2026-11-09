@@ -71,6 +71,10 @@ describe('automatic rules', () => {
     ]);
     expect(await command('rule.move', { id: b, direction: 'up' })).toEqual({ ok: true, value: null, changed: ['rules'] });
     expect((await query<RuleView[]>('rules')).map((r) => r.id)).toEqual([b, a]);
+    expect((await command('rule.move', { id: b, to: 1 })).ok).toBe(true);
+    expect((await query<RuleView[]>('rules')).map((r) => r.id)).toEqual([a, b]);
+    expect(await command('rule.move', { id: b, to: 2 })).toEqual({ ok: false, error: 'invalid' });
+    expect((await command('rule.move', { id: b, to: 0 })).ok).toBe(true);
     expect((await command('rule.update', { id: a, ...rule('rappi', { [tipo]: restaurante }) })).ok).toBe(true);
     expect((await query<RuleView[]>('rules'))[1]?.conditions).toEqual([{ kind: 'descriptionContains', text: 'rappi' }]);
     expect((await command('rule.delete', { id: b })).ok).toBe(true);

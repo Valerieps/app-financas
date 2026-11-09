@@ -155,6 +155,7 @@ export function Regras() {
   const [panel, setPanel] = useState<Panel>(null);
   const [search, setSearch] = useState('');
   const [moveError, setMoveError] = useState(false);
+  const [drag, setDrag] = useState<{ id: string; from: number; over: number } | null>(null);
 
   useEffect(() => {
     if (!panel) return;
@@ -171,9 +172,15 @@ export function Regras() {
     .map((rule, index) => ({ rule, index }))
     .filter(({ rule }) => ruleMatchesSearch([ruleSentence(rule, choices), ...rule.actions.flatMap((a) => actionChips(a, choices).map((c) => c.label))], search));
 
-  async function move(id: string, direction: 'up' | 'down') {
+  async function move(input: { id: string; direction: 'up' | 'down' } | { id: string; to: number }) {
     setMoveError(false);
-    if (!(await backend.command('rule.move', { id, direction })).ok) setMoveError(true);
+    if (!(await backend.command('rule.move', input)).ok) setMoveError(true);
+  }
+
+  /** Where the dragged rule would land, drawn as a line above or below the row it is over. */
+  function dropClass(index: number): string {
+    if (!drag || drag.over !== index || drag.from === index) return '';
+    return drag.over < drag.from ? ' rules-item--drop-above' : ' rules-item--drop-below';
   }
 
   return (
@@ -218,7 +225,47 @@ export function Regras() {
             {rules.length > 0 && shown.length === 0 && <p className="muted">{text.noMatch}</p>}
             <ol className="rules-list">
               {shown.map(({ rule, index }) => (
-                <li key={rule.id} className={editing?.id === rule.id ? 'rules-item rules-item--selected' : 'rules-item'}>
+                <li
+                  key={rule.id}
+                  className={`rules-item${editing?.id === rule.id ? ' rules-item--selected' : ''}${drag?.id === rule.id ? ' rules-item--dragging' : ''}${dropClass(index)}`}
+                  onDragOver={(event) => {
+                    if (!drag) return;
+                    event.preventDefault();
+                    if (drag.over !== index) setDrag({ ...drag, over: index });
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    if (drag && drag.from !== index) void move({ id: drag.id, to: index });
+                    setDrag(null);
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="rules-handle"
+                    draggable
+                    aria-label={`${text.ruleNumber(index + 1)}: ${text.handle}`}
+                    title={text.handle}
+                    onDragStart={(event) => {
+                      event.dataTransfer.effectAllowed = 'move';
+                      event.dataTransfer.setData('text/plain', rule.id);
+                      const row = event.currentTarget.closest('li');
+                      if (row) event.dataTransfer.setDragImage(row, 0, 0);
+                      setDrag({ id: rule.id, from: index, over: index });
+                    }}
+                    onDragEnd={() => setDrag(null)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'ArrowUp' && index > 0) {
+                        event.preventDefault();
+                        void move({ id: rule.id, direction: 'up' });
+                      }
+                      if (event.key === 'ArrowDown' && index < rules.length - 1) {
+                        event.preventDefault();
+                        void move({ id: rule.id, direction: 'down' });
+                      }
+                    }}
+                  >
+                    ⋮⋮
+                  </button>
                   <span className="rules-num" aria-hidden="true">
                     {index + 1}
                   </span>
@@ -240,10 +287,10 @@ export function Regras() {
                     )}
                   </button>
                   <span className="rules-move">
-                    <button type="button" className="icon-button" aria-label={text.up} title={text.up} disabled={index === 0} onClick={() => void move(rule.id, 'up')}>
+                    <button type="button" className="icon-button" aria-label={text.up} title={text.up} disabled={index === 0} onClick={() => void move({ id: rule.id, direction: 'up' })}>
                       ↑
                     </button>
-                    <button type="button" className="icon-button" aria-label={text.down} title={text.down} disabled={index === rules.length - 1} onClick={() => void move(rule.id, 'down')}>
+                    <button type="button" className="icon-button" aria-label={text.down} title={text.down} disabled={index === rules.length - 1} onClick={() => void move({ id: rule.id, direction: 'down' })}>
                       ↓
                     </button>
                   </span>

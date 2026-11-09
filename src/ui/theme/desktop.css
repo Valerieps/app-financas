@@ -1475,6 +1475,35 @@ a.lanc-row[aria-current='true'] {
   background: var(--color-brand-soft);
 }
 
+.rules-item--dragging {
+  opacity: 0.4;
+}
+
+.rules-item--drop-above {
+  box-shadow: inset 0 var(--border-width-strong) 0 var(--color-brand);
+}
+
+.rules-item--drop-below {
+  box-shadow: inset 0 calc(-1 * var(--border-width-strong)) 0 var(--color-brand);
+}
+
+/* The grip I drag a rule by; also moves it with the arrow keys */
+.rules-handle {
+  flex: none;
+  min-height: 0;
+  padding: var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: calc(-1 * var(--space-1));
+  cursor: grab;
+}
+
+.rules-handle:active {
+  cursor: grabbing;
+}
+
 .rules-num {
   flex: none;
   min-width: var(--space-6);
@@ -1491,6 +1520,8 @@ a.lanc-row[aria-current='true'] {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-1);
+  justify-content: flex-start;
+  min-height: 0;
   padding: 0;
   border: 0;
   background: none;
@@ -1505,10 +1536,17 @@ a.lanc-row[aria-current='true'] {
   padding: 0 var(--space-1);
 }
 
+/* Up and down stay for touch screens, where there is no dragging */
 .rules-move {
   flex: none;
   display: flex;
   color: var(--color-text-muted);
+}
+
+@media (hover: hover) {
+  .rules-move {
+    display: none;
+  }
 }
 
 .rules-chip {
@@ -1602,6 +1640,10 @@ a.lanc-row[aria-current='true'] {
 
 /* A menu inside the sentence: a dotted underlined word, not a box */
 .rules-token {
+  flex: none;
+  width: auto;
+  max-width: 100%;
+  field-sizing: content;
   font: inherit;
   padding: 0 var(--space-1);
   border: 0;
@@ -1621,6 +1663,7 @@ a.lanc-row[aria-current='true'] {
 
 .rules-input {
   flex: 1;
+  width: auto;
   min-width: var(--space-16);
 }
 
