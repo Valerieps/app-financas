@@ -118,7 +118,7 @@ async function checkedRule(ctx: Context, input: Record<string, unknown>): Promis
   const exists = await tagExists(ctx);
   const allExist = rule.actions.every((a) => a.kind !== 'addTags' || Object.entries(a.tags).every(([layerId, tagId]) => exists(layerId, tagId)));
   if (!allExist) return 'invalid';
-  const categoryIds = [...rule.conditions, ...rule.actions].flatMap((part) => (part.kind === 'category' || part.kind === 'setCategory' ? [part.categoryId] : []));
+  const categoryIds = [...rule.conditions, ...rule.actions].flatMap((part) => (part.kind === 'category' ? part.categoryIds : part.kind === 'setCategory' ? [part.categoryId] : []));
   for (const id of categoryIds) {
     if (!(await categoryExists(ctx, id))) return 'invalid';
   }

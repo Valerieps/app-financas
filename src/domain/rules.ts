@@ -1,7 +1,7 @@
 // Automatic rules, "if this then that" (docs/spec/regras-automaticas.md): each rule has conditions,
 // all of which must hold (or, when the rule says so, any one of them), and actions. The conditions are "the description contains a text" (with
 // "|" for or and "&" for and), "the lançamento is of this type", "who paid an entrada contains a
-// text", "the operação contains a text" and "the category is (or is under) this one"; the actions are "add these tags", "replace this text in the description" and "set the
+// text", "the operação contains a text" and "the category is (or is under) these ones"; the actions are "add these tags", "replace this text in the description" and "set the
 // category". New kinds join the unions below (ADR-009).
 import type { Direction } from './lancamentos';
 import { assignTag, cleanName, type TagAssignment } from './tags';
@@ -16,6 +16,8 @@ export const MAX_RULE_PARTS = 5;
 export const RULE_PREVIEW_LIMIT = 10;
 /** A category id (Pluggy's, like "05100000") has at most this many characters. */
 const MAX_CATEGORY_ID_LENGTH = 64;
+/** One "a categoria está em" condition lists at most this many categories. */
+export const MAX_CONDITION_CATEGORIES = 30;
 
 /** Entrada, saída or transferência. */
 export type LancamentoType = 'in' | 'out' | 'transfer';
@@ -26,7 +28,8 @@ export type RuleCondition =
   | { readonly kind: 'type'; readonly type: LancamentoType }
   | { readonly kind: 'payerContains'; readonly text: string }
   | { readonly kind: 'operationContains'; readonly text: string }
-  | { readonly kind: 'category'; readonly categoryId: string };
+  /** The category is in (or under) these ones, joined by the rule's "e"/"ou", as separate conditions would be. */
+  | { readonly kind: 'category'; readonly categoryIds: readonly string[] };
 export type RuleAction =
   | { readonly kind: 'addTags'; readonly tags: TagAssignment }
   | { readonly kind: 'replaceInDescription'; readonly find: string; readonly replace: string }
@@ -108,7 +111,7 @@ function descriptionContains(description: string, text: string): boolean {
   return (containsExpression(text) ?? []).some((terms) => terms.every((term) => key.includes(term)));
 }
 
-export function conditionHolds(condition: RuleCondition, subject: RuleSubject): boolean {
+export function conditionHolds(condition: RuleCondition, subject: RuleSubject, match: RuleMatch = 'all'): boolean {
   switch (condition.kind) {
     case 'descriptionContains':
       return subject.description !== null && descriptionContains(subject.description, condition.text);
@@ -119,14 +122,16 @@ export function conditionHolds(condition: RuleCondition, subject: RuleSubject): 
       return subject.direction === 'in' && !subject.cardPayment && subject.payer !== null && descriptionContains(subject.payer, condition.text);
     case 'operationContains':
       return subject.operation !== null && descriptionContains(subject.operation, condition.text);
-    case 'category':
-      return categoryWithin(subject.categoryId, condition.categoryId);
+    case 'category': {
+      const within = (id: string) => categoryWithin(subject.categoryId, id);
+      return condition.categoryIds.length > 0 && (match === 'any' ? condition.categoryIds.some(within) : condition.categoryIds.every(within));
+    }
   }
 }
 
 /** Every condition holds (or, with match 'any', at least one); a rule without conditions matches nothing. */
 export function ruleMatches(rule: Pick<RuleDefinition, 'conditions' | 'match'>, subject: RuleSubject): boolean {
-  const holds = (c: RuleCondition) => conditionHolds(c, subject);
+  const holds = (c: RuleCondition) => conditionHolds(c, subject, rule.match);
   return rule.conditions.length > 0 && (rule.match === 'any' ? rule.conditions.some(holds) : rule.conditions.every(holds));
 }
 
@@ -235,10 +240,12 @@ function parseCondition(raw: unknown): RuleCondition | null {
     if (!text || [...text].length > MAX_RULE_TEXT_LENGTH || !containsExpression(text)) return null;
     return { kind: raw.kind, text };
   }
-  if (raw.kind === 'category' && typeof raw.categoryId === 'string') {
-    const { categoryId } = raw;
-    if (!categoryId || categoryId.length > MAX_CATEGORY_ID_LENGTH) return null;
-    return { kind: 'category', categoryId };
+  if (raw.kind === 'category') {
+    // Rules saved before the multiple choice hold a single `categoryId`.
+    const ids: unknown = typeof raw.categoryId === 'string' ? [raw.categoryId] : raw.categoryIds;
+    if (!Array.isArray(ids) || ids.length === 0 || ids.length > MAX_CONDITION_CATEGORIES) return null;
+    if (!ids.every((id): id is string => typeof id === 'string' && id.length > 0 && id.length <= MAX_CATEGORY_ID_LENGTH)) return null;
+    return { kind: 'category', categoryIds: [...new Set(ids)] };
   }
   if (raw.kind === 'type' && (LANCAMENTO_TYPES as readonly unknown[]).includes(raw.type)) {
     return { kind: 'type', type: raw.type as LancamentoType };

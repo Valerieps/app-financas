@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyReplacements, categoryFromRules, categoryWithin, containsExpression, describeWithRules, lancamentoType, operationLabel, parseConditions, parseMatch, parseRule, replaceText, ruleMatches, ruleMatchesSearch, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
+import { applyReplacements, categoryFromRules, categoryWithin, containsExpression, describeWithRules, lancamentoType, MAX_CONDITION_CATEGORIES, operationLabel, parseConditions, parseMatch, parseRule, replaceText, ruleMatches, ruleMatchesSearch, tagsFromRules, textKey, withExistingTags, type RuleDefinition, type RuleSubject } from './rules';
 
 const contains = (text: string) => ({ kind: 'descriptionContains', text }) as const;
 const subject = (description: string | null, more: Partial<RuleSubject> = {}): RuleSubject => ({ description, direction: 'out', categoryId: null, cardPayment: false, payer: null, operation: null, ...more });
@@ -31,7 +31,7 @@ describe('ruleMatches', () => {
   });
 
   it('with "qualquer condição" (any), needs just one', () => {
-    const either = { match: 'any', conditions: [contains('ifood'), { kind: 'category', categoryId: '05000000' }] } as const;
+    const either = { match: 'any', conditions: [contains('ifood'), { kind: 'category', categoryIds: ['05000000'] }] } as const;
     expect(ruleMatches(either, subject('iFood'))).toBe(true);
     expect(ruleMatches(either, subject('Mercado', { categoryId: '05070000' }))).toBe(true);
     expect(ruleMatches(either, subject('iFood', { categoryId: '05070000' }))).toBe(true);
@@ -280,7 +280,7 @@ describe('ruleMatchesSearch', () => {
 });
 
 describe('"categoria" condition', () => {
-  const byCategory = (categoryId: string): RuleDefinition => ({ conditions: [{ kind: 'category', categoryId }], actions: [{ kind: 'addTags', tags: { a: 't' } }] });
+  const byCategory = (...categoryIds: string[]): RuleDefinition => ({ conditions: [{ kind: 'category', categoryIds }], actions: [{ kind: 'addTags', tags: { a: 't' } }] });
 
   it('matches the category or any category under it in the tree', () => {
     expect(categoryWithin('05070000', '05070000')).toBe(true);
@@ -299,8 +299,21 @@ describe('"categoria" condition', () => {
     expect(ruleMatches(byCategory('05000000'), subject('x'))).toBe(false);
   });
 
-  it('is read from the API only with a category id', () => {
-    expect(parseConditions([{ kind: 'category', categoryId: '05000000' }])).toEqual([{ kind: 'category', categoryId: '05000000' }]);
+  it('with several categories, follows the rule "ou" or "e"', () => {
+    const any = { ...byCategory('05000000', '06000000'), match: 'any' } as const;
+    expect(ruleMatches(any, subject('x', { categoryId: '06010000' }))).toBe(true);
+    expect(ruleMatches(any, subject('x', { categoryId: '07000000' }))).toBe(false);
+    const all = byCategory('05000000', '05070000');
+    expect(ruleMatches(all, subject('x', { categoryId: '05070100' }))).toBe(true);
+    expect(ruleMatches(all, subject('x', { categoryId: '05080000' }))).toBe(false);
+  });
+
+  it('is read from the API with its category ids, or the single id of older rules', () => {
+    expect(parseConditions([{ kind: 'category', categoryIds: ['05000000', '06000000', '05000000'] }])).toEqual([{ kind: 'category', categoryIds: ['05000000', '06000000'] }]);
+    expect(parseConditions([{ kind: 'category', categoryId: '05000000' }])).toEqual([{ kind: 'category', categoryIds: ['05000000'] }]);
+    expect(parseConditions([{ kind: 'category', categoryIds: [] }])).toBeNull();
+    expect(parseConditions([{ kind: 'category', categoryIds: [''] }])).toBeNull();
+    expect(parseConditions([{ kind: 'category', categoryIds: Array.from({ length: MAX_CONDITION_CATEGORIES + 1 }, (_, i) => String(i + 1)) }])).toBeNull();
     expect(parseConditions([{ kind: 'category', categoryId: '' }])).toBeNull();
     expect(parseConditions([{ kind: 'category' }])).toBeNull();
   });
