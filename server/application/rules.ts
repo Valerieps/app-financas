@@ -4,7 +4,7 @@
 import type { RulePreviewView, RuleView } from '../../src/application/api-contract';
 import { cardPaymentWithChoice } from '../../src/domain/lancamentos';
 import { applyReplacements, categoryFromRules, describeWithRules, MAX_RULES, parseActions, parseConditions, parseRule, RULE_PREVIEW_LIMIT, ruleMatches, tagsFromRules, withExistingTags, type RuleDefinition } from '../../src/domain/rules';
-import { MAX_BULK_TAGGING, moveInOrder, type TagAssignment } from '../../src/domain/tags';
+import { MAX_BULK_TAGGING, moveInOrder, moveToIndex, type TagAssignment } from '../../src/domain/tags';
 import { failure, nowIso, QueryError, type CommandResult, type Context } from './context';
 import { descriptionStatements, rewriteDescriptions, ruleSubjects, storedDescriptions, type Subject } from './descriptions';
 import { lancamentoViews } from './lancamentos';
@@ -187,12 +187,15 @@ export async function deleteRule(ctx: Context, input: Record<string, unknown>): 
 }
 
 export async function moveRule(ctx: Context, input: Record<string, unknown>): Promise<CommandResult<null>> {
-  const { direction } = input;
-  if (direction !== 'up' && direction !== 'down') return failure('invalid');
+  const { direction, to } = input;
+  const dragged = typeof to === 'number' && Number.isInteger(to) && to >= 0;
+  if (!dragged && direction !== 'up' && direction !== 'down') return failure('invalid');
   const found = await findRule(ctx, input.id);
   if (found === 'invalid' || found === 'not_found') return failure(found);
   const rows = await ruleRows(ctx);
-  const order = moveInOrder(rows.map((r) => r.id), found, direction);
+  const ids = rows.map((r) => r.id);
+  if (dragged && to >= ids.length) return failure('invalid');
+  const order = dragged ? moveToIndex(ids, found, to) : moveInOrder(ids, found, direction === 'up' ? 'up' : 'down');
   const descriptions = await rewriteDescriptions(ctx, rulesAfter(rows, order), nowIso(ctx));
   await ctx.sql.batch([...savePositions(order), ...descriptions]);
   return { ok: true, value: null, changed: CHANGED };

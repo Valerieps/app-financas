@@ -47,6 +47,16 @@ export function moveInOrder(ids: readonly string[], id: string, direction: 'up' 
   return order;
 }
 
+/** `ids` with `id` taken out and put at position `to` (dragged there); unchanged when either is out of range. */
+export function moveToIndex(ids: readonly string[], id: string, to: number): string[] {
+  const order = [...ids];
+  const from = order.indexOf(id);
+  if (from < 0 || !Number.isInteger(to) || to < 0 || to >= order.length) return order;
+  order.splice(from, 1);
+  order.splice(to, 0, id);
+  return order;
+}
+
 /** A lançamento's tags: for each layer that has one, the tag id. */
 export type TagAssignment = Readonly<Record<string, string>>;
 

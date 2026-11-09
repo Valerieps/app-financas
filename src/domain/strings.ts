@@ -197,6 +197,7 @@ export const strings = {
     save: 'Salvar',
     cancel: 'Cancelar',
     delete: 'Excluir',
+    handle: 'Arraste para mudar a ordem, ou use as setas ↑ ↓ do teclado',
     up: 'Subir a regra',
     down: 'Descer a regra',
     needText: 'Escreva o texto que a descrição deve conter.',
