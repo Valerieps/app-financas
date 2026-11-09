@@ -104,24 +104,26 @@ Eu ensino o app a classificar sozinho: "sempre que isso, então aquilo".
   diferença entre maiúsculas e minúsculas nem acentos; os números continuam os da ordem. *(2)*
 - No topo também ficam quantas regras eu tenho, o botão **Aplicar aos guardados** e o botão **Nova
   regra**. *(2)*
-- Ao clicar numa regra, ou em Nova regra, ela abre num painel ao lado da lista (numa tela estreita,
-  por cima dela), que fecha com Esc. Lá eu salvo, cancelo ou excluo a regra. *(2)*
-  Por quê: a lista não some nem pula enquanto eu edito.
-- No painel, a regra é escrita como uma frase: "Sempre que **a descrição** contiver [ifood | rappi]
-  e **o lançamento** for **uma saída**, então **aplique as tags** [Tipo de Gasto: Restaurante]". Cada
-  palavra sublinhada é um menu: nas condições, a descrição, o lançamento (o tipo), quem pagou
-  (entrada), a operação ou a categoria (da árvore do Pluggy); nas ações, aplique as tags, mude a categoria para (da árvore do Pluggy)
-  ou troque na descrição [texto] por [novo]. As tags escolhidas aparecem como etiquetas que eu tiro
-  com ×, e um menu "+ tag" põe outra (uma por camada: a nova troca a da mesma camada). Até 5
-  condições e 5 ações. *(2)*
-- Com duas condições ou mais, um menu acima delas diz como elas se juntam: "A regra vale com
+- Ao clicar numa regra, ou em Nova regra, ela abre numa gaveta que desliza da esquerda por cima da
+  tela, com a lista escurecida atrás. A gaveta fecha com Esc, com × ou com um clique fora dela. Lá eu
+  salvo, cancelo ou excluo a regra; esses botões ficam sempre à vista no rodapé da gaveta. *(2)*
+  Por quê: a gaveta tem espaço para cada campo numa linha, e a lista não some nem pula enquanto eu edito.
+- Na gaveta, a regra fica em três blocos numerados: **1 Quando** (quais lançamentos ela pega),
+  **2 Então** (o que ela faz com eles) e **3 Prévia**. Cada condição é uma linha que ainda se lê como
+  frase, com campos de verdade: [a descrição ▾] contiver [ifood | rappi]. O primeiro menu diz o que
+  ela olha: a descrição, o lançamento (o tipo), quem pagou (entrada), a operação ou a categoria (da
+  árvore do Pluggy). Cada ação também: [aplique as tags ▾], [mude a categoria para ▾] (da árvore do
+  Pluggy) ou [troque na descrição ▾] [texto] por [novo]. As tags escolhidas aparecem como etiquetas
+  que eu tiro com ×, e um menu "+ tag" põe outra (uma por camada: a nova troca a da mesma camada).
+  Até 5 condições e 5 ações. *(2)*
+- Com duas condições ou mais, uma escolha de dois botões acima delas diz como elas se juntam: "A regra vale com
   **todas as condições (e)**" ou "**qualquer condição (ou)**". A palavra antes de cada condição a
   mais e o link para pôr outra seguem esse menu: "e" e "+ e outra condição", ou "ou" e "+ ou outra
   condição". Na lista, uma regra com "ou" mostra "ou" entre as etiquetas das condições. *(2)*
 - A regra nova começa com "a descrição contiver" e, se já existem tags, "aplique as tags". Ao trocar
   uma ação para "troque na descrição", o texto a trocar já vem com o texto da primeira condição de
   descrição, quando ele não tem `|` nem `&`. *(2)*
-- Enquanto eu escrevo, o painel mostra sozinho até 10 lançamentos guardados que a regra pega, os
+- Enquanto eu escrevo, a Prévia mostra sozinha até 10 lançamentos guardados que a regra pega, os
   mais recentes primeiro, e quantos ela pega ao todo; quando a regra substitui, cada lançamento
   aparece com a descrição já trocada. *(2)*
   Por quê: ver o resultado sem apertar Testar evita salvar uma regra que pega demais.
