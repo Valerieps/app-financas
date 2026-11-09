@@ -134,6 +134,10 @@
   --size-filter-menu-min: 220px;
   --size-filter-menu-max: 360px;
   --size-filter-menu-height: 320px;
+  --size-filters-panel: 480px;
+  --size-filters-panel-height: 400px;
+  --size-filters-fields: 180px;
+  --size-count-badge: 18px;
   /* Gráficos: the label and value columns of a bar row, a bar's thickness, the column chart's height */
   --size-chart-label: 120px;
   --size-chart-value: 96px;

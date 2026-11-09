@@ -72,6 +72,7 @@ O que ainda não está pronto.
 - [ ] Um lançamento escondido por um filtro sai da seleção; trocar de mês ou salvar limpa a seleção; até 500 de uma vez (`spec/categorias.md`).
 - [ ] No filtro por tags, tags da mesma camada somam e camadas diferentes se cruzam (`spec/lancamentos.md`).
 - [ ] Filtros nos títulos das colunas: o de contas fica na Descrição e o de saídas/entradas/cartão no Tipo (no Valor, com o Tipo oculto); a Data só ordena; "Vazio" só onde pode faltar valor (categoria, operação, quem pagou e tags); o filtro de categoria usa as categorias que aparecem no mês (`spec/lancamentos.md`).
+- [ ] O menu Filtros lista cada camada de tag como um filtro próprio, sob "Tags"; as etiquetas dos filtros ligados mostram até dois valores e "+n"; "Limpar filtros" foi para a linha das etiquetas (`spec/lancamentos.md`).
 - [ ] Uma conexão substituída fica de fora dos gráficos, e os gastos provisórios ainda não entram (`spec/graficos.md`).
 - [ ] Pagamento de cartão: as descrições que o reconhecem sem a categoria do Pluggy, Todos ainda o mostra, e o topo diz à parte quanto foi pago (`spec/lancamentos.md`).
 - [ ] No gráfico por tag: só o mês escolhido, sem comparação; "Sem tag" por último; a camada começa na primeira; a lista da fatia abre na mesma tela e um lançamento abre o detalhe em Lançamentos; por enquanto ele lê a lista de Lançamentos, que ainda mostra as conexões substituídas (`spec/graficos.md`).
