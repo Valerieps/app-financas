@@ -112,8 +112,15 @@
   /* Desktop layout */
   --size-sidebar: 240px;
   --size-detail-panel: 400px;
-  /* Regras automáticas: the editor beside the list, wide enough for a rule written as a sentence */
-  --size-rules-panel: 480px;
+  /* Regras automáticas: the editor drawer, wide enough for a condition on one line; the menu that
+     says what a row looks at or does; the narrowest a text box gets before it wraps; the step number */
+  --size-rules-panel: 640px;
+  --size-rule-subject: 200px;
+  --size-rule-value-min: 160px;
+  --size-rule-step: 24px;
+  /* The editor drawer slides in quickly and settles softly */
+  --duration-drawer: 200ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --size-content-max: 1200px;
   /* Below 1024px wide the sidebar shows only icons; below 1280px the detail panel opens over the
      content. CSS cannot read variables in media queries, so desktop.css repeats these two widths. */

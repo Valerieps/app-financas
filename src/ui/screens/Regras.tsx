@@ -211,7 +211,7 @@ export function Regras() {
         </p>
       )}
       {loaded && (
-        <div className={panel ? 'rules-layout rules-layout--open' : 'rules-layout'}>
+        <div className="rules-layout">
           <article className="tile rules-list-tile">
             <div className="rules-toolbar">
               <h2 className="text-label rules-count">{text.count(rules.length)}</h2>
@@ -314,17 +314,24 @@ export function Regras() {
               ))}
             </ol>
           </article>
-          {panel && (panel.mode === 'new' || editing) && (
-            <aside className="rules-panel" aria-label={editing ? text.ruleNumber(editingIndex + 1) : text.newRule}>
-              <div className="rules-panel-head">
-                <h2 className="text-title">{editing ? text.ruleNumber(editingIndex + 1) : text.newRule}</h2>
-                <button type="button" className="icon-button" aria-label={text.close} title={text.close} onClick={() => setPanel(null)}>
-                  ×
-                </button>
+        </div>
+      )}
+      {loaded && panel && (panel.mode === 'new' || editing) && (
+        <div className="scrim rule-drawer-scrim" onClick={() => setPanel(null)}>
+          <aside role="dialog" aria-modal="true" aria-labelledby="rule-drawer-title" className="rule-drawer" onClick={(event) => event.stopPropagation()}>
+            <header className="rule-drawer-head">
+              <div>
+                <h2 id="rule-drawer-title" className="text-title">
+                  {editing ? text.ruleNumber(editingIndex + 1) : text.newRule}
+                </h2>
+                <p className="text-caption muted">{text.drawerHint}</p>
               </div>
-              <RuleForm key={editing?.id ?? 'new'} {...choices} initial={editing} onDone={() => setPanel(null)} />
-            </aside>
-          )}
+              <button type="button" className="icon-button" aria-label={text.close} title={text.close} onClick={() => setPanel(null)}>
+                ×
+              </button>
+            </header>
+            <RuleForm key={editing?.id ?? 'new'} {...choices} initial={editing} onDone={() => setPanel(null)} />
+          </aside>
         </div>
       )}
     </section>
@@ -372,135 +379,172 @@ function RuleForm({ layers, categories, initial, onDone }: { initial?: RuleView;
 
   const removeButton = (onClick: () => void, hidden: boolean) =>
     hidden ? null : (
-      <button type="button" className="icon-button rules-remove" aria-label={text.removeRow} title={text.removeRow} onClick={onClick}>
+      <button type="button" className="icon-button rule-remove" aria-label={text.removeRow} title={text.removeRow} onClick={onClick}>
         ×
       </button>
     );
 
+  const categoryOptions = categories.map((option) => (
+    <option key={option.id} value={option.id}>
+      {optionLabel(option)}
+    </option>
+  ));
+
   return (
-    <form className="rules-form" onSubmit={(event) => void onSubmit(event)}>
-      <div className="rules-sentence">
-        {conditions.length > 1 && (
-          <p className="rules-line">
-            <span>{text.matchLabel}</span>
-            <select className="rules-token rules-token--when" aria-label={text.matchLabel} value={match} onChange={(e) => setMatch(RULE_MATCHES.find((m) => m === e.target.value) ?? 'all')}>
-              {RULE_MATCHES.map((m) => (
-                <option key={m} value={m}>
-                  {text.matches[m]}
-                </option>
-              ))}
-            </select>
-          </p>
-        )}
-        {conditions.map((condition, index) => (
-          <p key={index} className="rules-line">
-            <span className="rules-lead">{index === 0 ? text.when : match === 'any' ? text.or : text.and}</span>
-            <select className="rules-token rules-token--when" aria-label={text.when} value={conditionField(condition)} onChange={(e) => changeCondition(index, newCondition(e.target.value as ConditionField))}>
-              {(Object.keys(text.conditionSubjects) as ConditionField[]).map((field) => (
-                <option key={field} value={field}>
-                  {text.conditionSubjects[field]}
-                </option>
-              ))}
-            </select>
-            <span>{isTextCondition(condition) ? text.contains : condition.kind === 'category' ? text.within : text.is}</span>
-            {isTextCondition(condition) ? (
-              <input
-                className="rules-input"
-                value={condition.text}
-                placeholder={PLACEHOLDERS[condition.kind]}
-                aria-label={text.conditionSubjects[conditionField(condition)]}
-                onChange={(e) => changeCondition(index, { kind: condition.kind, text: e.target.value })}
-                autoComplete="off"
-                autoFocus={index === 0}
-              />
-            ) : condition.kind === 'category' ? (
-              <select className="rules-token rules-token--when" aria-label={text.conditionSubjects.category} value={condition.categoryId} onChange={(e) => changeCondition(index, { kind: 'category', categoryId: e.target.value })}>
-                <option value="">{text.chooseCategory}</option>
-                {categories.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {optionLabel(option)}
-                  </option>
+    <form className="rule-form" onSubmit={(event) => void onSubmit(event)}>
+      <div className="rule-form-body">
+        <section className="rule-block" aria-labelledby="rule-block-when">
+          <BlockHead step={1} id="rule-block-when" {...text.blocks.when} />
+          {conditions.length > 1 && (
+            <div className="rule-match" role="group" aria-label={text.matchLabel}>
+              <span className="text-caption muted">{text.matchLabel}</span>
+              <span className="rule-segmented">
+                {RULE_MATCHES.map((m) => (
+                  <button key={m} type="button" className="rule-segment" aria-pressed={match === m} onClick={() => setMatch(m)}>
+                    {text.matches[m]}
+                  </button>
                 ))}
-              </select>
-            ) : (
-              <select className="rules-token rules-token--when" aria-label={text.conditionSubjects.type} value={condition.type} onChange={(e) => changeCondition(index, { kind: 'type', type: LANCAMENTO_TYPES.find((t) => t === e.target.value) ?? 'out' })}>
-                {LANCAMENTO_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {text.typeSummary[t]}
-                  </option>
-                ))}
-              </select>
-            )}
-            {removeButton(() => setConditions(conditions.filter((_, i) => i !== index)), conditions.length === 1)}
-          </p>
-        ))}
-        {conditions.length < MAX_RULE_PARTS && (
-          <button type="button" className="rules-add" onClick={() => setConditions([...conditions, newCondition('description')])}>
-            {text.addCondition[match]}
-          </button>
-        )}
-        {conditions.some(isTextCondition) && <p className="text-caption muted">{text.whenHint}</p>}
-        {conditions.some((c) => c.kind === 'category') && <p className="text-caption muted">{text.categoryHint}</p>}
+              </span>
+            </div>
+          )}
+          <ol className="rule-rows">
+            {conditions.map((condition, index) => (
+              <li key={index} className="rule-row">
+                {index > 0 && <span className="rule-joiner">{match === 'any' ? text.or : text.and}</span>}
+                <div className="rule-row-fields">
+                  <select className="rule-control rule-control--subject" aria-label={text.conditionFieldLabel} value={conditionField(condition)} onChange={(e) => changeCondition(index, newCondition(e.target.value as ConditionField))}>
+                    {(Object.keys(text.conditionSubjects) as ConditionField[]).map((field) => (
+                      <option key={field} value={field}>
+                        {text.conditionSubjects[field]}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="rule-op">{isTextCondition(condition) ? text.contains : condition.kind === 'category' ? text.within : text.is}</span>
+                  {isTextCondition(condition) ? (
+                    <input
+                      className="rule-control rule-control--grow"
+                      value={condition.text}
+                      placeholder={PLACEHOLDERS[condition.kind]}
+                      aria-label={text.conditionSubjects[conditionField(condition)]}
+                      onChange={(e) => changeCondition(index, { kind: condition.kind, text: e.target.value })}
+                      autoComplete="off"
+                      autoFocus={index === 0}
+                    />
+                  ) : condition.kind === 'category' ? (
+                    <select className="rule-control rule-control--grow" aria-label={text.conditionSubjects.category} value={condition.categoryId} onChange={(e) => changeCondition(index, { kind: 'category', categoryId: e.target.value })}>
+                      <option value="">{text.chooseCategory}</option>
+                      {categoryOptions}
+                    </select>
+                  ) : (
+                    <select className="rule-control rule-control--grow" aria-label={text.conditionSubjects.type} value={condition.type} onChange={(e) => changeCondition(index, { kind: 'type', type: LANCAMENTO_TYPES.find((t) => t === e.target.value) ?? 'out' })}>
+                      {LANCAMENTO_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {text.typeSummary[t]}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {removeButton(() => setConditions(conditions.filter((_, i) => i !== index)), conditions.length === 1)}
+                </div>
+              </li>
+            ))}
+          </ol>
+          {conditions.length < MAX_RULE_PARTS && (
+            <button type="button" className="rule-add" onClick={() => setConditions([...conditions, newCondition('description')])}>
+              {text.addCondition[match]}
+            </button>
+          )}
+          {conditions.some(isTextCondition) && <p className="rule-hint text-caption">{text.whenHint}</p>}
+          {conditions.some((c) => c.kind === 'category') && <p className="rule-hint text-caption">{text.categoryHint}</p>}
+        </section>
 
-        {actions.map((action, index) => (
-          <p key={index} className="rules-line">
-            <span className="rules-lead">{index === 0 ? text.then : text.and}</span>
-            <select className="rules-token rules-token--then" aria-label={text.then} value={actionField(action)} onChange={(e) => changeAction(index, newAction(e.target.value as ActionField, conditions))}>
-              {actionFields.map((field) => (
-                <option key={field} value={field}>
-                  {text.actionVerbs[field]}
-                </option>
-              ))}
-            </select>
-            {action.kind === 'addTags' ? (
-              <TagPicker tags={action.tags} layers={layers} onChange={(tags) => changeAction(index, { kind: 'addTags', tags })} />
-            ) : action.kind === 'setCategory' ? (
-              <select className="rules-token rules-token--then" aria-label={text.actionVerbs.category} value={action.categoryId} onChange={(e) => changeAction(index, { kind: 'setCategory', categoryId: e.target.value })}>
-                <option value="">{text.chooseCategory}</option>
-                {categories.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {optionLabel(option)}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <>
-                <input className="rules-input" value={action.find} placeholder={text.findPlaceholder} aria-label={text.actionVerbs.description} onChange={(e) => changeAction(index, { ...action, find: e.target.value })} autoComplete="off" />
-                <span>{text.replaceBy}</span>
-                <input className="rules-input" value={action.replace} placeholder={text.replacePlaceholder} aria-label={text.replacePlaceholder} onChange={(e) => changeAction(index, { ...action, replace: e.target.value })} autoComplete="off" />
-              </>
-            )}
-            {removeButton(() => setActions(actions.filter((_, i) => i !== index)), actions.length === 1)}
-          </p>
-        ))}
-        {actions.length < MAX_RULE_PARTS && (
-          <button type="button" className="rules-add" onClick={() => setActions([...actions, newAction(actionFields[0], conditions)])}>
-            {text.addAction}
-          </button>
-        )}
-        {actions.some((a) => a.kind === 'replaceInDescription') && <p className="text-caption muted">{text.replaceHint}</p>}
+        <section className="rule-block" aria-labelledby="rule-block-then">
+          <BlockHead step={2} id="rule-block-then" {...text.blocks.then} />
+          <ol className="rule-rows">
+            {actions.map((action, index) => (
+              <li key={index} className="rule-row">
+                {index > 0 && <span className="rule-joiner">{text.and}</span>}
+                <div className="rule-row-fields">
+                  <select className="rule-control rule-control--subject" aria-label={text.actionKindLabel} value={actionField(action)} onChange={(e) => changeAction(index, newAction(e.target.value as ActionField, conditions))}>
+                    {actionFields.map((field) => (
+                      <option key={field} value={field}>
+                        {text.actionVerbs[field]}
+                      </option>
+                    ))}
+                  </select>
+                  {action.kind === 'addTags' ? (
+                    <span className="rule-tags">
+                      <TagPicker tags={action.tags} layers={layers} onChange={(tags) => changeAction(index, { kind: 'addTags', tags })} />
+                    </span>
+                  ) : action.kind === 'setCategory' ? (
+                    <select className="rule-control rule-control--grow" aria-label={text.actionVerbs.category} value={action.categoryId} onChange={(e) => changeAction(index, { kind: 'setCategory', categoryId: e.target.value })}>
+                      <option value="">{text.chooseCategory}</option>
+                      {categoryOptions}
+                    </select>
+                  ) : (
+                    <span className="rule-replace">
+                      <input className="rule-control rule-control--grow" value={action.find} placeholder={text.findPlaceholder} aria-label={text.actionVerbs.description} onChange={(e) => changeAction(index, { ...action, find: e.target.value })} autoComplete="off" />
+                      <span className="rule-op">{text.replaceBy}</span>
+                      <input className="rule-control rule-control--grow" value={action.replace} placeholder={text.replacePlaceholder} aria-label={text.replacePlaceholder} onChange={(e) => changeAction(index, { ...action, replace: e.target.value })} autoComplete="off" />
+                    </span>
+                  )}
+                  {removeButton(() => setActions(actions.filter((_, i) => i !== index)), actions.length === 1)}
+                </div>
+              </li>
+            ))}
+          </ol>
+          {actions.length < MAX_RULE_PARTS && (
+            <button type="button" className="rule-add" onClick={() => setActions([...actions, newAction(actionFields[0], conditions)])}>
+              {text.addAction}
+            </button>
+          )}
+          {actions.some((a) => a.kind === 'replaceInDescription') && <p className="rule-hint text-caption">{text.replaceHint}</p>}
+        </section>
+
+        <section className="rule-block" aria-labelledby="rule-block-preview">
+          <BlockHead step={3} id="rule-block-preview" {...text.blocks.preview} />
+          <Preview state={preview} />
+        </section>
       </div>
 
-      <Preview state={preview} />
-      {error && (
-        <p className="notice" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="tags-actions rules-panel-foot">
-        <button type="submit" disabled={busy}>
-          {initial ? text.save : text.create}
-        </button>
-        <button type="button" className="secondary" onClick={onDone}>
-          {text.cancel}
-        </button>
-        {initial && (
-          <button type="button" className="button-outline tags-danger rules-delete" disabled={busy} onClick={() => void remove()}>
-            {text.delete}
-          </button>
+      <footer className="rule-form-foot">
+        {error && (
+          <p className="notice" role="alert">
+            {error}
+          </p>
         )}
-      </div>
+        <div className="rule-form-buttons">
+          <button type="submit" disabled={busy}>
+            {initial ? text.save : text.create}
+          </button>
+          <button type="button" className="secondary" onClick={onDone}>
+            {text.cancel}
+          </button>
+          {initial && (
+            <button type="button" className="button-outline tags-danger rule-delete" disabled={busy} onClick={() => void remove()}>
+              {text.delete}
+            </button>
+          )}
+        </div>
+      </footer>
     </form>
+  );
+}
+
+/** A numbered block of the form: "1 Quando", with one line saying what it is for. */
+function BlockHead({ step, id, title, hint }: { step: number; id: string; title: string; hint: string }) {
+  return (
+    <header className="rule-block-head">
+      <span className="rule-step" aria-hidden="true">
+        {step}
+      </span>
+      <div>
+        <h3 id={id} className="text-strong">
+          {title}
+        </h3>
+        <p className="text-caption muted">{hint}</p>
+      </div>
+    </header>
   );
 }
 
@@ -531,7 +575,7 @@ function TagPicker({ tags, layers, onChange }: { tags: TagAssignment; layers: re
         ];
       })}
       <select
-        className="rules-token rules-token--then"
+        className="rule-control rule-control--tag"
         aria-label={text.addTag}
         value=""
         onChange={(e) => {
