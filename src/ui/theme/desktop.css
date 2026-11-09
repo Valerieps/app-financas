@@ -86,6 +86,11 @@
   padding: var(--space-8);
 }
 
+/* The Lançamentos table uses the whole window: it grows and shrinks with it */
+.shell-content:has(.lanc) {
+  max-width: none;
+}
+
 /* Sidebar */
 .sidebar {
   position: sticky;
