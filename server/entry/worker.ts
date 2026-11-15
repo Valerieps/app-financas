@@ -1,4 +1,5 @@
 // The Worker: serves the app's files, the API under /api, the webhooks and the cron (ADR-004, ADR-006).
+import { WorkerEntrypoint } from 'cloudflare:workers';
 import type { ApiError } from '../../src/application/api-contract';
 import { AppService } from '../application/app-service';
 import { processEvent, receivePluggyWebhook } from '../application/collect/webhooks';
@@ -176,6 +177,21 @@ async function api(request: Request, env: Env, url: URL, ctx: Context): Promise<
   return result.ok ? json({ value: result.value, changed: result.changed }) : error(result.error);
 }
 
+/**
+ * The time-based jobs: one tick, which decides which jobs are due (AppService.tick). Shared by the
+ * Worker's own cron trigger and by the `Cron` entrypoint that cron-central calls.
+ */
+export async function runCron(env: Env, ctx: ExecutionContext): Promise<void> {
+  await new AppService(context(env, (task) => ctx.waitUntil(task))).tick();
+}
+
+/** Called over a service binding (RPC) by the central cron Worker. */
+export class Cron extends WorkerEntrypoint<Env> {
+  async tick(): Promise<void> {
+    await runCron(this.env, this.ctx);
+  }
+}
+
 export default {
   async fetch(request, env, executionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -188,6 +204,6 @@ export default {
   },
 
   async scheduled(_controller, env, executionContext): Promise<void> {
-    await new AppService(context(env, (task) => executionContext.waitUntil(task))).tick();
+    await runCron(env, executionContext);
   },
 } satisfies ExportedHandler<Env>;
