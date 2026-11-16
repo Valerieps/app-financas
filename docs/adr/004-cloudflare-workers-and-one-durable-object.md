@@ -31,3 +31,8 @@ for the cron (two deploys, two origins).
 
 **Update (2026-11-02):** Data moves to D1 and R2 and the live WebSocket goes away (ADR-006). One Worker
 still serves the app, the API, the webhooks and the cron.
+
+**Update (2026-11-16):** The cron no longer lives in this Worker. The central Worker `cron-central`
+fires every 5 minutes (UTC) and calls `tick()` on this Worker's `Cron` entrypoint (`WorkerEntrypoint`,
+`server/entry/worker.ts`) through a service binding. `wrangler.jsonc` keeps `"triggers": { "crons": [] }`:
+deleting the key would leave the old schedule in Cloudflare. The Worker has no `scheduled()` handler.

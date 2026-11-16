@@ -178,8 +178,8 @@ async function api(request: Request, env: Env, url: URL, ctx: Context): Promise<
 }
 
 /**
- * The time-based jobs: one tick, which decides which jobs are due (AppService.tick). Shared by the
- * Worker's own cron trigger and by the `Cron` entrypoint that cron-central calls.
+ * The time-based jobs: one tick, which decides which jobs are due (AppService.tick). Called by the
+ * `Cron` entrypoint, which the central Worker `cron-central` triggers every 5 minutes.
  */
 export async function runCron(env: Env, ctx: ExecutionContext): Promise<void> {
   await new AppService(context(env, (task) => ctx.waitUntil(task))).tick();
@@ -201,9 +201,5 @@ export default {
     if (url.pathname.startsWith('/webhooks/')) return error('not_found');
     if (url.pathname.startsWith('/api/')) return api(request, env, url, ctx());
     return env.ASSETS.fetch(request);
-  },
-
-  async scheduled(_controller, env, executionContext): Promise<void> {
-    await runCron(env, executionContext);
   },
 } satisfies ExportedHandler<Env>;

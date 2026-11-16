@@ -11,7 +11,7 @@ O desenho técnico que o código não mostra sozinho.
 
 - **App:** web app (Vite + React + TypeScript), instalável (PWA). Fala só com a própria origem.
 - **Servidor:** um Cloudflare Worker serve os arquivos do app, a API em `/api`, os webhooks em
-  `/webhooks/*` e o cron. É o único que escreve no banco. Ver ADR-004 e ADR-006.
+  `/webhooks/*`. O cron vive no Worker `cron-central` (a cada 5 min), que chama o `tick()` da entrypoint `Cron` deste Worker. É o único que escreve no banco. Ver ADR-004 e ADR-006.
 - **Dados:** tabelas normalizadas no D1; o bruto (cada resposta do Pluggy e cada webhook, em JSON) no
   R2. Ver ADR-006.
 - **Acesso:** Cloudflare Access com login Google na frente de tudo, menos os webhooks; trava por
