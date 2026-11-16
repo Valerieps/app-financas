@@ -109,7 +109,7 @@ Each step rereads the whole conversation, so long sessions and back-and-forth co
 - `server/application` - the server's use cases (`AppService`), asynchronous, on the `Sql`/`RawStore`/`PluggyApi`/`Clock`/`IdGenerator` ports; `collect/` is the Pluggy collection (raw first, mirrors, transactions, sync, webhooks), `lock.ts` the passkey lock.
 - `migrations/` - the D1 schema, numbered SQL files applied by `wrangler d1 migrations apply`.
 - `server/infrastructure`, `server/entry` - Worker, D1, R2, Access, cookies, crypto. `server/testing` - `node:sqlite` (with `migrations/` applied), memory ports, a fake Pluggy and anonymized Pluggy fixtures for tests.
-- `wrangler.jsonc` - the Worker: assets, D1 (`DB`), R2 (`RAW`), their preview copies, cron. Secrets via `wrangler secret put`; locally in `.dev.vars` (see `.dev.vars.example`).
+- `wrangler.jsonc` - the Worker: assets, D1 (`DB`), R2 (`RAW`), their preview copies. No cron of its own: the `cron-central` Worker calls the `Cron` entrypoint (`tick()`) every 5 minutes. Secrets via `wrangler secret put`; locally in `.dev.vars` (see `.dev.vars.example`).
 - `public/` - static files: manifest, icons, `_headers`.
 - `network-policy.ts` - the servers the app (`ALLOWED_ORIGINS`, `IMAGE_ORIGINS`) and the Worker (`SERVER_ORIGINS`) may talk to.
 - `scripts/` - `check-docs.mjs` (run by CI), `setup-repo.mjs` (once per new repository) `pluggy-webhook.mjs` (registers the Pluggy webhook with its secret header) and `espelho.mjs` (the nightly mirror on the owner's desktop).

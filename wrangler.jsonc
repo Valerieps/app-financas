@@ -18,8 +18,10 @@
   ],
   // Raw archive: every Pluggy response and webhook body, before normalization.
   "r2_buckets": [{ "binding": "RAW", "bucket_name": "sinal-verde-raw" }],
-  // One cron for every time-based job; each job decides whether it is due (AppService.tick).
-  "triggers": { "crons": ["*/5 * * * *"] },
+  // No cron of its own: the central Worker `cron-central` calls the `Cron` entrypoint's `tick()`
+  // every 5 minutes through a service binding; each job decides whether it is due (AppService.tick).
+  // Keep the empty list: removing `triggers` would not remove the schedule from Cloudflare.
+  "triggers": { "crons": [] },
   // Branch previews (ADR-004) get their own database and bucket, never production's.
   "previews": {
     "d1_databases": [
